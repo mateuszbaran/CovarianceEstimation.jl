@@ -12,9 +12,10 @@ abstract type CovarianceEstimator end
 
 export cov
 export CovarianceEstimator, SimpleCovariance, CorrectedCovariance,
-    LedoitWolfCovariance
+    LedoitWolfCovariance, RBLWCovariance, OASCovariance
 
 include("basicmethods.jl")
 include("ledoitwolf.jl")
+include("chen.jl")
 
 end # module

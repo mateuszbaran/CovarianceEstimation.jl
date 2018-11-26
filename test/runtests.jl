@@ -21,9 +21,9 @@ end
 
 @testset "Ledoit-Wolf covariance shrinkage" begin
     Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
-    C = Z * transpose(Z)
+    C = cov(Z; dims=2)
     F, r̄ = CovarianceEstimation.ledoitwolfshrinkagetarget(C)
-    @test F ≈ Matrix(6.0I, 3, 3)
+    @test F ≈ Matrix(3.0I, 3, 3)
     @test r̄ ≈ 0.0
     (N, Tnum) = size(Z)
     πmatrix = mean([(Z[i,t]*Z[j,t]-C[i,j])^2 for i in 1:N, j in 1:N] for t in 1:Tnum)
@@ -36,4 +36,20 @@ end
     shrunkcov = (1-δstar)*C + δstar*F
     @test cov(LedoitWolfCovariance(), Z) ≈ shrunkcov
     @test cov(LedoitWolfCovariance(), Z, δstar) ≈ shrunkcov
+end
+
+@testset "Chen covariance shrinkage" begin
+    Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
+    C = cov(Z; dims=2)
+    F = CovarianceEstimation.chenshrinkagetarget(Z)
+    @test F ≈ Matrix(3.0I, 3, 3)
+    ρhatZrblw = 99/135
+    shrunkcov = (1-ρhatZrblw)*C + ρhatZrblw*F
+    @test cov(RBLWCovariance(), Z, ρhatZrblw) ≈ shrunkcov
+    @test cov(RBLWCovariance(), Z) ≈ shrunkcov
+
+    ρhatZoas = 1
+    shrunkcov = (1-ρhatZoas)*C + ρhatZoas*F
+    @test cov(OASCovariance(), Z, ρhatZoas) ≈ shrunkcov
+    @test cov(OASCovariance(), Z) ≈ shrunkcov
 end

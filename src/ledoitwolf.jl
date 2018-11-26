@@ -14,7 +14,7 @@ function ledoitwolfshrinkagetarget(C::DenseMatrix{<:Real})
 end
 
 """
-    ldacalccov(LedoitWolfCovariance(), X, shrinkage)
+    cov(LedoitWolfCovariance(), X, shrinkage)
 
 Calculates shrunk covariance matrix for centered data `X` with shrinkage
 parameter `shrinkage` and Ledoit-Wolf shrinkage target.
@@ -25,13 +25,13 @@ The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
 function cov(::LedoitWolfCovariance, X::DenseMatrix{T}, shrinkage::Number) where T<:Real
     (shrinkage ≥ 0 && shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
-    C = X * transpose(X)
+    C = cov(X; dims=2)
     F, r̄ = ledoitwolfshrinkagetarget(C)
     (1-shrinkage)*C + shrinkage*F
 end
 
 """
-    ldacalccov(::LedoitWolfCovariance, X::DenseMatrix)
+    cov(::LedoitWolfCovariance, X::DenseMatrix)
 
 Calculates shrunk covariance matrix for centered data `X` with
 Ledoit-Wolf optimal shrinkage.
@@ -41,7 +41,7 @@ O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
 function cov(::LedoitWolfCovariance, X::DenseMatrix{T}) where T<:Real
-    C = X * transpose(X)
+    C = cov(X; dims=2)
     Tnum = size(X, 2)
     N = size(X, 1)
     F, r̄ = ledoitwolfshrinkagetarget(C)
