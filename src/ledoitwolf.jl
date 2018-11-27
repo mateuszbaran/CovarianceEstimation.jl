@@ -24,7 +24,7 @@ O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
 function cov(::LedoitWolfCovariance, X::DenseMatrix{T}, shrinkage::Number) where T<:Real
-    (shrinkage ≥ 0 && shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
+    (0 ≤ shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
     C = cov(X; dims=2)
     F, r̄ = ledoitwolfshrinkagetarget(C)
     (1-shrinkage)*C + shrinkage*F
@@ -53,7 +53,8 @@ function cov(::LedoitWolfCovariance, X::DenseMatrix{T}) where T<:Real
     #TODO: inbounds/simd?
     for i in 1:N
         for j in 1:N
-            ρhatpart2 += sqrt(C[j,j]/C[i,i])*ϑhatii[i,j] + sqrt(C[i,i]/C[j,j])*ϑhatjj[i,j]
+            αij = sqrt(C[j,j]/C[i,i])
+            ρhatpart2 += ϑhatii[i,j]*αij + ϑhatjj[i,j]/αij
         end
     end
     ρhat = sum(diag(πmatrix)) + (r̄/2)*ρhatpart2
