@@ -2,8 +2,11 @@ using CovarianceEstimation
 using Statistics
 using LinearAlgebra
 using Test
+using Random
 
-X = rand(3, 8)
+Random.seed!(1234)
+
+X = randn(3, 8)
 
 @testset "Simple covariance" begin
     sc = SimpleCovariance()
