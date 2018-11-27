@@ -9,7 +9,7 @@ function ledoitwolfshrinkagetarget(C::DenseMatrix{<:Real})
     r = C ./ Cs
     r̄ = (sum(r)-N)/(N*(N-1))
     Finterm = Cs .* r̄
-    F = Finterm - Diagonal(diag(Finterm)) + Diagonal(diag(Cs))
+    F = Finterm + Diagonal(diag(Cs) .- diag(Finterm))
     F, r̄
 end
 
