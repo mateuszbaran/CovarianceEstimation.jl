@@ -1,7 +1,17 @@
 using LinearAlgebra
 
-struct LedoitWolfCovariance <: CovarianceEstimator
+"""
+    LedoitWolfCovariance(shrinkage)
+
+Ledoit-Wolf covariance estimator. The parameter `shrinkage` is either equal
+to `:auto` and optimal shrinkage is calculated, or it is a number between
+0 and 1.
+"""
+struct LedoitWolfCovariance{S<:Union{Symbol, Real}} <: CovarianceEstimator
+    shrinkage::S
 end
+
+LedoitWolfCovariance() = LedoitWolfCovariance{Symbol}(:auto)
 
 function ledoitwolfshrinkagetarget(C::AbstractMatrix{<:Real})
     N = size(C, 1)
@@ -14,7 +24,7 @@ function ledoitwolfshrinkagetarget(C::AbstractMatrix{<:Real})
 end
 
 """
-    cov(LedoitWolfCovariance(), X::AbstractMatrix, shrinkage; dims::Int=1)
+    cov(lw::LedoitWolfCovariance, X::AbstractMatrix, shrinkage; dims::Int=1)
 
 Calculates shrunk covariance matrix for data in `X` with shrinkage
 parameter `shrinkage` and Ledoit-Wolf shrinkage target.
@@ -28,7 +38,7 @@ Implements shrinkage target and optimal shrinkage according to
 O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
-function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}, shrinkage::Number; dims::Int=1) where T<:Real
+function cov(lw::LedoitWolfCovariance{<:Real}, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     if dims == 1
         Xint = transpose(X)
     elseif dims == 2
@@ -37,10 +47,10 @@ function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}, shrinkage::Number; di
         throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
     end
 
-    (0 ≤ shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
+    (0 ≤ lw.shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
     C = cov(Xint; dims=2)
     F, r̄ = ledoitwolfshrinkagetarget(C)
-    (1-shrinkage)*C + shrinkage*F
+    (1-lw.shrinkage)*C + lw.shrinkage*F
 end
 
 """
@@ -58,7 +68,7 @@ Implements shrinkage target and optimal shrinkage according to
 O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
-function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
+function cov(::LedoitWolfCovariance{Symbol}, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     if dims == 1
         Xint = transpose(X)
     elseif dims == 2
@@ -76,7 +86,7 @@ function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<
     ϑhatii = mean([(Xint[i,t]^2 - C[i,i])*(Xint[i,t]*Xint[j,t] - C[i,j]) for i in 1:N, j in 1:N] for t in 1:Tnum)
     ϑhatjj = mean([(Xint[i,t]^2 - C[j,j])*(Xint[i,t]*Xint[j,t] - C[i,j]) for i in 1:N, j in 1:N] for t in 1:Tnum)
     ρhatpart2 = zero(T)
-    #TODO: inbounds/simd?
+    # TODO: inbounds/simd?
     sdC = sqrt.(C[i,i] for i ∈ 1:N)
     for i in 1:N
         for j in 1:N

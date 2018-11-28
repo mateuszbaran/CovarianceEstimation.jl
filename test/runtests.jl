@@ -74,11 +74,14 @@ end
     δstar = clamp(κhat/Tnum, 0.0, 1.0)
     shrunkcov = (1-δstar)*C + δstar*F
     @test cov(lwc, Z; dims=2) ≈ shrunkcov
-    @test cov(lwc, Z, δstar; dims=2) ≈ shrunkcov
+    lwcstar = LedoitWolfCovariance(δstar)
+    @test cov(lwcstar, Z; dims=2) ≈ shrunkcov
 
     testTransposition(lwc)
     testUncorrelated(lwc)
     testTranslation(lwc)
+
+    testTransposition(lwcstar)
 end
 
 @testset "Chen covariance shrinkage" begin
@@ -88,19 +91,25 @@ end
     @test F ≈ Matrix(3.0I, 3, 3)
     ρhatZrblw = 99/135
     shrunkcov = (1-ρhatZrblw)*C + ρhatZrblw*F
-    rblwc = RBLWCovariance()
-    @test cov(rblwc, Z, ρhatZrblw; dims=2) ≈ shrunkcov
+    rblwc = RaoBlackwellLedoitWolfCovariance()
+    rblwcOptim = RaoBlackwellLedoitWolfCovariance(ρhatZrblw)
+    @test cov(rblwcOptim, Z; dims=2) ≈ shrunkcov
     @test cov(rblwc, Z; dims=2) ≈ shrunkcov
     testTransposition(rblwc)
     testUncorrelated(rblwc)
     testTranslation(rblwc)
 
+    testTransposition(rblwcOptim)
+
     ρhatZoas = 1
     shrunkcov = (1-ρhatZoas)*C + ρhatZoas*F
-    oasc = OASCovariance()
-    @test cov(oasc, Z, ρhatZoas; dims=2) ≈ shrunkcov
+    oasc = OracleApproximatingShrinkageCovariance()
+    oascOptim = OracleApproximatingShrinkageCovariance(ρhatZoas)
+    @test cov(oascOptim, Z; dims=2) ≈ shrunkcov
     @test cov(oasc, Z; dims=2) ≈ shrunkcov
     testTransposition(oasc)
     testUncorrelated(oasc)
     testTranslation(oasc)
+
+    testTransposition(oascOptim)
 end
