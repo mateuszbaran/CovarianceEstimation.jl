@@ -51,9 +51,10 @@ function cov(::LedoitWolfCovariance, X::DenseMatrix{T}) where T<:Real
     ϑhatjj = mean([(X[i,t]^2 - C[j,j])*(X[i,t]*X[j,t] - C[i,j]) for i in 1:N, j in 1:N] for t in 1:Tnum)
     ρhatpart2 = zero(T)
     #TODO: inbounds/simd?
+    sdC = sqrt.(C[i,i] for i ∈ 1:N)
     for i in 1:N
         for j in 1:N
-            αij = sqrt(C[j,j]/C[i,i])
+            αij = sdC[j]/sdC[i]
             ρhatpart2 += ϑhatii[i,j]*αij + ϑhatjj[i,j]/αij
         end
     end
