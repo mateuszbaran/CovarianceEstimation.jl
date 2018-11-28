@@ -14,9 +14,9 @@ function ledoitwolfshrinkagetarget(C::AbstractMatrix{<:Real})
 end
 
 """
-    cov(LedoitWolfCovariance(), X, shrinkage; dims::Int=1)
+    cov(LedoitWolfCovariance(), X::AbstractMatrix, shrinkage; dims::Int=1)
 
-Calculates shrunk covariance matrix for centered data `X` with shrinkage
+Calculates shrunk covariance matrix for data in `X` with shrinkage
 parameter `shrinkage` and Ledoit-Wolf shrinkage target.
 
 # Arguments
@@ -44,10 +44,10 @@ function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}, shrinkage::Number; di
 end
 
 """
-    cov(::LedoitWolfCovariance, X::DenseMatrix; dims::Int=1)
+    cov(::LedoitWolfCovariance, X::AbstractMatrix; dims::Int=1)
 
-Calculates shrunk covariance matrix for centered data `X` with
-Ledoit-Wolf optimal shrinkage.
+Calculates shrunk covariance matrix for data in `X` with Ledoit-Wolf
+optimal shrinkage.
 
 # Arguments
 - `dims::Int`: the dimension along which the variables are organized.
@@ -66,6 +66,7 @@ function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<
     else
         throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
     end
+    Xint = Xint .- mean(Xint; dims=2)
     C = cov(Xint; dims=2)
     Tnum = size(Xint, 2)
     N = size(Xint, 1)
@@ -87,7 +88,7 @@ function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<
     γhat = sum((F - C).^2)
     κhat = (πhat - ρhat)/γhat
     if abs(γhat) < 1e-16
-        #division by almost zero, co shrinkage doesn't really matter
+        # division by almost zero, so shrinkage doesn't really matter
         δstar = 0.0
     else
         δstar = clamp(κhat/Tnum, 0.0, 1.0)

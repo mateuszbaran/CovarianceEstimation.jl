@@ -17,13 +17,22 @@ function testTransposition(ce::CovarianceEstimator)
     # @test_throws ArgumentError cov(ce, X, dims=3)
 end
 
-function testUncorrelated(ce::CovarianceEstimator; corrected = false)
+function testUncorrelated(ce::CovarianceEstimator)
     X2s = [[1 0; 0 1; -1 0; 0 -1],
-           [2 0; 0 2; -1 0; 0 -1]]
+           [1 0; 0 1; 0 -1; -1 0]]
 
     for X2 ∈ X2s
-        @test cov(ce, X2) ≈ cov(X2, corrected = corrected)
+        @test isdiag(cov(ce, X2))
     end
+end
+
+function testTranslation(ce::CovarianceEstimator)
+    C1 = cov(ce, X)
+    C2 = cov(ce, X .+ randn(1, 8))
+    @test C1 ≈ C2
+    C1t = cov(ce, X')
+    C2t = cov(ce, X' .+ randn(1, 3))
+    @test C1t ≈ C2t
 end
 
 @testset "Simple covariance" begin
@@ -33,7 +42,8 @@ end
     @test cov(sc, X[1,:], X[2,:]) ≈ cov(X[1,:], X[2,:]; corrected = false)
     @test cov(sc, X[1,:]) ≈ cov(X[1,:]; corrected = false)
     testTransposition(sc)
-    testUncorrelated(sc; corrected = false)
+    testUncorrelated(sc)
+    testTranslation(sc)
 end
 
 @testset "Corrected covariance" begin
@@ -43,7 +53,8 @@ end
     @test cov(sc, X[1,:], X[2,:]) ≈ cov(X[1,:], X[2,:]; corrected = true)
     @test cov(sc, X[1,:]) ≈ cov(X[1,:]; corrected = true)
     testTransposition(sc)
-    testUncorrelated(sc; corrected = true)
+    testUncorrelated(sc)
+    testTranslation(sc)
 end
 
 @testset "Ledoit-Wolf covariance shrinkage" begin
@@ -66,7 +77,8 @@ end
     @test cov(lwc, Z, δstar; dims=2) ≈ shrunkcov
 
     testTransposition(lwc)
-    testUncorrelated(lwc; corrected = true)
+    testUncorrelated(lwc)
+    testTranslation(lwc)
 end
 
 @testset "Chen covariance shrinkage" begin
@@ -80,8 +92,8 @@ end
     @test cov(rblwc, Z, ρhatZrblw; dims=2) ≈ shrunkcov
     @test cov(rblwc, Z; dims=2) ≈ shrunkcov
     testTransposition(rblwc)
-    # broken
-    # testUncorrelated(rblwc; corrected = true)
+    testUncorrelated(rblwc)
+    testTranslation(rblwc)
 
     ρhatZoas = 1
     shrunkcov = (1-ρhatZoas)*C + ρhatZoas*F
@@ -89,6 +101,6 @@ end
     @test cov(oasc, Z, ρhatZoas; dims=2) ≈ shrunkcov
     @test cov(oasc, Z; dims=2) ≈ shrunkcov
     testTransposition(oasc)
-    # broken
-    # testUncorrelated(oasc; corrected = true)
+    testUncorrelated(oasc)
+    testTranslation(oasc)
 end
