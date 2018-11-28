@@ -1,0 +1,8 @@
+language: julia
+julia:
+  - 1.0
+os:
+  - linux
+  - osx
+notifications:
+  email: false
