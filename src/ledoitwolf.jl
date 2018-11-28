@@ -37,7 +37,7 @@ function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}, shrinkage::Number; di
         throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
     end
 
-    (shrinkage ≥ 0 && shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
+    (0 ≤ shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
     C = cov(Xint; dims=2)
     F, r̄ = ledoitwolfshrinkagetarget(C)
     (1-shrinkage)*C + shrinkage*F
@@ -76,9 +76,11 @@ function cov(::LedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<
     ϑhatjj = mean([(Xint[i,t]^2 - C[j,j])*(Xint[i,t]*Xint[j,t] - C[i,j]) for i in 1:N, j in 1:N] for t in 1:Tnum)
     ρhatpart2 = zero(T)
     #TODO: inbounds/simd?
+    sdC = sqrt.(C[i,i] for i ∈ 1:N)
     for i in 1:N
         for j in 1:N
-            ρhatpart2 += sqrt(C[j,j]/C[i,i])*ϑhatii[i,j] + sqrt(C[i,i]/C[j,j])*ϑhatjj[i,j]
+            αij = sdC[j]/sdC[i]
+            ρhatpart2 += ϑhatii[i,j]*αij + ϑhatjj[i,j]/αij
         end
     end
     ρhat = sum(diag(πmatrix)) + (r̄/2)*ρhatpart2
