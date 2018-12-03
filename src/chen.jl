@@ -20,20 +20,6 @@ function chenshrinkagetarget(X::AbstractMatrix{<:Real})
     (tr(C)/p) * one(C)
 end
 
-function cov(rblw::RaoBlackwellLedoitWolfCovariance{<:Real}, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
-    (0 ≤ rblw.shrinkage ≤ 1) || throw(ArgumentError("Shinkage must be in [0,1] (given shrinkage: $shrinkage)"))
-    if dims == 1
-        Xint = transpose(X)
-    elseif dims == 2
-        Xint = X
-    else
-        throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
-    end
-    C = cov(Xint; dims=2)
-    F = chenshrinkagetarget(Xint)
-    (1-rblw.shrinkage)*C + rblw.shrinkage*F
-end
-
 """
     cov(rblw::RaoBlackwellLedoitWolfCovariance, X::AbstractMatrix; dims::Int=1)
 
@@ -50,7 +36,7 @@ Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero,
 “Shrinkage Algorithms for MMSE Covariance Estimation,”
 IEEE Transactions on Signal Processing, vol. 58, no. 10, pp. 5016–5029, Oct. 2010.
 """
-function cov(::RaoBlackwellLedoitWolfCovariance{Symbol}, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
+function cov(rblw::RaoBlackwellLedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     if dims == 1
         Xint = transpose(X)
     elseif dims == 2
@@ -60,13 +46,19 @@ function cov(::RaoBlackwellLedoitWolfCovariance{Symbol}, X::AbstractMatrix{T}; d
     end
 
     C = cov(Xint; dims=2)
-    n, p = size(Xint)
-    trS2 = dot(C, transpose(C)) # trace of C*C
-    tr2S = tr(C)^2
-    ρhat = ((n-2)/n * trS2 + tr2S)/((n+2) * (trS2 - tr2S/p))
-    ρhat = min(ρhat, 1)
+    shrinkage =
+    if rblw.shrinkage isa Symbol
+        n, p = size(Xint)
+        trS2 = dot(C, transpose(C)) # trace of C*C
+        tr2S = tr(C)^2
+        ρhat = ((n-2)/n * trS2 + tr2S)/((n+2) * (trS2 - tr2S/p))
+        min(ρhat, 1) # assigned to variable `shrinkage`
+    else
+        rblw.shrinkage # assigned to variable `shrinkage`
+    end
+
     F = chenshrinkagetarget(Xint)
-    (1-ρhat)*C + ρhat*F
+    (1-shrinkage)*C + shrinkage*F
 end
 
 """
@@ -81,10 +73,6 @@ struct OracleApproximatingShrinkageCovariance{S<:Union{Symbol, Real}} <: Covaria
 end
 
 OracleApproximatingShrinkageCovariance() = OracleApproximatingShrinkageCovariance{Symbol}(:auto)
-
-function cov(oas::OracleApproximatingShrinkageCovariance{<:Real}, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
-    cov(RaoBlackwellLedoitWolfCovariance(oas.shrinkage), X; dims = dims)
-end
 
 """
     cov(oas::OracleApproximatingShrinkageCovariance, X::AbstractMatrix; dims::Int=1)
@@ -102,7 +90,7 @@ Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero,
 “Shrinkage Algorithms for MMSE Covariance Estimation,”
 IEEE Transactions on Signal Processing, vol. 58, no. 10, pp. 5016–5029, Oct. 2010.
 """
-function cov(::OracleApproximatingShrinkageCovariance{Symbol}, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
+function cov(oas::OracleApproximatingShrinkageCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     if dims == 1
         Xint = transpose(X)
     elseif dims == 2
@@ -112,11 +100,16 @@ function cov(::OracleApproximatingShrinkageCovariance{Symbol}, X::AbstractMatrix
     end
 
     C = cov(Xint; dims=2)
-    n, p = size(Xint)
-    trS2 = dot(C, transpose(C)) # trace of C*C
-    tr2S = tr(C)^2
-    ρhat = (-1.0/p * trS2 + tr2S)/((n-1.0)/p * (trS2 - tr2S/p))
-    ρhat = min(ρhat, 1)
+    shrinkage =
+    if oas.shrinkage isa Symbol
+        n, p = size(Xint)
+        trS2 = dot(C, transpose(C)) # trace of C*C
+        tr2S = tr(C)^2
+        ρhat = (-1.0/p * trS2 + tr2S)/((n-1.0)/p * (trS2 - tr2S/p))
+        min(ρhat, 1) # assigned to variable `shrinkage`
+    else
+        oas.shrinkage # assigned to variable `shrinkage`
+    end
     F = chenshrinkagetarget(Xint)
-    (1-ρhat)*C + ρhat*F
+    (1-shrinkage)*C + shrinkage*F
 end
