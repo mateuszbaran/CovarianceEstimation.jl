@@ -11,9 +11,9 @@ Basic type for all covariance estimators.
 abstract type CovarianceEstimator end
 
 export cov
-export CovarianceEstimator, SimpleCovariance, CorrectedCovariance,
-    LedoitWolfCovariance, RaoBlackwellLedoitWolfCovariance,
-    OracleApproximatingShrinkageCovariance
+export CovarianceEstimator, Simple, Corrected,
+    LedoitWolf, RaoBlackwellLedoitWolf,
+    OracleApproximatingShrinkage
 
 include("basicmethods.jl")
 include("ledoitwolf.jl")

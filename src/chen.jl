@@ -2,17 +2,17 @@
 using LinearAlgebra
 
 """
-    RaoBlackwellLedoitWolfCovariance(shrinkage)
+    RaoBlackwellLedoitWolf(shrinkage)
 
 Rao-Blackwell theorem Ledoit-Wolf covariance estimator. The parameter
 `shrinkage` is either equal to `:auto` and optimal shrinkage is calculated,
 or it is a number between 0 and 1.
 """
-struct RaoBlackwellLedoitWolfCovariance{S<:Union{Symbol, Real}} <: CovarianceEstimator
+struct RaoBlackwellLedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     shrinkage::S
 end
 
-RaoBlackwellLedoitWolfCovariance() = RaoBlackwellLedoitWolfCovariance{Symbol}(:auto)
+RaoBlackwellLedoitWolf() = RaoBlackwellLedoitWolf{Symbol}(:auto)
 
 function chenshrinkagetarget(X::AbstractMatrix{<:Real})
     p = size(X, 2)
@@ -21,7 +21,7 @@ function chenshrinkagetarget(X::AbstractMatrix{<:Real})
 end
 
 """
-    cov(rblw::RaoBlackwellLedoitWolfCovariance, X::AbstractMatrix; dims::Int=1)
+    cov(rblw::RaoBlackwellLedoitWolf, X::AbstractMatrix; dims::Int=1)
 
 Calculates shrunk covariance matrix for centered data `X` with optimal shrinkage
 for Rao-Blackwell theorem Ledoit-Wolf shrinkage target.
@@ -36,7 +36,7 @@ Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero,
 “Shrinkage Algorithms for MMSE Covariance Estimation,”
 IEEE Transactions on Signal Processing, vol. 58, no. 10, pp. 5016–5029, Oct. 2010.
 """
-function cov(rblw::RaoBlackwellLedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
+function cov(rblw::RaoBlackwellLedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     if dims == 1
         Xint = transpose(X)
     elseif dims == 2
@@ -62,20 +62,20 @@ function cov(rblw::RaoBlackwellLedoitWolfCovariance, X::AbstractMatrix{T}; dims:
 end
 
 """
-    OracleApproximatingShrinkageCovariance(shrinkage)
+    OracleApproximatingShrinkage(shrinkage)
 
 Oracle approximating shrinkage covariance estimator. The parameter
 `shrinkage` is either equal to `:auto` and optimal shrinkage is calculated,
 or it is a number between 0 and 1.
 """
-struct OracleApproximatingShrinkageCovariance{S<:Union{Symbol, Real}} <: CovarianceEstimator
+struct OracleApproximatingShrinkage{S<:Union{Symbol, Real}} <: CovarianceEstimator
     shrinkage::S
 end
 
-OracleApproximatingShrinkageCovariance() = OracleApproximatingShrinkageCovariance{Symbol}(:auto)
+OracleApproximatingShrinkage() = OracleApproximatingShrinkage{Symbol}(:auto)
 
 """
-    cov(oas::OracleApproximatingShrinkageCovariance, X::AbstractMatrix; dims::Int=1)
+    cov(oas::OracleApproximatingShrinkage, X::AbstractMatrix; dims::Int=1)
 
 Calculates shrunk covariance matrix for centered data `X` with optimal
 oracle approximating shrinkage estimator.
@@ -90,7 +90,7 @@ Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero,
 “Shrinkage Algorithms for MMSE Covariance Estimation,”
 IEEE Transactions on Signal Processing, vol. 58, no. 10, pp. 5016–5029, Oct. 2010.
 """
-function cov(oas::OracleApproximatingShrinkageCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
+function cov(oas::OracleApproximatingShrinkage, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     if dims == 1
         Xint = transpose(X)
     elseif dims == 2

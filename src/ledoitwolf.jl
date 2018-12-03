@@ -7,11 +7,11 @@ Ledoit-Wolf covariance estimator. The parameter `shrinkage` is either equal
 to `:auto` and optimal shrinkage is calculated, or it is a number between
 0 and 1.
 """
-struct LedoitWolfCovariance{S<:Union{Symbol, Real}} <: CovarianceEstimator
+struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     shrinkage::S
 end
 
-LedoitWolfCovariance() = LedoitWolfCovariance{Symbol}(:auto)
+LedoitWolf() = LedoitWolf{Symbol}(:auto)
 
 function ledoitwolfshrinkagetarget(C::AbstractMatrix{<:Real})
     N = size(C, 1)
@@ -24,7 +24,7 @@ function ledoitwolfshrinkagetarget(C::AbstractMatrix{<:Real})
 end
 
 """
-    cov(::LedoitWolfCovariance, X::AbstractMatrix; dims::Int=1)
+    cov(::LedoitWolf, X::AbstractMatrix; dims::Int=1)
 
 Calculates shrunk covariance matrix for data in `X` with Ledoit-Wolf
 optimal shrinkage.
@@ -38,7 +38,7 @@ Implements shrinkage target and optimal shrinkage according to
 O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
-function cov(lw::LedoitWolfCovariance, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
+function cov(lw::LedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     if dims == 1
         Xint = transpose(X)
     elseif dims == 2

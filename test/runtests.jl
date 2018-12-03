@@ -36,7 +36,7 @@ function testTranslation(ce::CovarianceEstimator)
 end
 
 @testset "Simple covariance" begin
-    sc = SimpleCovariance()
+    sc = Simple()
     @test cov(sc, X; dims=1) ≈ cov(X; dims=1, corrected = false)
     @test cov(sc, X; dims=2) ≈ cov(X; dims=2, corrected = false)
     @test cov(sc, X[1,:], X[2,:]) ≈ cov(X[1,:], X[2,:]; corrected = false)
@@ -47,7 +47,7 @@ end
 end
 
 @testset "Corrected covariance" begin
-    sc = CorrectedCovariance()
+    sc = Corrected()
     @test cov(sc, X; dims=1) ≈ cov(X; dims=1, corrected = true)
     @test cov(sc, X; dims=2) ≈ cov(X; dims=2, corrected = true)
     @test cov(sc, X[1,:], X[2,:]) ≈ cov(X[1,:], X[2,:]; corrected = true)
@@ -58,7 +58,7 @@ end
 end
 
 @testset "Ledoit-Wolf covariance shrinkage" begin
-    lwc = LedoitWolfCovariance()
+    lwc = LedoitWolf()
     Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
     C = cov(Z; dims=2)
     F, r̄ = CovarianceEstimation.ledoitwolfshrinkagetarget(C)
@@ -74,7 +74,7 @@ end
     δstar = clamp(κhat/Tnum, 0.0, 1.0)
     shrunkcov = (1-δstar)*C + δstar*F
     @test cov(lwc, Z; dims=2) ≈ shrunkcov
-    lwcstar = LedoitWolfCovariance(δstar)
+    lwcstar = LedoitWolf(δstar)
     @test cov(lwcstar, Z; dims=2) ≈ shrunkcov
 
     testTransposition(lwc)
@@ -91,8 +91,8 @@ end
     @test F ≈ Matrix(3.0I, 3, 3)
     ρhatZrblw = 99/135
     shrunkcov = (1-ρhatZrblw)*C + ρhatZrblw*F
-    rblwc = RaoBlackwellLedoitWolfCovariance()
-    rblwcOptim = RaoBlackwellLedoitWolfCovariance(ρhatZrblw)
+    rblwc = RaoBlackwellLedoitWolf()
+    rblwcOptim = RaoBlackwellLedoitWolf(ρhatZrblw)
     @test cov(rblwcOptim, Z; dims=2) ≈ shrunkcov
     @test cov(rblwc, Z; dims=2) ≈ shrunkcov
     testTransposition(rblwc)
@@ -103,8 +103,8 @@ end
 
     ρhatZoas = 1
     shrunkcov = (1-ρhatZoas)*C + ρhatZoas*F
-    oasc = OracleApproximatingShrinkageCovariance()
-    oascOptim = OracleApproximatingShrinkageCovariance(ρhatZoas)
+    oasc = OracleApproximatingShrinkage()
+    oascOptim = OracleApproximatingShrinkage(ρhatZoas)
     @test cov(oascOptim, Z; dims=2) ≈ shrunkcov
     @test cov(oasc, Z; dims=2) ≈ shrunkcov
     testTransposition(oasc)
