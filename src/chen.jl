@@ -14,9 +14,9 @@ end
 
 RaoBlackwellLedoitWolf() = RaoBlackwellLedoitWolf{Symbol}(:auto)
 
-function chenshrinkagetarget(X::AbstractMatrix{<:Real})
-    p = size(X, 2)
-    C = cov(X; dims=2)
+function chenshrinkagetarget(X::AbstractMatrix{<:Real}; dims=2)
+    p = size(X, dims)
+    C = cov(X; dims=dims)
     (tr(C)/p) * one(C)
 end
 
@@ -102,10 +102,10 @@ function cov(oas::OracleApproximatingShrinkage, X::AbstractMatrix{T}; dims::Int=
     C = cov(Xint; dims=2)
     shrinkage =
     if oas.shrinkage isa Symbol
-        n, p = size(Xint)
+        p, n = size(Xint)
         trS2 = dot(C, transpose(C)) # trace of C*C
         tr2S = tr(C)^2
-        ρhat = (-1.0/p * trS2 + tr2S)/((n-1.0)/p * (trS2 - tr2S/p))
+        ρhat = ((1-2.0/p) * trS2 + tr2S)/((n+1-2.0/p) * (trS2 - tr2S/p))
         min(ρhat, 1) # assigned to variable `shrinkage`
     else
         oas.shrinkage # assigned to variable `shrinkage`

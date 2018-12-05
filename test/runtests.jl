@@ -101,12 +101,14 @@ end
 
     testTransposition(rblwcOptim)
 
-    ρhatZoas = 1
-    shrunkcov = (1-ρhatZoas)*C + ρhatZoas*F
+    ρhatZoas = 0.6
+    Cdim1 = cov(Z; dims=1)
+    Fdim1 = CovarianceEstimation.chenshrinkagetarget(Z, dims=1)
+    shrunkcov = (1-ρhatZoas)*Cdim1 + ρhatZoas*Fdim1
     oasc = OracleApproximatingShrinkage()
     oascOptim = OracleApproximatingShrinkage(ρhatZoas)
-    @test cov(oascOptim, Z; dims=2) ≈ shrunkcov
-    @test cov(oasc, Z; dims=2) ≈ shrunkcov
+    @test cov(oascOptim, Z; dims=1) ≈ shrunkcov
+    @test cov(oasc, Z; dims=1) ≈ shrunkcov
     testTransposition(oasc)
     testUncorrelated(oasc)
     testTranslation(oasc)
