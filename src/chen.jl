@@ -5,19 +5,32 @@ using LinearAlgebra
     RaoBlackwellLedoitWolf(shrinkage)
 
 Rao-Blackwell theorem Ledoit-Wolf covariance estimator. The parameter
-`shrinkage` is either equal to `:auto` and optimal shrinkage is calculated,
+`shrinkage` is either equal to `:optimal` and optimal shrinkage is calculated,
 or it is a number between 0 and 1.
 """
 struct RaoBlackwellLedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     shrinkage::S
+    function RaoBlackwellLedoitWolf(s::T) where T<:Real
+        @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
+        new{T}(s)
+    end
+    function RaoBlackwellLedoitWolf(s::Symbol=:optimal)
+        @assert s ∈ [:optimal] "Shrinkage setting not supported"
+        new{Symbol}(s)
+    end
 end
 
-RaoBlackwellLedoitWolf() = RaoBlackwellLedoitWolf{Symbol}(:auto)
+function chenoptimalshrinkage(n, p, C)
+    trS2 = dot(C, transpose(C)) # trace of C*C
+    tr2S = tr(C)^2
+    ρhat = ((n-2)/n * trS2 + tr2S)/((n+2) * (trS2 - tr2S/p))
+    return min(ρhat, 1)
+end
 
-function chenshrinkagetarget(X::AbstractMatrix{<:Real}; dims=2)
+function chenshrinkagetarget(X; dims=2)
     p = size(X, dims)
     C = cov(X; dims=dims)
-    (tr(C)/p) * one(C)
+    return (tr(C)/p) * one(C)
 end
 
 """
@@ -46,19 +59,11 @@ function cov(rblw::RaoBlackwellLedoitWolf, X::AbstractMatrix{T}; dims::Int=1) wh
     end
 
     C = cov(Xint; dims=2)
-    shrinkage =
-    if rblw.shrinkage isa Symbol
-        n, p = size(Xint)
-        trS2 = dot(C, transpose(C)) # trace of C*C
-        tr2S = tr(C)^2
-        ρhat = ((n-2)/n * trS2 + tr2S)/((n+2) * (trS2 - tr2S/p))
-        min(ρhat, 1) # assigned to variable `shrinkage`
-    else
-        rblw.shrinkage # assigned to variable `shrinkage`
-    end
-
+    n, p = size(Xint)
+    shrinkage = rblw.shrinkage
+    (shrinkage == :optimal) && (shrinkage = chenoptimalshrinkage(n, p, C))
     F = chenshrinkagetarget(Xint)
-    (1-shrinkage)*C + shrinkage*F
+    return (1.0 - shrinkage) * C + shrinkage * F
 end
 
 """

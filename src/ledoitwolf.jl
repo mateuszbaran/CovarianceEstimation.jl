@@ -4,23 +4,57 @@ using LinearAlgebra
     LedoitWolfCovariance(shrinkage)
 
 Ledoit-Wolf covariance estimator. The parameter `shrinkage` is either equal
-to `:auto` and optimal shrinkage is calculated, or it is a number between
+to `:optimal` and optimal shrinkage is calculated, or it is a number between
 0 and 1.
 """
 struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     shrinkage::S
+    function LedoitWolf(s::T) where T<:Real
+        @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
+        new{T}(s)
+    end
+    function LedoitWolf(s::Symbol=:optimal)
+        @assert s ∈ [:optimal] "Shrinkage setting not supported"
+        new{Symbol}(s)
+    end
 end
 
-LedoitWolf() = LedoitWolf{Symbol}(:auto)
+function ledoitwolfoptimalshrinkage(X, C, F, r̄)
+    # steps leading to equation 5 of http://www.ledoit.net/honey.pdf in
+    # appendix B. (notations follow the paper)
+    N, T  = size(X)
+    tmat  = [(X[:,t] * X[:,t]' - C) for t ∈ 1:T]
+    π̂mat  = sum(tmat[t].^2 for t ∈ 1:T) / T
+    π̂     = sum(π̂mat)
+    tdiag = [Diagonal(X[:,t].^2 - diag(C)) for t ∈ 1:T]
+    ϑ̂ᵢᵢ   = sum(tdiag[t] * tmat[t] for t ∈ 1:T) / T # row scaling
+    ϑ̂ⱼⱼ   = sum(tmat[t] * tdiag[t] for t ∈ 1:T) / T # col scaling
+    ρ̂₂    = zero(eltype(X))
+    # TODO: inbounds/simd?
+    sdC = sqrt.(C[i,i] for i ∈ 1:N)
+    for i ∈ 1:N
+        for j ∈ 1:N
+            (j == i) && continue
+            αᵢⱼ = sdC[j]/sdC[i]
+            ρ̂₂ += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
+        end
+    end
+    ρ̂ = sum(diag(π̂mat)) + (r̄/2)*ρ̂₂
+    γ̂ = sum((F - C).^2)
+    # if γ̂ is very small it may lead to NaNs or infinities
+    (γ̂ ≤ eps()) && return ifelse(π̂ ≤ ρ̂, 0.0, 1.0)
+    κ̂ = (π̂ - ρ̂)/γ̂
+    return clamp(κ̂/T, 0.0, 1.0)
+end
 
-function ledoitwolfshrinkagetarget(C::AbstractMatrix{<:Real})
+function ledoitwolfshrinkagetarget(C)
     N = size(C, 1)
     Cs = [sqrt(C[i,i]*C[j,j]) for i in 1:N, j in 1:N]
     r = C ./ Cs
     r̄ = (sum(r)-N)/(N*(N-1))
     Finterm = Cs .* r̄
     F = Finterm + Diagonal(diag(Cs) .- diag(Finterm))
-    F, r̄
+    return F, r̄
 end
 
 """
@@ -49,35 +83,7 @@ function cov(lw::LedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     Xint = Xint .- mean(Xint; dims=2)
     C = cov(Xint; dims=2)
     F, r̄ = ledoitwolfshrinkagetarget(C)
-    shrinkage =
-    if lw.shrinkage isa Symbol
-        Tnum = size(Xint, 2)
-        N = size(Xint, 1)
-        πmatrix = mean([(Xint[i,t]*Xint[j,t]-C[i,j])^2 for i in 1:N, j in 1:N] for t in 1:Tnum)
-        πhat = sum(πmatrix)
-        ϑhatii = mean([(Xint[i,t]^2 - C[i,i])*(Xint[i,t]*Xint[j,t] - C[i,j]) for i in 1:N, j in 1:N] for t in 1:Tnum)
-        ϑhatjj = mean([(Xint[i,t]^2 - C[j,j])*(Xint[i,t]*Xint[j,t] - C[i,j]) for i in 1:N, j in 1:N] for t in 1:Tnum)
-        ρhatpart2 = zero(T)
-        # TODO: inbounds/simd?
-        sdC = sqrt.(C[i,i] for i ∈ 1:N)
-        for i in 1:N
-            for j in 1:N
-                αij = sdC[j]/sdC[i]
-                ρhatpart2 += ϑhatii[i,j]*αij + ϑhatjj[i,j]/αij
-            end
-        end
-        ρhat = sum(diag(πmatrix)) + (r̄/2)*ρhatpart2
-        γhat = sum((F - C).^2)
-        κhat = (πhat - ρhat)/γhat
-        if abs(γhat) < 1e-16
-            # division by almost zero, so shrinkage doesn't really matter
-            δstar = 0.0
-        else
-            δstar = clamp(κhat/Tnum, 0.0, 1.0)
-        end
-        δstar # assigned to variable `shrinkage`
-    else
-        lw.shrinkage # assigned to variable `shrinkage`
-    end
-    (1-shrinkage)*C + shrinkage*F
+    shrinkage = lw.shrinkage
+    (shrinkage == :optimal) && (shrinkage = ledoitwolfoptimalshrinkage(Xint, C, F, r̄))
+    return (1.0 - shrinkage) * C + shrinkage * F
 end

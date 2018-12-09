@@ -35,7 +35,7 @@ function testTranslation(ce::CovarianceEstimator)
     @test C1t ≈ C2t
 end
 
-@testset "Simple covariance" begin
+@testset "Simple covariance                  " begin
     sc = Simple()
     @test cov(sc, X; dims=1) ≈ cov(X; dims=1, corrected = false)
     @test cov(sc, X; dims=2) ≈ cov(X; dims=2, corrected = false)
@@ -46,7 +46,7 @@ end
     testTranslation(sc)
 end
 
-@testset "Corrected covariance" begin
+@testset "Corrected covariance               " begin
     sc = Corrected()
     @test cov(sc, X; dims=1) ≈ cov(X; dims=1, corrected = true)
     @test cov(sc, X; dims=2) ≈ cov(X; dims=2, corrected = true)
@@ -57,7 +57,7 @@ end
     testTranslation(sc)
 end
 
-@testset "Ledoit-Wolf covariance shrinkage" begin
+@testset "Ledoit-Wolf covariance shrinkage   " begin
     lwc = LedoitWolf()
     Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
     C = cov(Z; dims=2)
@@ -84,7 +84,7 @@ end
     testTransposition(lwcstar)
 end
 
-@testset "Chen covariance shrinkage" begin
+@testset "Chen covariance shrinkage          " begin
     Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
     C = cov(Z; dims=2)
     F = CovarianceEstimation.chenshrinkagetarget(Z)
