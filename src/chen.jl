@@ -20,14 +20,14 @@ struct RaoBlackwellLedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     end
 end
 
-function chenoptimalshrinkage(n, p, C)
+function rblw_optimalshrinkage(n, p, C)
     trS2 = dot(C, transpose(C)) # trace of C*C
     tr2S = tr(C)^2
     ρhat = ((n-2)/n * trS2 + tr2S)/((n+2) * (trS2 - tr2S/p))
     return min(ρhat, 1)
 end
 
-function chenshrinkagetarget(X; dims=2)
+function rblw_shrinkagetarget(X; dims=2)
     p = size(X, dims)
     C = cov(X; dims=dims)
     return (tr(C)/p) * one(C)
@@ -61,8 +61,8 @@ function cov(rblw::RaoBlackwellLedoitWolf, X::AbstractMatrix{T}; dims::Int=1) wh
     C = cov(Xint; dims=2)
     n, p = size(Xint)
     shrinkage = rblw.shrinkage
-    (shrinkage == :optimal) && (shrinkage = chenoptimalshrinkage(n, p, C))
-    F = chenshrinkagetarget(Xint)
+    (shrinkage == :optimal) && (shrinkage = rblw_optimalshrinkage(n, p, C))
+    F = rblw_shrinkagetarget(Xint)
     return (1.0 - shrinkage) * C + shrinkage * F
 end
 
@@ -70,14 +70,27 @@ end
     OracleApproximatingShrinkage(shrinkage)
 
 Oracle approximating shrinkage covariance estimator. The parameter
-`shrinkage` is either equal to `:auto` and optimal shrinkage is calculated,
+`shrinkage` is either equal to `:optimal` and optimal shrinkage is calculated,
 or it is a number between 0 and 1.
 """
 struct OracleApproximatingShrinkage{S<:Union{Symbol, Real}} <: CovarianceEstimator
     shrinkage::S
+    function OracleApproximatingShrinkage(s::T) where T<:Real
+        @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
+        new{T}(s)
+    end
+    function OracleApproximatingShrinkage(s::Symbol=:optimal)
+        @assert s ∈ [:optimal] "Shrinkage setting not supported"
+        new{Symbol}(s)
+    end
 end
 
-OracleApproximatingShrinkage() = OracleApproximatingShrinkage{Symbol}(:auto)
+function oas_optimalshrinkage(n, p, C)
+    trS2 = dot(C, transpose(C)) # trace of C*C
+    tr2S = tr(C)^2
+    ρhat = ((1.0-2.0/p) * trS2 + tr2S)/((n+1.0-2.0/p) * (trS2 - tr2S/p))
+    return min(ρhat, 1) # assigned to variable `shrinkage`
+end
 
 """
     cov(oas::OracleApproximatingShrinkage, X::AbstractMatrix; dims::Int=1)
@@ -105,16 +118,9 @@ function cov(oas::OracleApproximatingShrinkage, X::AbstractMatrix{T}; dims::Int=
     end
 
     C = cov(Xint; dims=2)
-    shrinkage =
-    if oas.shrinkage isa Symbol
-        p, n = size(Xint)
-        trS2 = dot(C, transpose(C)) # trace of C*C
-        tr2S = tr(C)^2
-        ρhat = ((1-2.0/p) * trS2 + tr2S)/((n+1-2.0/p) * (trS2 - tr2S/p))
-        min(ρhat, 1) # assigned to variable `shrinkage`
-    else
-        oas.shrinkage # assigned to variable `shrinkage`
-    end
-    F = chenshrinkagetarget(Xint)
-    (1-shrinkage)*C + shrinkage*F
+    n, p = size(Xint)
+    shrinkage = oas.shrinkage
+    (shrinkage == :optimal) && (shrinkage = oas_optimalshrinkage(n, p, C))
+    F = rblw_shrinkagetarget(Xint)
+    return (1.0 - shrinkage) * C + shrinkage * F
 end

@@ -61,7 +61,7 @@ end
     lwc = LedoitWolf()
     Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
     C = cov(Z; dims=2)
-    F, r̄ = CovarianceEstimation.ledoitwolfshrinkagetarget(C)
+    F, r̄ = CovarianceEstimation.lw_shrinkagetarget(C)
     @test F ≈ Matrix(3.0I, 3, 3)
     @test r̄ ≈ 0.0
     (N, Tnum) = size(Z)
@@ -87,7 +87,7 @@ end
 @testset "Chen covariance shrinkage          " begin
     Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
     C = cov(Z; dims=2)
-    F = CovarianceEstimation.chenshrinkagetarget(Z)
+    F = CovarianceEstimation.rblw_shrinkagetarget(Z)
     @test F ≈ Matrix(3.0I, 3, 3)
     ρhatZrblw = 99/135
     shrunkcov = (1-ρhatZrblw)*C + ρhatZrblw*F
@@ -103,7 +103,7 @@ end
 
     ρhatZoas = 0.6
     Cdim1 = cov(Z; dims=1)
-    Fdim1 = CovarianceEstimation.chenshrinkagetarget(Z, dims=1)
+    Fdim1 = CovarianceEstimation.rblw_shrinkagetarget(Z, dims=1)
     shrunkcov = (1-ρhatZoas)*Cdim1 + ρhatZoas*Fdim1
     oasc = OracleApproximatingShrinkage()
     oascOptim = OracleApproximatingShrinkage(ρhatZoas)

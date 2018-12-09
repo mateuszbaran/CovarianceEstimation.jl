@@ -19,7 +19,7 @@ struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     end
 end
 
-function ledoitwolfoptimalshrinkage(X, C, F, r̄)
+function lw_optimalshrinkage(X, C, F, r̄)
     # steps leading to equation 5 of http://www.ledoit.net/honey.pdf in
     # appendix B. (notations follow the paper)
     N, T  = size(X)
@@ -47,7 +47,7 @@ function ledoitwolfoptimalshrinkage(X, C, F, r̄)
     return clamp(κ̂/T, 0.0, 1.0)
 end
 
-function ledoitwolfshrinkagetarget(C)
+function lw_shrinkagetarget(C)
     N = size(C, 1)
     Cs = [sqrt(C[i,i]*C[j,j]) for i in 1:N, j in 1:N]
     r = C ./ Cs
@@ -82,8 +82,8 @@ function cov(lw::LedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     end
     Xint = Xint .- mean(Xint; dims=2)
     C = cov(Xint; dims=2)
-    F, r̄ = ledoitwolfshrinkagetarget(C)
+    F, r̄ = lw_shrinkagetarget(C)
     shrinkage = lw.shrinkage
-    (shrinkage == :optimal) && (shrinkage = ledoitwolfoptimalshrinkage(Xint, C, F, r̄))
+    (shrinkage == :optimal) && (shrinkage = lw_optimalshrinkage(Xint, C, F, r̄))
     return (1.0 - shrinkage) * C + shrinkage * F
 end
