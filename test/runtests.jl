@@ -4,6 +4,8 @@ using LinearAlgebra
 using Test
 using Random
 
+include("ledoitwolf.jl")
+
 Random.seed!(1234)
 
 X = randn(3, 8)

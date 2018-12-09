@@ -19,7 +19,7 @@ struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     end
 end
 
-function ledoitwolfoptimalshrinkage(X, C, F, r̄)
+function ledoitwolfoptimalshrinkage(X, C, sdC, F, r̄)
     # steps leading to equation 5 of http://www.ledoit.net/honey.pdf in
     # appendix B. (notations follow the paper)
     N, T  = size(X)
@@ -31,13 +31,10 @@ function ledoitwolfoptimalshrinkage(X, C, F, r̄)
     ϑ̂ⱼⱼ   = sum(tmat[t] * tdiag[t] for t ∈ 1:T) / T # col scaling
     ρ̂₂    = zero(eltype(X))
     # TODO: inbounds/simd?
-    sdC = sqrt.(C[i,i] for i ∈ 1:N)
-    for i ∈ 1:N
-        for j ∈ 1:N
-            (j == i) && continue
-            αᵢⱼ = sdC[j]/sdC[i]
-            ρ̂₂ += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
-        end
+    for i ∈ 1:N, j ∈ 1:N
+        (j == i) && continue
+        αᵢⱼ = sdC[j]/sdC[i]
+        ρ̂₂ += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
     end
     ρ̂ = sum(diag(π̂mat)) + (r̄/2)*ρ̂₂
     γ̂ = sum((F - C).^2)
@@ -47,12 +44,11 @@ function ledoitwolfoptimalshrinkage(X, C, F, r̄)
     return clamp(κ̂/T, 0.0, 1.0)
 end
 
-function ledoitwolfshrinkagetarget(C)
-    N = size(C, 1)
-    Cs = [sqrt(C[i,i]*C[j,j]) for i in 1:N, j in 1:N]
-    r = C ./ Cs
-    r̄ = (sum(r)-N)/(N*(N-1))
-    Finterm = Cs .* r̄
+function ledoitwolfshrinkagetarget(C, sdC)
+    N  = size(C, 1)
+    Cs = sdC * sdC'
+    r̄ = (sum(C./Cs) - N) / (N * (N - 1))
+    Finterm = r̄ * Cs
     F = Finterm + Diagonal(diag(Cs) .- diag(Finterm))
     return F, r̄
 end
@@ -73,17 +69,20 @@ O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
 function cov(lw::LedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
-    if dims == 1
-        Xint = transpose(X)
-    elseif dims == 2
-        Xint = X
-    else
+    if dims == 2
+        X = transpose(X)
+    elseif dims != 1
         throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
     end
-    Xint = Xint .- mean(Xint; dims=2)
-    C = cov(Xint; dims=2)
-    F, r̄ = ledoitwolfshrinkagetarget(C)
+    n, p = size(X)
+    μ = mean(X, dims=1)
+    for i ∈ 1:n, j ∈ 1:p
+        X[i, j] -= μ[j]
+    end
+    C = cov(Simple(), X; dims=1)
+    sdC = sqrt.(diag(C))
+    F, r̄ = ledoitwolfshrinkagetarget(C, sdC)
     shrinkage = lw.shrinkage
-    (shrinkage == :optimal) && (shrinkage = ledoitwolfoptimalshrinkage(Xint, C, F, r̄))
+    (shrinkage == :optimal) && (shrinkage = ledoitwolfoptimalshrinkage(X, C, sdC, F, r̄))
     return (1.0 - shrinkage) * C + shrinkage * F
 end
