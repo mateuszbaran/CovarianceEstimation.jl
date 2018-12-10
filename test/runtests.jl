@@ -4,6 +4,8 @@ using LinearAlgebra
 using Test
 using Random
 
+const CE = CovarianceEstimation
+
 include("reference_ledoitwolf.jl")
 
 Random.seed!(1234)
@@ -11,6 +13,8 @@ Random.seed!(1234)
 const X = randn(3, 8)
 const Z = [2 -1 2; -1 2 -1; -1 -1 -1]
 const X2s = [[1 0; 0 1; -1 0; 0 -1], [1 0; 0 1; 0 -1; -1 0]]
+
+const test_matrices = [X, Z]
 
 function testTransposition(ce::CovarianceEstimator)
     @test cov(ce, X; dims=1) ≈ cov(ce, transpose(X); dims=2)
@@ -63,47 +67,62 @@ end
     testTransposition(lw)
     testUncorrelated(lw)
     testTranslation(lw)
-    for X̂ ∈ [X, Z]
+    for X̂ ∈ test_matrices
         ref_results = matlab_ledoitwolf_covcor(X̂)
-        C = cov(Simple(), X̂; dims=1)
-        sdC = sqrt.(diag(C))
-        F, r̄ = CovarianceEstimation.lw_shrinkagetarget(C, sdC)
+        # center columns
+        X̂c = X̂
+        n, p = size(X̂c)
+        μ = mean(X̂c, dims=1)
+        @inbounds for i ∈ 1:n, j ∈ 1:p
+            X̂c[i, j] -= μ[j]
+        end
+        # compute the different elements and check they match the reference
+        Ŝ    = cov(Simple(), X̂)
+        V̂    = sqrt.(diag(Ŝ))
+        F, r̄ = CE.lw_shrinkagetarget(Ŝ, V̂, p)
         @test r̄ ≈ ref_results["r̄"]
         @test F ≈ ref_results["F"]
-        shrinkage = CovarianceEstimation.lw_optimalshrinkage(X̂, C, sdC, F, r̄)
+        shrinkage = CE.lw_optimalshrinkage(X̂c, Ŝ, V̂, F, r̄, n, p)
         @test shrinkage ≈ ref_results["shrinkage"]
         @test cov(lw, X̂) ≈ ref_results["lwcov"]
     end
 end
 
 @testset "Chen covariance shrinkage          " begin
-    Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
-    C = cov(Z; dims=2)
-    F = CovarianceEstimation.rblw_shrinkagetarget(Z)
-    @test F ≈ Matrix(3.0I, 3, 3)
-    ρhatZrblw = 99/135
-    shrunkcov = (1-ρhatZrblw)*C + ρhatZrblw*F
-    rblwc = RaoBlackwellLedoitWolf()
-    rblwcOptim = RaoBlackwellLedoitWolf(ρhatZrblw)
-    @test cov(rblwcOptim, Z; dims=2) ≈ shrunkcov
-    @test cov(rblwc, Z; dims=2) ≈ shrunkcov
-    testTransposition(rblwc)
-    testUncorrelated(rblwc)
-    testTranslation(rblwc)
+    rblw = RaoBlackwellLedoitWolf()
+    testTransposition(rblw)
+    testUncorrelated(rblw)
+    testTranslation(rblw)
 
-    testTransposition(rblwcOptim)
+    oas = OracleApproximatingShrinkage()
+    testTransposition(oas)
+    testUncorrelated(oas)
+    testTranslation(oas)
 
-    ρhatZoas = 0.6
-    Cdim1 = cov(Z; dims=1)
-    Fdim1 = CovarianceEstimation.rblw_shrinkagetarget(Z, dims=1)
-    shrunkcov = (1-ρhatZoas)*Cdim1 + ρhatZoas*Fdim1
-    oasc = OracleApproximatingShrinkage()
-    oascOptim = OracleApproximatingShrinkage(ρhatZoas)
-    @test cov(oascOptim, Z; dims=1) ≈ shrunkcov
-    @test cov(oasc, Z; dims=1) ≈ shrunkcov
-    testTransposition(oasc)
-    testUncorrelated(oasc)
-    testTranslation(oasc)
+    for X̂ ∈ test_matrices
+        Ŝ_rblw = cov(rblw, X̂)
+        Ŝ_oas  = cov(oas, X̂)
 
-    testTransposition(oascOptim)
+        CE.centercols!(X̂)
+        n, p = size(X̂)
+        Ŝ    = cov(Simple(), X̂)
+
+        F = CE.rblw_shrinkagetarget(Ŝ, p)
+
+        ρ_rblw = CE.rblw_optimalshrinkage(Ŝ, n, p)
+        ρ_oas  = CE.oas_optimalshrinkage(Ŝ, n, p)
+
+        @test F ≈ tr(Ŝ)/p * I
+        # https://arxiv.org/pdf/0907.4698.pdf eq 17
+        ρ_rblw_ref = ((n-2)/n*tr(Ŝ^2)+tr(Ŝ)^2)/((n+2)*(tr(Ŝ^2)-tr(Ŝ)^2/p))
+        ρ_rblw_ref = min(ρ_rblw_ref, 1)
+        @test ρ_rblw ≈ ρ_rblw_ref
+        # https://arxiv.org/pdf/0907.4698.pdf eq 23
+        ρ_oas_ref = ((1-2/p)*tr(Ŝ^2)+tr(Ŝ)^2)/((n+1-2/p)*(tr(Ŝ^2)-tr(Ŝ)^2/p))
+        ρ_oas_ref = min(ρ_oas_ref, 1)
+        @test ρ_oas ≈ ρ_oas_ref
+
+        @test Ŝ_rblw ≈ CE.shrink(Ŝ, F, ρ_rblw_ref)
+        @test Ŝ_oas ≈ CE.shrink(Ŝ, F, ρ_oas_ref)
+    end
 end

@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 """
     LedoitWolfCovariance(shrinkage)
 
@@ -19,38 +17,38 @@ struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     end
 end
 
-function lw_optimalshrinkage(X, C, sdC, F, r̄)
+function lw_optimalshrinkage(Xc::AbstractMatrix, Ŝ::AbstractMatrix,
+                             V̂::AbstractVector, F::AbstractMatrix,
+                             r̄::Real, n::Int, p::Int)
     # steps leading to equation 5 of http://www.ledoit.net/honey.pdf in
     # appendix B. (notations follow the paper)
-    T, N  = size(X)
-    tmat  = [(X[t,:] * X[t,:]' - C) for t ∈ 1:T]
-    π̂mat  = sum(tmat[t].^2 for t ∈ 1:T) / T
+    tmat  = @inbounds [(Xc[t,:] * Xc[t,:]' - Ŝ) for t ∈ 1:n]
+    π̂mat  = sum(tmat[t].^2 for t ∈ 1:n) / n
     π̂     = sum(π̂mat)
-    tdiag = [Diagonal(X[t,:].^2 - diag(C)) for t ∈ 1:T]
-    ϑ̂ᵢᵢ   = sum(tdiag[t] * tmat[t] for t ∈ 1:T) / T # row scaling
-    ϑ̂ⱼⱼ   = sum(tmat[t] * tdiag[t] for t ∈ 1:T) / T # col scaling
-    ρ̂₂    = zero(eltype(X))
-    # TODO: inbounds/simd?
-    for i ∈ 1:N, j ∈ 1:N
+    dŜ    = diag(Ŝ)
+    tdiag = @inbounds [Diagonal(Xc[t,:].^2 - dŜ) for t ∈ 1:n]
+    ϑ̂ᵢᵢ   = @inbounds sum(tdiag[t] * tmat[t] for t ∈ 1:n) / n # row scaling
+    ϑ̂ⱼⱼ   = @inbounds sum(tmat[t] * tdiag[t] for t ∈ 1:n) / n # col scaling
+    ρ̂₂    = zero(eltype(Xc))
+    @inbounds for i ∈ 1:p, j ∈ 1:p
         (j == i) && continue
-        αᵢⱼ = sdC[j]/sdC[i]
+        αᵢⱼ = V̂[j]/V̂[i]
         ρ̂₂ += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
     end
     ρ̂ = sum(diag(π̂mat)) + (r̄/2)*ρ̂₂
-    γ̂ = sum((F - C).^2)
+    γ̂ = sum((F - Ŝ).^2)
     # if γ̂ is very small it may lead to NaNs or infinities
     (γ̂ ≤ eps()) && return ifelse(π̂ ≤ ρ̂, 0.0, 1.0)
     κ̂ = (π̂ - ρ̂)/γ̂
-    return clamp(κ̂/T, 0.0, 1.0)
+    return clamp(κ̂/n, 0.0, 1.0)
 end
 
-function lw_shrinkagetarget(C, sdC)
-    N = size(C, 1)
-    Cs = [sdC[i]*sdC[j] for i in 1:N, j in 1:N]
-    r = C ./ Cs
-    r̄ = (sum(r)-N)/(N*(N-1))
-    Finterm = Cs .* r̄
-    F = Finterm + Diagonal(diag(Cs) .- diag(Finterm))
+function lw_shrinkagetarget(Ŝ::AbstractMatrix, V̂::AbstractVector, p::Int)
+    V̂_ = @inbounds [V̂[i]*V̂[j] for i ∈ 1:p, j ∈ 1:p]
+    r  = Ŝ ./ V̂_
+    r̄  = (sum(r) - p)/(p * (p - 1))
+    F_ = V̂_ .* r̄
+    F  = F_ + Diagonal(diag(V̂_) .- diag(F_))
     return F, r̄
 end
 
@@ -70,20 +68,20 @@ O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
 function cov(lw::LedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
+    Xc = copy(X)
     if dims == 2
-        X = transpose(X)
+        Xc = transpose(Xc)
     elseif dims != 1
         throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
     end
-    n, p = size(X)
-    μ = mean(X, dims=1)
-    for i ∈ 1:n, j ∈ 1:p
-        X[i, j] -= μ[j]
-    end
-    C = cov(Simple(), X; dims=1)
-    sdC = sqrt.(diag(C))
-    F, r̄ = lw_shrinkagetarget(C, sdC)
-    shrinkage = lw.shrinkage
-    (shrinkage == :optimal) && (shrinkage = lw_optimalshrinkage(X, C, sdC, F, r̄))
-    return (1.0 - shrinkage) * C + shrinkage * F
+    centercols!(Xc)
+    # sample covariance of size (p x p)
+    n, p = size(Xc)
+    Ŝ    = (Xc'*Xc)/n
+    V̂    = sqrt.(diag(Ŝ))
+    # shrinkage
+    F, r̄ = lw_shrinkagetarget(Ŝ, V̂, p)
+    ρ    = lw.shrinkage
+    (ρ == :optimal) && (ρ = lw_optimalshrinkage(Xc, Ŝ, V̂, F, r̄, n, p))
+    return shrink(Ŝ, F, ρ)
 end

@@ -38,7 +38,9 @@ using LinearAlgebra
 # comments marked with a `#` come from their code
 # comments marked with a `#<#>` are ours
 
-function matlab_ledoitwolf_covcor(x)
+function matlab_ledoitwolf_covcor(z)
+    x = copy(z)
+    
     # de-mean returns
     t, n  = size(x)
     meanx = mean(x, dims=1)
