@@ -85,7 +85,7 @@ function oas_optimalshrinkage(Ŝ::AbstractMatrix, n::Int, p::Int)
     trŜ² = dot(Ŝ, transpose(Ŝ))
     tr²Ŝ = tr(Ŝ)^2
     ρ̂ = ((1.0-2.0/p) * trŜ² + tr²Ŝ)/((n+1.0-2.0/p) * (trŜ² - tr²Ŝ/p))
-    return min(ρ̂, 1) # assigned to variable `shrinkage`
+    return min(ρ̂, 1)
 end
 
 """
