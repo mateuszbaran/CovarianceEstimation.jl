@@ -48,41 +48,47 @@ function matlab_ledoitwolf_covcor(x)
     sample = (1/t) * (x'*x)
 
     # compute prior
-    var = diag(sample)
-    sqrtvar = sqrt.(var)
+    diagsample = diag(sample)
+    sqrtvar = sqrt.(diagsample)
 
     sqrtvar_mat = repeat(sqrtvar, outer=(1, n))
 
-    rBar = (sum(sample./(sqrtvar_mat .* sqrtvar_mat'))-n)/(n*(n-1)) # ✅
+    rBar = (sum(sample./(sqrtvar_mat .* sqrtvar_mat'))-n)/(n*(n-1))
     prior = rBar * sqrtvar_mat .* sqrtvar_mat'
 
     #<#> replace the diagonal
     prior -= Diagonal(diag(prior))
-    prior += Diagonal(var)
+    prior += Diagonal(diagsample)
 
     #<#> compute optimal shrinkage
 
     # what we call pi-hat
     y = x.^2;
     phiMat = y'*y/t - 2*(x'*x) .* sample/t + sample.^2
-    phi = sum(phiMat) # ✅
+    phi = sum(phiMat)
 
     # what we call rho-hat
     term1    = ((x.^3)'*x)/t
     help     = x'*x/t
     helpDiag = diag(help)
     term2    = repeat(helpDiag, outer=(1, n)) .* sample
-    term3    = help .* repeat(var, outer=(1, n))
-    term4    = repeat(var, outer=(1, n)) .* sample
+    term3    = help .* repeat(diagsample, outer=(1, n))
+    term4    = repeat(diagsample, outer=(1, n)) .* sample
     thetaMat = term1 - term2 - term3 + term4
     #<#> remove the diagonal
-    thetaMat -= Diagonal(diag(thetaMat)) # ✅
-    rho       = sum(diag(phiMat)) + rBar*sum(sqrtvar'./sqrtvar.*thetaMat) # ✅
+    thetaMat -= Diagonal(diag(thetaMat))
+    rho       = sum(diag(phiMat)) + rBar*sum(sqrtvar'./sqrtvar.*thetaMat)
 
     # what we call gamma hat
     gamma = sum((sample - prior).^2)
     kappa = (phi - rho) / gamma
     shrinkage = max(0, min(1, kappa/t))
 
-    return (shrinkage*prior + (1-shrinkage)*sample, shrinkage)
+    part_results = Dict(
+        "r̄" => rBar,
+        "F" => prior,
+        "shrinkage" => shrinkage,
+        "lwcov" => shrinkage*prior + (1-shrinkage)*sample)
+
+    return part_results
 end

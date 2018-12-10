@@ -19,14 +19,14 @@ struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     end
 end
 
-function lw_optimalshrinkage(X, C, F, r̄)
+function lw_optimalshrinkage(X, C, sdC, F, r̄)
     # steps leading to equation 5 of http://www.ledoit.net/honey.pdf in
     # appendix B. (notations follow the paper)
-    N, T  = size(X)
-    tmat  = [(X[:,t] * X[:,t]' - C) for t ∈ 1:T]
+    T, N  = size(X)
+    tmat  = [(X[t,:] * X[t,:]' - C) for t ∈ 1:T]
     π̂mat  = sum(tmat[t].^2 for t ∈ 1:T) / T
     π̂     = sum(π̂mat)
-    tdiag = [Diagonal(X[:,t].^2 - diag(C)) for t ∈ 1:T]
+    tdiag = [Diagonal(X[t,:].^2 - diag(C)) for t ∈ 1:T]
     ϑ̂ᵢᵢ   = sum(tdiag[t] * tmat[t] for t ∈ 1:T) / T # row scaling
     ϑ̂ⱼⱼ   = sum(tmat[t] * tdiag[t] for t ∈ 1:T) / T # col scaling
     ρ̂₂    = zero(eltype(X))
@@ -44,9 +44,9 @@ function lw_optimalshrinkage(X, C, F, r̄)
     return clamp(κ̂/T, 0.0, 1.0)
 end
 
-function lw_shrinkagetarget(C)
+function lw_shrinkagetarget(C, sdC)
     N = size(C, 1)
-    Cs = [sqrt(C[i,i]*C[j,j]) for i in 1:N, j in 1:N]
+    Cs = [sdC[i]*sdC[j] for i in 1:N, j in 1:N]
     r = C ./ Cs
     r̄ = (sum(r)-N)/(N*(N-1))
     Finterm = Cs .* r̄

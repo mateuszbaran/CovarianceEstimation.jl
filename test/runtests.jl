@@ -4,25 +4,24 @@ using LinearAlgebra
 using Test
 using Random
 
-include("ledoitwolf.jl")
+include("reference_ledoitwolf.jl")
 
 Random.seed!(1234)
 
-X = randn(3, 8)
+const X = randn(3, 8)
+const Z = [2 -1 2; -1 2 -1; -1 -1 -1]
+const X2s = [[1 0; 0 1; -1 0; 0 -1], [1 0; 0 1; 0 -1; -1 0]]
 
 function testTransposition(ce::CovarianceEstimator)
     @test cov(ce, X; dims=1) ≈ cov(ce, transpose(X); dims=2)
     @test cov(ce, X; dims=2) ≈ cov(ce, transpose(X); dims=1)
 
     @test_throws ArgumentError cov(ce, X, dims=0)
-    # broken?
+    # XXX broken?
     # @test_throws ArgumentError cov(ce, X, dims=3)
 end
 
 function testUncorrelated(ce::CovarianceEstimator)
-    X2s = [[1 0; 0 1; -1 0; 0 -1],
-           [1 0; 0 1; 0 -1; -1 0]]
-
     for X2 ∈ X2s
         @test isdiag(cov(ce, X2))
     end
@@ -60,30 +59,21 @@ end
 end
 
 @testset "Ledoit-Wolf covariance shrinkage   " begin
-    lwc = LedoitWolf()
-    Z = [2. -1 -1; -1 2 -1; 2 -1 -1]
-    C = cov(Z; dims=2)
-    F, r̄ = CovarianceEstimation.lw_shrinkagetarget(C)
-    @test F ≈ Matrix(3.0I, 3, 3)
-    @test r̄ ≈ 0.0
-    (N, Tnum) = size(Z)
-    πmatrix = mean([(Z[i,t]*Z[j,t]-C[i,j])^2 for i in 1:N, j in 1:N] for t in 1:Tnum)
-    # the following assumes that r̄ ≈ 0.0
-    πhat = sum(πmatrix)
-    ρhat = sum(diag(πmatrix))
-    γhat = sum((F - C).^2)
-    κhat = (πhat - ρhat)/γhat
-    δstar = clamp(κhat/Tnum, 0.0, 1.0)
-    shrunkcov = (1-δstar)*C + δstar*F
-    @test cov(lwc, Z; dims=2) ≈ shrunkcov
-    lwcstar = LedoitWolf(δstar)
-    @test cov(lwcstar, Z; dims=2) ≈ shrunkcov
-
-    testTransposition(lwc)
-    testUncorrelated(lwc)
-    testTranslation(lwc)
-
-    testTransposition(lwcstar)
+    lw = LedoitWolf()
+    testTransposition(lw)
+    testUncorrelated(lw)
+    testTranslation(lw)
+    for X̂ ∈ [X, Z]
+        ref_results = matlab_ledoitwolf_covcor(X̂)
+        C = cov(Simple(), X̂; dims=1)
+        sdC = sqrt.(diag(C))
+        F, r̄ = CovarianceEstimation.lw_shrinkagetarget(C, sdC)
+        @test r̄ ≈ ref_results["r̄"]
+        @test F ≈ ref_results["F"]
+        shrinkage = CovarianceEstimation.lw_optimalshrinkage(X̂, C, sdC, F, r̄)
+        @test shrinkage ≈ ref_results["shrinkage"]
+        @test cov(lw, X̂) ≈ ref_results["lwcov"]
+    end
 end
 
 @testset "Chen covariance shrinkage          " begin
