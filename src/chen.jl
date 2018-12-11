@@ -17,15 +17,15 @@ struct RaoBlackwellLedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
     end
 end
 
-function rblw_optimalshrinkage(Ŝ::AbstractMatrix, n::Int, p::Int)
+function rblw_optimalshrinkage(S::AbstractMatrix, n::Int, p::Int)
     # https://arxiv.org/pdf/0907.4698.pdf equations 17, 19
-    trŜ² = dot(Ŝ, transpose(Ŝ))
-    tr²Ŝ = tr(Ŝ)^2
-    ρ̂    = ((n-2)/n * trŜ² + tr²Ŝ)/((n+2) * (trŜ² - tr²Ŝ/p))
-    return min(ρ̂, 1.0)
+    trS² = dot(S, transpose(S))
+    tr²S = tr(S)^2
+    ρ    = ((n-2)/n * trS² + tr²S)/((n+2) * (trS² - tr²S/p))
+    return min(ρ, one(ρ))
 end
 
-rblw_shrinkagetarget(Ŝ::AbstractMatrix, p::Int) = (tr(Ŝ)/p) * I
+rblw_shrinkagetarget(S::AbstractMatrix, p::Int) = (tr(S)/p) * I
 
 """
     cov(rblw::RaoBlackwellLedoitWolf, X::AbstractMatrix; dims::Int=1)
@@ -53,12 +53,12 @@ function cov(rblw::RaoBlackwellLedoitWolf, X::AbstractMatrix{T}; dims::Int=1) wh
     centercols!(Xc)
     # sample covariance of size (p x p)
     n, p = size(Xc)
-    Ŝ    = (Xc'*Xc)/n
+    S    = (Xc'*Xc)/n
     # shrinkage
-    F = rblw_shrinkagetarget(Ŝ, p)
+    F = rblw_shrinkagetarget(S, p)
     ρ = rblw.shrinkage
-    (ρ == :optimal) && (ρ = rblw_optimalshrinkage(Ŝ, n, p))
-    return shrink(Ŝ, F, ρ)
+    (ρ == :optimal) && (ρ = rblw_optimalshrinkage(S, n, p))
+    return shrink(S, F, ρ)
 end
 
 """
@@ -80,12 +80,12 @@ struct OracleApproximatingShrinkage{S<:Union{Symbol, Real}} <: CovarianceEstimat
     end
 end
 
-function oas_optimalshrinkage(Ŝ::AbstractMatrix, n::Int, p::Int)
+function oas_optimalshrinkage(S::AbstractMatrix, n::Int, p::Int)
     # https://arxiv.org/pdf/0907.4698.pdf equation 23
-    trŜ² = dot(Ŝ, transpose(Ŝ))
-    tr²Ŝ = tr(Ŝ)^2
-    ρ̂ = ((1.0-2.0/p) * trŜ² + tr²Ŝ)/((n+1.0-2.0/p) * (trŜ² - tr²Ŝ/p))
-    return min(ρ̂, 1)
+    trS² = dot(S, transpose(S))
+    tr²S = tr(S)^2
+    ρ    = ((1.0-2.0/p) * trS² + tr²S)/((n+1.0-2.0/p) * (trS² - tr²S/p))
+    return min(ρ, one(ρ))
 end
 
 """
@@ -114,10 +114,10 @@ function cov(oas::OracleApproximatingShrinkage, X::AbstractMatrix{T}; dims::Int=
     centercols!(Xc)
     # sample covariance of size (p x p)
     n, p = size(Xc)
-    Ŝ    = (Xc'*Xc)/n
+    S    = (Xc'*Xc)/n
     # shrinkage
-    F = rblw_shrinkagetarget(Ŝ, p)
+    F = rblw_shrinkagetarget(S, p)
     ρ = oas.shrinkage
-    (ρ == :optimal) && (ρ = oas_optimalshrinkage(Ŝ, n, p))
-    return shrink(Ŝ, F, ρ)
+    (ρ == :optimal) && (ρ = oas_optimalshrinkage(S, n, p))
+    return shrink(S, F, ρ)
 end
