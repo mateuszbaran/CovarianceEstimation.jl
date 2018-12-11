@@ -18,7 +18,7 @@ struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
 end
 
 function lw_optimalshrinkage(Xc::AbstractMatrix, Ŝ::AbstractMatrix,
-                             V̂::AbstractVector, F::AbstractMatrix,
+                             ŝ::AbstractVector, F::AbstractMatrix,
                              r̄::Real, n::Int, p::Int)
     # steps leading to equation 5 of http://www.ledoit.net/honey.pdf in
     # appendix B. (notations follow the paper)
@@ -32,7 +32,7 @@ function lw_optimalshrinkage(Xc::AbstractMatrix, Ŝ::AbstractMatrix,
     ρ̂₂    = zero(eltype(Xc))
     @inbounds for i ∈ 1:p, j ∈ 1:p
         (j == i) && continue
-        αᵢⱼ = V̂[j]/V̂[i]
+        αᵢⱼ = ŝ[j]/ŝ[i]
         ρ̂₂ += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
     end
     ρ̂ = sum(diag(π̂mat)) + (r̄/2)*ρ̂₂
@@ -43,12 +43,12 @@ function lw_optimalshrinkage(Xc::AbstractMatrix, Ŝ::AbstractMatrix,
     return clamp(κ̂/n, 0.0, 1.0)
 end
 
-function lw_shrinkagetarget(Ŝ::AbstractMatrix, V̂::AbstractVector, p::Int)
-    V̂_ = @inbounds [V̂[i]*V̂[j] for i ∈ 1:p, j ∈ 1:p]
-    r  = Ŝ ./ V̂_
+function lw_shrinkagetarget(Ŝ::AbstractMatrix, ŝ::AbstractVector, p::Int)
+    ŝ_ = @inbounds [ŝ[i]*ŝ[j] for i ∈ 1:p, j ∈ 1:p]
+    r  = Ŝ ./ ŝ_
     r̄  = (sum(r) - p)/(p * (p - 1))
-    F_ = V̂_ .* r̄
-    F  = F_ + Diagonal(diag(V̂_) .- diag(F_))
+    F_ = ŝ_ .* r̄
+    F  = F_ + Diagonal(diag(ŝ_) .- diag(F_))
     return F, r̄
 end
 
@@ -78,10 +78,10 @@ function cov(lw::LedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
     # sample covariance of size (p x p)
     n, p = size(Xc)
     Ŝ    = (Xc'*Xc)/n
-    V̂    = sqrt.(diag(Ŝ))
+    ŝ    = sqrt.(diag(Ŝ))
     # shrinkage
-    F, r̄ = lw_shrinkagetarget(Ŝ, V̂, p)
+    F, r̄ = lw_shrinkagetarget(Ŝ, ŝ, p)
     ρ    = lw.shrinkage
-    (ρ == :optimal) && (ρ = lw_optimalshrinkage(Xc, Ŝ, V̂, F, r̄, n, p))
+    (ρ == :optimal) && (ρ = lw_optimalshrinkage(Xc, Ŝ, ŝ, F, r̄, n, p))
     return shrink(Ŝ, F, ρ)
 end
