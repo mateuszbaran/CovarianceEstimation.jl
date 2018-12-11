@@ -1,6 +1,6 @@
 name = "CovarianceEstimation"
 uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
-authors = ["Mateusz Baran <mateuszbaran89@gmail.com>"]
+authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Thibaut Lienart"]
 version = "0.1.0"
 
 [deps]
