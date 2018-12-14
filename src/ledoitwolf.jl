@@ -1,21 +1,9 @@
 """
-    LedoitWolfCovariance(shrinkage)
+    LedoitWolf()
 
-Ledoit-Wolf covariance estimator. The parameter `shrinkage` is either equal
-to `:optimal` and optimal shrinkage is calculated, or it is a number between
-0 and 1.
+Ledoit-Wolf covariance estimator target type.
 """
-struct LedoitWolf{S<:Union{Symbol, Real}} <: CovarianceEstimator
-    shrinkage::S
-    function LedoitWolf(s::T) where T<:Real
-        @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
-        new{T}(s)
-    end
-    function LedoitWolf(s::Symbol=:optimal)
-        @assert s ∈ [:optimal] "Shrinkage setting not supported"
-        new{Symbol}(s)
-    end
-end
+struct LedoitWolf <: TargetType end
 
 function lw_optimalshrinkage(Xc::AbstractMatrix, S::AbstractMatrix,
                              s::AbstractVector, F::AbstractMatrix,
@@ -52,7 +40,7 @@ function lw_shrinkagetarget(S::AbstractMatrix, s::AbstractVector, p::Int)
 end
 
 """
-    cov(::LedoitWolf, X::AbstractMatrix; dims::Int=1)
+    targetandshrinkage(::LedoitWolf, X::AbstractMatrix; dims::Int=1)
 
 Calculates shrunk covariance matrix for data in `X` with Ledoit-Wolf
 optimal shrinkage.
@@ -66,21 +54,12 @@ Implements shrinkage target and optimal shrinkage according to
 O. Ledoit and M. Wolf, “Honey, I Shrunk the Sample Covariance Matrix,”
 The Journal of Portfolio Management, vol. 30, no. 4, pp. 110–119, Jul. 2004.
 """
-function cov(lw::LedoitWolf, X::AbstractMatrix{T}; dims::Int=1) where T<:Real
-    Xc = copy(X)
-    if dims == 2
-        Xc = transpose(Xc)
-    elseif dims != 1
-        throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
-    end
-    centercols!(Xc)
-    # sample covariance of size (p x p)
-    n, p = size(Xc)
-    S    = (Xc'*Xc)/n
+function targetandshrinkage(lw::LedoitWolf, S::AbstractMatrix{<:Real},
+                            X::AbstractMatrix{<:Real})
+    n, p = size(X)
     s    = sqrt.(diag(S))
     # shrinkage
     F, r = lw_shrinkagetarget(S, s, p)
-    ρ    = lw.shrinkage
-    (ρ == :optimal) && (ρ = lw_optimalshrinkage(Xc, S, s, F, r, n, p))
-    return shrink(S, F, ρ)
+    ρ    = lw_optimalshrinkage(X, S, s, F, r, n, p)
+    return F, ρ
 end
