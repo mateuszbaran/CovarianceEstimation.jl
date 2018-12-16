@@ -6,11 +6,5 @@ function centercols!(X::AbstractMatrix)
 end
 
 
-safe01clamp(x::Real) = isnan(x) ? 0.0 : clamp(x, 0.0, 1.0)
-
-
-function linshrink(S::AbstractMatrix, F::Union{UniformScaling, AbstractMatrix},
-                   ρ::Real)
-    ρsafe = safe01clamp(ρ)
-    return (1.0 - ρsafe) * S + ρsafe * F
-end
+linshrink(S::AbstractMatrix, F::Union{UniformScaling, AbstractMatrix},
+          λ::Real) = (1.0 - λ) * S + λ * F
