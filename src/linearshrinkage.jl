@@ -97,17 +97,18 @@ end
 
 ## TARGET B
 
+target_B(S::AbstractMatrix, p::Int) = tr(S)/p * I
+
 function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int)
 
-    F = tr(S)/p * I
-    return linshrink(S, F, λ)
+    return linshrink(S, target_B(S, p), λ)
 end
 
 function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int)
 
-    F = tr(S)/p * I
+    F = target_B(S, p)
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
         λ = sum_var_sij(Xc, S, n) / sum((S - F).^2)
@@ -130,17 +131,18 @@ end
 
 ## TARGET D
 
+target_D(S::AbstractMatrix) = Diagonal(diag(S))
+
 function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int)
 
-    F = Diagonal(diag(S))
-    return linshrink(S, F, λ)
+    return linshrink(S, target_D(S), λ)
 end
 
 function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int)
 
-    F = Diagonal(diag(S))
+    F = target_D(S)
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
         λ = sum_var_sij(Xc, S, n, false) / (n * sum((S - F).^2))
@@ -153,11 +155,8 @@ end
 
 ## TARGET C
 
-function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
-                          S::AbstractMatrix, λ::Real, n::Int, p::Int)
-
-    d = Diag(S)
-    v = sum(d)/p
+function target_C(S::AbstractMatrix, p::Int)
+    v = tr(S)/p
     # average of off-diagonal terms
     c = sum(S)/(p * (p - 1)) - v / (p - 1)
     # target: off diag terms = average of s_{ij} for i≂̸j
@@ -165,21 +164,19 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
     # target: diag terms = average of s_{ii}
     F -= Diagonal(diag(F))
     F += v * I
-    return linshrink(S, F, λ)
+    return F
+end
+
+function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Real, n::Int, p::Int)
+
+    return linshrink(S, target_C(S, p), λ)
 end
 
 function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int)
 
-    d = Diag(S)
-    v = sum(d)/p
-    # average of off-diagonal terms
-    c = sum(S)/(p * (p - 1)) - v / (p - 1)
-    # target: off diag terms = average of s_{ij} for i≂̸j
-    F = c * ones(S)
-    # target: diag terms = average of s_{ii}
-    F -= Diagonal(diag(F))
-    F += v * I
+    F = target_C(S, p)
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
         λ = sum_var_sij(Xc, S, n) / sum((S - F).^2)
@@ -192,19 +189,21 @@ end
 
 ## TARGET E
 
+function target_E(S::AbstractMatrix)
+    d = diag(S)
+    return sqrt.(d*d')
+end
+
 function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int)
 
-    d = diag(S)
-    F = sqrt.(d*d')
-    return linshrink(S, F, λ)
+    return linshrink(S, target_E(S), λ)
 end
 
 function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int)
 
-    d = diag(S)
-    F = sqrt.(d*d')
+    F = target_E(S)
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
         λ  = (sum_var_sij(Xc, S, n, false) - sum_fij(Xc, S, n))
@@ -218,25 +217,26 @@ end
 
 ## TARGET F
 
-function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
-                          S::AbstractMatrix, λ::Real, n::Int, p::Int)
-
+function target_F(S::AbstractMatrix, p::Int)
     s  = sqrt.(diag(S))
     s_ = @inbounds [s[i]*s[j] for i ∈ 1:p, j ∈ 1:p]
     r̄  = (sum(S ./ s_) - p)/(p * (p - 1))
     F_ = r̄ * s_
     F  = F_ + Diagonal(diag(s_) .- diag(F_))
+    return F, r̄
+end
+
+function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Real, n::Int, p::Int)
+
+    F, _ = target_F(S, p)
     return linshrink(S, F, λ)
 end
 
 function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int)
 
-    s  = sqrt.(diag(S))
-    s_ = @inbounds [s[i]*s[j] for i ∈ 1:p, j ∈ 1:p]
-    r̄  = (sum(S ./ s_) - p)/(p * (p - 1))
-    F_ = r̄ * s_
-    F  = F_ + Diagonal(diag(s_) .- diag(F_))
+    F, r̄ = target_F(S, p)
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
         λ  = (sum_var_sij(Xc, S, n, false) - r̄ * sum_fij(Xc, S, n, p))
