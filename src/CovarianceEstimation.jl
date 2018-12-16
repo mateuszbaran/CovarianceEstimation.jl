@@ -12,13 +12,16 @@ Basic type for all covariance estimators.
 abstract type CovarianceEstimator end
 
 export cov
-export CovarianceEstimator, Simple, Corrected,
-    LedoitWolf, RaoBlackwellLedoitWolf,
-    OracleApproximatingShrinkage
+export CovarianceEstimator, Simple,
+    LinearShrinkageEstimator,
+    # Targets for linear shrinkage
+    DiagonalUnitVariance, DiagonalCommonVariance, DiagonalUnequalVariance,
+    CommonCovariance, PerfectPositiveCorrelation, ConstantCorrelation
+
 
 include("utils.jl")
-include("basicmethods.jl")
-include("ledoitwolf.jl")
-include("chen.jl")
+include("simplecov.jl")
+include("linearshrinkage.jl")
+
 
 end # module
