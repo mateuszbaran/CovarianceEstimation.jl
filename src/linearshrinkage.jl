@@ -1,30 +1,28 @@
 const Shrinkage = Union{Symbol, Real}
 abstract type LinearShrinkageTarget end
 
-"""
-    linear_shrinkage(S, F, ρ)
+# Taxonomy from http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+# page 13
 
-Given a sample covariance `S` and a matching target `F`, return an estimator
-corresponding to the James-Stein estimator corresponding to a shrinkage of
-intensity `ρ` between `S` and `F`.
-"""
-linear_shrinkage(S::AbstractMatrix, F::LinearShrinkageTarget, ρ::Real) =
-    (1.0 - ρ) * S + ρ * F
+struct DiagonalUnitVariance       <: LinearShrinkageTarget end
+struct DiagonalCommonVariance     <: LinearShrinkageTarget end
+struct DiagonalUnequalVariance    <: LinearShrinkageTarget end
+struct CommonCovariance           <: LinearShrinkageTarget end
+struct PerfectPositiveCorrelation <: LinearShrinkageTarget end
+struct ConstantCorrelation        <: LinearShrinkageTarget end
 
 
 struct LinearShrinkageEstimator{T<:LinearShrinkageTarget, S<:Shrinkage} <: CovarianceEstimator
     target::T
     shrinkage::S
-end
-
-function LinearShrinkageEstimator(t::LinearShrinkageTarget, s::Real)
-    @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
-    return LinearShrinkageEstimator(t, s)
-end
-
-function LinearShrinkageEstimator(t::LinearShrinkageTarget, s::Symbol=:optimal)
-    @assert s ∈ [:optimal] "Shrinkage setting not supported"
-    return LinearShrinkageEstimator(t, s)
+    function LinearShrinkageEstimator(t::TT, s::SS) where {TT<:LinearShrinkageTarget, SS<:Real}
+        @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
+        new{TT, SS}(t, s)
+    end
+    function LinearShrinkageEstimator(t::TT, s::Symbol=:auto) where TT <: LinearShrinkageTarget
+        @assert s ∈ [:auto, :lw, :rblw, :oas] "Shrinkage method not supported"
+        new{TT, Symbol}(t, s)
+    end
 end
 
 
@@ -40,9 +38,157 @@ function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
     centercols!(Xc)
     # sample covariance of size (p x p)
     n, p = size(Xc)
-    S    = (Xc'*Xc)/n
+    Ŝ    = (Xc'*Xc)/n
+    return linear_shrinkage(lse.target, Xc, Ŝ, lse.shrinkage, n, p)
+end
 
-    F, ρ = targetandshrinkage(lse.target, S, Xc)
-    ρ    = ifelse(lse.shrinkage == :optimal, ρ : ls.shrinkage)
-    return shrink(S, F, ρ̂)
+##################################################
+
+# helper function
+function sum_var_sij(Xc, S, n, with_diagonal=true)
+    π̂mat = sum((Xc[t,:] * Xc[t,:]' - S).^2 for t ∈ 1:n) / n^2
+    with_diagonal && return sum(π̂mat)
+    return sum(π̂mat) - sum(diag(π̂mat))
+end
+
+# helper function ∑_{i≂̸j} f_ij
+function sum_fij(Xc, S, n, p)
+    tmat  = @inbounds [(Xc[t,:] * Xc[t,:]' - S) for t ∈ 1:n]
+    tmat  = @inbounds [(Xc[t,:] * Xc[t,:]' - S) for t ∈ 1:n]
+    dS    = diag(S)
+    sdS   = sqrt.(dS)
+    tdiag = @inbounds [Diagonal(Xc[t,:].^2 - dS) for t ∈ 1:n]
+    # estimator for cov(s_ii, s_ij) --> row scaling
+    ϑ̂ᵢᵢ   = @inbounds sum(tdiag[t] * tmat[t] for t ∈ 1:n) / n
+    # estimator for cov(s_jj, s_ij) --> column scaling
+    ϑ̂ⱼⱼ   = @inbounds sum(tmat[t] * tdiag[t] for t ∈ 1:n) / n
+    ∑fij  = zero(eltype(Xc))
+    @inbounds for i ∈ 1:p, j ∈ 1:p
+        (j == i) && continue
+        αᵢⱼ   = sdS[j]/sdS[i]
+        ∑fij += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
+    end
+    ∑fij /= (2.0 * n)
+    return ∑fij
+end
+
+function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Shrinkage, n::Int, p::Int)
+    # http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+    # target A in table 2
+    F = I
+    # computing the shrinkage
+    if λ isa Symbol
+        if λ ∈ [:auto, :lw]
+            λ = sum_var_sij(Xc, S, n) / sum((S - F).^2)
+        else
+            error("Unsupported shrinkage method for target DiagonalUnitVariance.")
+        end
+    end
+    return linshrink(S, F, λ)
+end
+
+function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Shrinkage, n::Int, p::Int)
+    # http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+    # target B in table 2
+    F = tr(S)/p * I
+    # computing the shrinkage
+    if λ isa Symbol
+        if λ ∈ [:auto, :lw]
+            λ = sum_var_sij(Xc, S, n) / sum((S - F).^2)
+        elseif λ == :rblw
+            # https://arxiv.org/pdf/0907.4698.pdf equations 17, 19
+            trS² = sum(S.^2)
+            tr²S = tr(S)^2
+            λ = ((n-2)/n * trS² + tr²S)/((n+2) * (trS² - tr²S/p))
+        elseif λ == :oas
+            # https://arxiv.org/pdf/0907.4698.pdf equation 23
+            trS² = sum(S.^2)
+            tr²S = tr(S)^2
+            λ = ((1.0-2.0/p) * trS² + tr²S)/((n+1.0-2.0/p) * (trS² - tr²S/p))
+        else
+            error("Unsupported shrinkage method for target DiagonalCommonVariance.")
+        end
+    end
+    return linshrink(S, F, λ)
+end
+
+function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Shrinkage, n::Int, p::Int)
+    # http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+    # target D in table 2
+    F = Diagonal(diag(S))
+    # computing the shrinkage
+    if λ isa Symbol
+        if λ ∈ [:auto, :lw]
+            λ = sum_var_sij(Xc, S, n, false) / (n * sum((S - F).^2))
+        else
+            error("Unsupported shrinkage method for target DiagonalCommonVariance.")
+        end
+    end
+    return linshrink(S, F, λ)
+end
+
+function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Shrinkage, n::Int, p::Int)
+    # http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+    # target C in table 2
+    d = Diag(S)
+    v = sum(d)/p
+    # average of off-diagonal terms
+    c = sum(S)/(p * (p - 1)) - v / (p - 1)
+    # target: off diag terms = average of s_{ij} for i≂̸j
+    F = c * ones(S)
+    # target: diag terms = average of s_{ii}
+    F -= Diagonal(diag(F))
+    F += v * I
+    # computing the shrinkage
+    if λ isa Symbol
+        if λ ∈ [:auto, :lw]
+            λ = sum_var_sij(Xc, S, n) / sum((S - F).^2)
+        else
+            error("Unsupported shrinkage method for target DiagonalCommonVariance.")
+        end
+    end
+    return linshrink(S, F, λ)
+end
+
+function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Shrinkage, n::Int, p::Int)
+    # http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+    # target E in table 2
+    d = diag(S)
+    F = sqrt.(d*d')
+    # computing the shrinkage
+    if λ isa Symbol
+        if λ ∈ [:auto, :lw]
+            λ  = (sum_var_sij(Xc, S, n, false) - sum_fij(Xc, S, n))
+            λ /= sum((S - F).^2)
+        else
+            error("Unsupported shrinkage method for target DiagonalCommonVariance.")
+        end
+    end
+    return linshrink(S, F, λ)
+end
+
+function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
+                          S::AbstractMatrix, λ::Shrinkage, n::Int, p::Int)
+    # http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+    # target F in table 2
+    s  = sqrt.(diag(S))
+    s_ = @inbounds [s[i]*s[j] for i ∈ 1:p, j ∈ 1:p]
+    r̄  = (sum(S ./ s_) - p)/(p * (p - 1))
+    F_ = r̄ * s_
+    F  = F_ + Diagonal(diag(s_) .- diag(F_))
+    # computing the shrinkage
+    if λ isa Symbol
+        if λ ∈ [:auto, :lw]
+            λ  = (sum_var_sij(Xc, S, n, false) - r̄ * sum_fij(Xc, S, n, p))
+            λ /= sum((S - F).^2)
+        else
+            error("Unsupported shrinkage method for target DiagonalCommonVariance.")
+        end
+    end
+    return linshrink(S, F, λ)
 end

@@ -63,63 +63,42 @@ end
 end
 
 @testset "Ledoit-Wolf covariance shrinkage   " begin
-    testTransposition(LW)
-    testUncorrelated(LW)
-    testTranslation(LW)
+    lw = LinearShrinkageEstimator(ConstantCorrelation())
+    testTransposition(lw)
+    testUncorrelated(lw)
+    testTranslation(lw)
     for X̂ ∈ test_matrices
         ref_results = matlab_ledoitwolf_covcor(X̂)
-        # center columns
-        X̂c = X̂
-        n, p = size(X̂c)
-        μ = mean(X̂c, dims=1)
-        @inbounds for i ∈ 1:n, j ∈ 1:p
-            X̂c[i, j] -= μ[j]
-        end
-        # compute the different elements and check they match the reference
-        Ŝ    = cov(X̂, Simple())
-        V̂    = sqrt.(diag(Ŝ))
-        F, r̄ = CE.lw_shrinkagetarget(Ŝ, V̂, p)
-        @test r̄ ≈ ref_results["r̄"]
-        @test F ≈ ref_results["F"]
-        shrinkage = CE.lw_optimalshrinkage(X̂c, Ŝ, V̂, F, r̄, n, p)
-        @test shrinkage ≈ ref_results["shrinkage"]
-        @test cov(X̂, LW) ≈ ref_results["lwcov"]
+        @test cov(X̂, lw) ≈ ref_results["lwcov"]
     end
 end
 
 @testset "Chen covariance shrinkage          " begin
-    testTransposition(RBLW)
-    testUncorrelated(RBLW)
-    testTranslation(RBLW)
+    rblw = LinearShrinkageEstimator(DiagonalCommonVariance(), :rblw)
+    testTransposition(rblw)
+    testUncorrelated(rblw)
+    testTranslation(rblw)
 
-    testTransposition(OAS)
-    testUncorrelated(OAS)
-    testTranslation(OAS)
+    oas = LinearShrinkageEstimator(DiagonalCommonVariance(), :oas)
+    testTransposition(oas)
+    testUncorrelated(oas)
+    testTranslation(oas)
 
     for X̂ ∈ test_matrices
-        Ŝ_rblw = cov(X̂, RBLW)
-        Ŝ_oas  = cov(X̂, OAS)
+        Ŝ_rblw = cov(X̂, rblw)
+        Ŝ_oas  = cov(X̂, oas)
 
         CE.centercols!(X̂)
         n, p = size(X̂)
         Ŝ    = cov(X̂, Simple())
 
-        F = CE.rblw_shrinkagetarget(Ŝ, p)
-
-        ρ_rblw = CE.rblw_optimalshrinkage(Ŝ, n, p)
-        ρ_oas  = CE.oas_optimalshrinkage(Ŝ, n, p)
-
-        @test F ≈ tr(Ŝ)/p * I
+        F_ref = tr(Ŝ)/p * I
         # https://arxiv.org/pdf/0907.4698.pdf eq 17
         ρ_rblw_ref = ((n-2)/n*tr(Ŝ^2)+tr(Ŝ)^2)/((n+2)*(tr(Ŝ^2)-tr(Ŝ)^2/p))
-        ρ_rblw_ref = min(ρ_rblw_ref, 1)
-        @test ρ_rblw ≈ ρ_rblw_ref
         # https://arxiv.org/pdf/0907.4698.pdf eq 23
         ρ_oas_ref = ((1-2/p)*tr(Ŝ^2)+tr(Ŝ)^2)/((n+1-2/p)*(tr(Ŝ^2)-tr(Ŝ)^2/p))
-        ρ_oas_ref = min(ρ_oas_ref, 1)
-        @test ρ_oas ≈ ρ_oas_ref
 
-        @test Ŝ_rblw ≈ CE.shrink(Ŝ, F, ρ_rblw_ref)
-        @test Ŝ_oas ≈ CE.shrink(Ŝ, F, ρ_oas_ref)
+        @test cov(X̂, rblw) ≈ CE.linshrink(Ŝ, F_ref, ρ_rblw_ref)
+        #@test cov(X̂, oas) ≈ CE.linshrink(Ŝ, F_ref, ρ_oas_ref)
     end
 end

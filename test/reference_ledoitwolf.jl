@@ -34,13 +34,14 @@
 ###########################################################################
 
 using LinearAlgebra
+using Statistics
 
 # comments marked with a `#` come from their code
 # comments marked with a `#<#>` are ours
 
 function matlab_ledoitwolf_covcor(z)
     x = copy(z)
-    
+
     # de-mean returns
     t, n  = size(x)
     meanx = mean(x, dims=1)
@@ -90,6 +91,8 @@ function matlab_ledoitwolf_covcor(z)
         "r̄" => rBar,
         "F" => prior,
         "shrinkage" => shrinkage,
+        "kappa" => kappa,
+        "gamma" => gamma,
         "lwcov" => shrinkage*prior + (1-shrinkage)*sample)
 
     return part_results
