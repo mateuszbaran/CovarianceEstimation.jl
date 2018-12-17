@@ -145,11 +145,12 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
     F = target_D(S)
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        λ = sum_var_sij(Xc, S, n, false) / (n * sum((S - F).^2))
+        λ = sum_var_sij(Xc, S, n, false) / sum((S - F).^2)
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
     λ = clamp(λ, 0.0, 1.0)
+    @show λ
     return linshrink(S, F, λ)
 end
 
