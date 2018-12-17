@@ -42,6 +42,7 @@ S_05 = cov(X, method)
 * `LinearShrinkageEstimator`: James-Stein type estimator of the form `(1-λ)S+λF` where `S` is the uncorrected simple estimator, `F` is a target and `λ∈[0,1]` a shrinkage intensity.
   - common targets are implemented following the taxonomy given in [**1**] along with Ledoit-Wolf optimal shrinkage intensities [**2**].
   - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised intensity and Oracle-Approximating intensity are also supported (see [**3**]).
+  - **Note**: `S` is symmetric semi-positive definite and all targets `F` are symmetric positive definite so that provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite.
 
 ## References
 
