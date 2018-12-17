@@ -150,7 +150,6 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
     λ = clamp(λ, 0.0, 1.0)
-    @show λ
     return linshrink(S, F, λ)
 end
 
@@ -161,7 +160,7 @@ function target_C(S::AbstractMatrix, p::Int)
     # average of off-diagonal terms
     c = sum(S)/(p * (p - 1)) - v / (p - 1)
     # target: off diag terms = average of s_{ij} for i≂̸j
-    F = c * ones(S)
+    F = c * ones(p, p)
     # target: diag terms = average of s_{ii}
     F -= Diagonal(diag(F))
     F += v * I
@@ -207,7 +206,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
     F = target_E(S)
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        λ  = (sum_var_sij(Xc, S, n, false) - sum_fij(Xc, S, n))
+        λ  = sum_var_sij(Xc, S, n, false) - sum_fij(Xc, S, n, p)
         λ /= sum((S - F).^2)
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")

@@ -23,12 +23,12 @@ S_corrected    = cov(X, Simple(corrected=true))
 # using shrinkage with different targets
 # - Ledoit-Wolf target + shrinkage
 method = LinearShrinkageEstimator(ConstantCorrelation())
-S_ledoitwolf   = cov(X, method)
+S_ledoitwolf = cov(X, method)
 # - Chen target + shrinkage
 method = LinearShrinkageEstimator(DiagonalCommonVariance(), :rblw)
 S_chen_rblw = cov(X, method)
 method = LinearShrinkageEstimator(DiagonalCommonVariance(), :oas)
-S_chen_oas  = cov(X, method)
+S_chen_oas = cov(X, method)
 
 # a pre-defined shrinkage can be used as well
 method = LinearShrinkageEstimator(DiagonalUnitVariance(), 0.5)
