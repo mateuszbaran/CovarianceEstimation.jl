@@ -3,7 +3,6 @@ using Statistics
 using LinearAlgebra
 using Test
 using Random
-using DelimitedFiles
 
 const CE = CovarianceEstimation
 
