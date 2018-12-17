@@ -16,12 +16,14 @@ export CovarianceEstimator, Simple,
     LinearShrinkageEstimator,
     # Targets for linear shrinkage
     DiagonalUnitVariance, DiagonalCommonVariance, DiagonalUnequalVariance,
-    CommonCovariance, PerfectPositiveCorrelation, ConstantCorrelation
+    CommonCovariance, PerfectPositiveCorrelation, ConstantCorrelation,
+    # Eigendecomposition-based methods
+    AnalyticalNonlinearShrinkage
 
 
 include("utils.jl")
 include("simplecov.jl")
 include("linearshrinkage.jl")
-
+include("eigendecompositionshrinkage.jl")
 
 end # module
