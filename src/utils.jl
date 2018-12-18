@@ -1,9 +1,4 @@
-function centercols!(X::AbstractMatrix)
-    # centering of the columns
-    μ = mean(X, dims=1)
-    X .-= μ
-    return nothing
-end
+centercols(X::AbstractMatrix) = (X .- mean(X, dims=1))
 
 
 linshrink(S::AbstractMatrix, F::Union{UniformScaling, AbstractMatrix},
