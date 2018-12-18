@@ -68,7 +68,7 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
     # Equation (4.8)
     Hf̃_tmp = epanechnikov_HT1.(x)
     # if by any chance there are x such that |x| ≈ √5 ...
-    mask = isinf.(Hf̃_tmp)
+    mask = (@. abs(x) ≈ SQRT5)
     any(mask) && (Hf̃_tmp[mask] = epanechnikov_HT2.(x[mask]))
     Hf̃ = mean(Hf̃_tmp ./ H, dims=2)[:]
 
@@ -92,12 +92,8 @@ end
 
 function cov(X::AbstractMatrix{<:Real}, ::AnalyticalNonlinearShrinkage;
              dims::Int=1, decomp::Union{Eigen,Nothing}=nothing)
-    Xc = copy(X)
-    if dims == 2
-        Xc = transpose(Xc)
-    elseif dims != 1
-        throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
-    end
-    centercols!(Xc)
+    @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
+
+    Xc = (dims == 1) ? centercols(X) : centercols(transpose(X))
     return analytical_nonlinear_shrinkage(Xc, decomp = decomp)
 end

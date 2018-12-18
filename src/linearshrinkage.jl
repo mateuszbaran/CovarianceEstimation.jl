@@ -29,16 +29,12 @@ end
 function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
              dims::Int=1)
 
-    Xc = copy(X)
-    if dims == 2
-        Xc = transpose(Xc)
-    elseif dims != 1
-        throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
-    end
-    centercols!(Xc)
+    @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
+
+    Xc = (dims == 1) ? centercols(X) : centercols(transpose(X))
     # sample covariance of size (p x p)
     n, p = size(Xc)
-    Ŝ    = (Xc'*Xc)/n
+    Ŝ    = cov(Xc, Simple())
     return linear_shrinkage(lse.target, Xc, Ŝ, lse.shrinkage, n, p)
 end
 
