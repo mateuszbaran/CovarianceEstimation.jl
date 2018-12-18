@@ -44,12 +44,14 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
         # explained in the paper
         throw(ArgumentError("The number of samples `n` must be at least 12 (given: $n)."))
     end
-    sample = (X'*X)./n
+    sample = cov(X, Simple())
+
     # sample eigenvalues sorted in ascending order and eigenvectors
     F    = isa(decomp, Nothing) ? eigen(sample) : decomp
     perm = sortperm(F.values)
     λ    = F.values[perm]
     U    = F.vectors[:,perm]
+
     # compute analytical nonlinear shrinkage kernel formula
     λ = λ[max(1, p-n+1):p]
     L = repeat(λ, outer=(1, min(p, n)))
@@ -57,15 +59,19 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
     h = n^(-1.0/3.0)
     H = h * L'
     x = (L - L') ./ H
-    # Equation (4.7) in http://www.econ.uzh.ch/static/wp/econwp264.pdf
-    f̃ = mean(epanechnikov.(x) ./ H, dims=2)
-    # Equation (4.8)
-    Hf̃_tmp = epanechnikov_HT1.(x)
-    mask = (@. abs(x) == SQRT5)
-    Hf̃_tmp[mask] = epanechnikov_HT2.(x[mask])
-    Hf̃ = mean(Hf̃_tmp ./ H, dims=2)
+    # additional useful definitions
     γ  = p/n
     πλ = π * λ
+
+    # Equation (4.7) in http://www.econ.uzh.ch/static/wp/econwp264.pdf
+    f̃ = mean(epanechnikov.(x) ./ H, dims=2)[:]
+    # Equation (4.8)
+    Hf̃_tmp = epanechnikov_HT1.(x)
+    # if by any chance there are x such that |x| ≈ √5 ...
+    mask = isinf.(Hf̃_tmp)
+    any(mask) && (Hf̃_tmp[mask] = epanechnikov_HT2.(x[mask]))
+    Hf̃ = mean(Hf̃_tmp ./ H, dims=2)[:]
+
     if p <= n
         # Equation (4.3)
         πγλ = γ * πλ
@@ -73,15 +79,15 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
         d̃ = λ ./ denom
     else
         # Equation (C.8)
-        Hf̃0 = epanechnikov_HT1.(h) * mean(1.0 ./ πλ)
+        Hf̃0 = epanechnikov_HT1(h) * mean(1.0 ./ πλ)
         # Equation (C.5)
         d̃0  = IPI / ((γ - 1.0) * Hf̃0)
         # Eq. (C.4)
         d̃1  = @. 1.0 / (π * πλ * (f̃^2 + Hf̃^2))
-        d̃ = vcat(d̃0 * ones(p-n,1), d̃1)
+        d̃ = [d̃0 * ones(p-n,1); d̃1]
     end
     # Equation (4.4)
-    return U*Diagonal(vec(d̃'))*U'
+    return U*(Diagonal(d̃)*U')
 end
 
 function cov(X::AbstractMatrix{<:Real}, ::AnalyticalNonlinearShrinkage;
