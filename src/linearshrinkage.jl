@@ -34,7 +34,7 @@ function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
     Xc = (dims == 1) ? centercols(X) : centercols(transpose(X))
     # sample covariance of size (p x p)
     n, p = size(Xc)
-    Ŝ    = (Xc'*Xc)/n
+    Ŝ    = cov(Xc, Simple())
     return linear_shrinkage(lse.target, Xc, Ŝ, lse.shrinkage, n, p)
 end
 

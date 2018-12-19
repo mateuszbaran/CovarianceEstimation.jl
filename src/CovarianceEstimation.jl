@@ -24,6 +24,6 @@ export CovarianceEstimator, Simple,
 include("utils.jl")
 include("simplecov.jl")
 include("linearshrinkage.jl")
-include("eigendecompositionshrinkage.jl")
+include("nonlinearshrinkage.jl")
 
 end # module
