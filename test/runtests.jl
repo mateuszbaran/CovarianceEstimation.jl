@@ -3,6 +3,7 @@ using Statistics
 using LinearAlgebra
 using Test
 using Random
+using DelimitedFiles
 
 const CE = CovarianceEstimation
 
@@ -65,7 +66,8 @@ end
 end
 
 
-@testset "LinShrink: target F with LW        " begin
+
+@testset "LinShrink: target F with LW (ref⭒) " begin
     lw = LinearShrinkageEstimator(ConstantCorrelation())
     testTransposition(lw, X)
     testUncorrelated(lw)
@@ -76,6 +78,20 @@ end
         @test cov(X̂, lw) ≈ ref_results["lwcov"]
         @test cov(X̂, lwfixed) ≈ ref_results["lwcov"]
     end
+end
+
+
+@testset "LinShrink: target D with SS (ref⭒) " begin
+    ss = LinearShrinkageEstimator(DiagonalUnequalVariance(), :ss)
+    test_mat1 = readdlm("test_matrices/20x100.csv")
+    ref_cov1  = readdlm("test_matrices/20x100_corpcor.csv")
+    test_mat2 = readdlm("test_matrices/100x20.csv")
+    ref_cov2  = readdlm("test_matrices/100x20_corpcor.csv")
+    test_mat3 = readdlm("test_matrices/50x50.csv")
+    ref_cov3  = readdlm("test_matrices/50x50_corpcor.csv")
+    @test cov(test_mat1, ss, corrected=true) ≈ ref_cov1
+    @test cov(test_mat2, ss, corrected=true) ≈ ref_cov2
+    @test cov(test_mat3, ss, corrected=true) ≈ ref_cov3
 end
 
 
@@ -131,7 +147,7 @@ end
         S = cov(X̂, Simple())
         Xtmp = CE.centercols(X̂)
         F = Diagonal(S)
-        shrinkage  = CE.sum_var_sij(Xtmp, S, n, false)
+        shrinkage  = CE.sum_var_sij(Xtmp, S, n; with_diag=false)
         shrinkage /= sum((S-Diagonal(S)).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwd) ≈ (1.0-shrinkage) * S + shrinkage * F
@@ -146,7 +162,8 @@ end
         Xtmp = CE.centercols(X̂)
         d = diag(S)
         F = sqrt.(d*d')
-        shrinkage  = CE.sum_var_sij(Xtmp, S, n, false)-CE.sum_fij(Xtmp, S, n, p)
+        shrinkage  = CE.sum_var_sij(Xtmp, S, n; with_diag=false)
+        shrinkage -= CE.sum_fij(Xtmp, S, n, p)
         shrinkage /= sum((S - F).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwe) ≈ (1.0-shrinkage) * S + shrinkage * F
