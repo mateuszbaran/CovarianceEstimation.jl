@@ -82,6 +82,15 @@ end
 
 
 @testset "LinShrink: target D with SS (ref⭒) " begin
+    ## R Script used to compare:
+    # require(corpcor)
+    # tm1 = read.table("20x100.csv")
+    # tm2 = read.table("100x20.csv")
+    # tm3 = read.table("50x50.csv")
+    # c1 = cov.shrink(tm1, lambda.var=0.0)
+    # c2 = cov.shrink(tm2, lambda.var=0.0)
+    # c3 = cov.shrink(tm3, lambda.var=0.0)
+
     ss = LinearShrinkageEstimator(DiagonalUnequalVariance(), :ss)
     test_mat1 = readdlm("test_matrices/20x100.csv")
     ref_cov1  = readdlm("test_matrices/20x100_corpcor.csv")
