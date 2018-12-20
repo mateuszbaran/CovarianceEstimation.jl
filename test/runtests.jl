@@ -8,6 +8,7 @@ using DelimitedFiles
 const CE = CovarianceEstimation
 
 include("reference_ledoitwolf.jl")
+include("legacy.jl")
 
 Random.seed!(1234)
 
@@ -66,7 +67,6 @@ end
 end
 
 
-
 @testset "LinShrink: target F with LW (ref⭒) " begin
     lw = LinearShrinkageEstimator(ConstantCorrelation())
     testTransposition(lw, X)
@@ -111,7 +111,7 @@ end
         n, p = size(X̂)
         S = cov(X̂, Simple())
         Xtmp = CE.centercols(X̂)
-        shrinkage  = CE.sum_var_sij(Xtmp, S, n)
+        shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-1).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwa) ≈ (1.0-shrinkage) * S + shrinkage * I
@@ -126,7 +126,7 @@ end
         Xtmp = CE.centercols(X̂)
         v = tr(S)/p
         F = v * I
-        shrinkage  = CE.sum_var_sij(Xtmp, S, n)
+        shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-v).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwb) ≈ (1.0-shrinkage) * S + shrinkage * F
@@ -142,7 +142,7 @@ end
         v = tr(S)/p
         c = sum(S-Diagonal(S))/(p*(p-1))
         F = v * I + c * (ones(p, p) - I)
-        shrinkage  = CE.sum_var_sij(Xtmp, S, n)
+        shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum(((S-Diagonal(S)) - c*(ones(p, p)-I)).^2) + sum((diag(S) .- v).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwc) ≈ (1.0-shrinkage) * S + shrinkage * F
@@ -156,7 +156,7 @@ end
         S = cov(X̂, Simple())
         Xtmp = CE.centercols(X̂)
         F = Diagonal(S)
-        shrinkage  = CE.sum_var_sij(Xtmp, S, n; with_diag=false)
+        shrinkage  = sum_var_sij(Xtmp, S, n, false; with_diag=false)
         shrinkage /= sum((S-Diagonal(S)).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwd) ≈ (1.0-shrinkage) * S + shrinkage * F
@@ -171,7 +171,7 @@ end
         Xtmp = CE.centercols(X̂)
         d = diag(S)
         F = sqrt.(d*d')
-        shrinkage  = CE.sum_var_sij(Xtmp, S, n; with_diag=false)
+        shrinkage  = sum_var_sij(Xtmp, S, n; with_diag=false)
         shrinkage -= CE.sum_fij(Xtmp, S, n, p)
         shrinkage /= sum((S - F).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
