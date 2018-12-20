@@ -174,7 +174,8 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
         # use the standardised data matrix
         D   = Diagonal(1.0 ./ sum(Xc², dims=1)[:])
         ΣS̄² = γ^2 * Σ(rescale(S.^2, D))
-        λ   = (Σ(rescale(uccov(Xc²), D)) - ΣS̄²) / (κ * ΣS̄²)
+        λ   = (Σ(rescale(uccov(Xc²), D)) - ΣS̄²) / κ
+        λ  /= ΣS̄²
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
@@ -186,11 +187,8 @@ end
 
 function target_C(S::AbstractMatrix, p::Int)
     v = tr(S)/p
-    # average of off-diagonal terms
-    c = Σ(S; with_diag=false) / (p*(p - 1)) # XXX sum(S)/(p * (p - 1)) - v / (p - 1)
-    # target: off diag terms = average of s_{ij} for i≂̸j
+    c = Σ(S; with_diag=false) / (p*(p - 1))
     F = c * ones(p, p)
-    # target: diag terms = average of s_{ii}
     F -= Diagonal(F)
     F += v * I
     return F, v, c
