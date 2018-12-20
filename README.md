@@ -15,19 +15,20 @@ The package is currently unregistered but can be installed with `Pkg` using
 ```julia
 using CovarianceEstimation
 
-X = randn(5, 3)
+X = randn(5, 7)
 
 S_uncorrected  = cov(X, Simple())
 S_corrected    = cov(X, Simple(corrected=true))
 
-# using shrinkage with different targets
+# using linear shrinkage with different targets
+LSE = LinearShrinkageEstimator
 # - Ledoit-Wolf target + shrinkage
-method = LinearShrinkageEstimator(ConstantCorrelation())
+method = LSE(ConstantCorrelation())
 S_ledoitwolf = cov(X, method)
-# - Chen target + shrinkage
-method = LinearShrinkageEstimator(DiagonalCommonVariance(), :rblw)
+# - Chen target + shrinkage (using the more verbose call)
+method = LSE(target=DiagonalCommonVariance(), shrinkage=:rblw)
 S_chen_rblw = cov(X, method)
-method = LinearShrinkageEstimator(DiagonalCommonVariance(), :oas)
+method = LSE(target=DiagonalCommonVariance(), shrinkage=:oas)
 S_chen_oas = cov(X, method)
 
 # a pre-defined shrinkage can be used as well

@@ -91,7 +91,8 @@ end
     # c2 = cov.shrink(tm2, lambda.var=0.0)
     # c3 = cov.shrink(tm3, lambda.var=0.0)
 
-    ss = LinearShrinkageEstimator(DiagonalUnequalVariance(), :ss)
+    ss = LinearShrinkageEstimator(target=DiagonalUnequalVariance(),
+                                  shrinkage=:ss)
     test_mat1 = readdlm("test_matrices/20x100.csv")
     ref_cov1  = readdlm("test_matrices/20x100_corpcor.csv")
     test_mat2 = readdlm("test_matrices/100x20.csv")

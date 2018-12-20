@@ -25,6 +25,10 @@ struct LinearShrinkageEstimator{T<:LinearShrinkageTarget, S<:Shrinkage} <: Covar
     end
 end
 
+LinearShrinkageEstimator(;
+    target::LinearShrinkageTarget=DiagonalUnitVariance(),
+    shrinkage::Shrinkage) = LinearShrinkageEstimator(target, shrinkage)
+
 
 function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
              corrected::Bool=false, dims::Int=1)

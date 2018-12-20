@@ -3,7 +3,7 @@ using Documenter, CovarianceEstimation
 makedocs(
     modules = [CovarianceEstimation],
     format = :html,
-    html_prettyurls = false,
+    format = Documenter.HTML(html_prettyurls = false),
     sitename = "CovarianceEstimation.jl",
     authors = "Mateusz Baran, Thibaut Lienart, and contributors.",
     pages = [
