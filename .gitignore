@@ -4,3 +4,5 @@
 deps/deps.jl
 *DS_Store
 docs/build/
+benchmark/tune.json
+benchmark/results.md
