@@ -4,5 +4,7 @@
 deps/deps.jl
 *DS_Store
 docs/build/
+*sandbox*
+*Rhistory*
 benchmark/tune.json
 benchmark/results.md
