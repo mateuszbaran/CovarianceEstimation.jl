@@ -187,13 +187,13 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
         trS² = sum(S.^2)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
-        λ = ((n-2)/n * trS² + tr²S)/((n+2) * (trS² - tr²S/p))
+        λ = ((n-2)/n * trS² + tr²S) / ((n+2) * (trS² - tr²S/p))
     elseif λ == :oas
         # https://arxiv.org/pdf/0907.4698.pdf equation 23
         trS² = sum(S.^2)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
-        λ = ((1.0-2.0/p) * trS² + tr²S)/((n+1.0-2.0/p) * (trS² - tr²S/p))
+        λ = ((1.0-2.0/p) * trS² + tr²S) / ((n+1.0-2.0/p) * (trS² - tr²S/p))
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
@@ -240,9 +240,9 @@ end
 ## TARGET C
 
 function target_C(S::AbstractMatrix, p::Int)
-    v = tr(S)/p
-    c = sumij(S; with_diag=false) / (p * (p - 1))
-    F = c * ones(p, p)
+    v  = tr(S)/p
+    c  = sumij(S; with_diag=false) / (p * (p - 1))
+    F  = c * ones(p, p)
     F -= Diagonal(F)
     F += v * I
     return F, v, c
@@ -279,8 +279,8 @@ end
 ## TARGET E
 
 function target_E(S::AbstractMatrix)
-    d = diag(S)
-    return sqrt.(d*d')
+    d = sqrt.(diag(S))
+    return d*d'
 end
 
 function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
@@ -303,7 +303,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
         ΣS̄² = γ^2 * sumij2(S)
         λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
         λ  -= sum_fij(Xc, S, n, p, corrected)
-        λ  /= sumij2((S - F))
+        λ  /= sumij2(S - F)
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
@@ -315,8 +315,8 @@ end
 
 function target_F(S::AbstractMatrix, p::Int)
     s  = sqrt.(diag(S))
-    s_ = @inbounds [s[i]*s[j] for i ∈ 1:p, j ∈ 1:p]
-    r̄  = (sum(S ./ s_) - p)/(p * (p - 1))
+    s_ = s*s'
+    r̄  = (sum(S ./ s_) - p) / (p * (p - 1))
     F_ = r̄ * s_
     F  = F_ + (Diagonal(s_) - Diagonal(F_))
     return F, r̄
@@ -343,7 +343,7 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
         ΣS̄² = γ^2 * sumij2(S)
         λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
         λ  -= r̄ * sum_fij(Xc, S, n, p, corrected)
-        λ  /= sumij2((S - F))
+        λ  /= sumij2(S - F)
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
