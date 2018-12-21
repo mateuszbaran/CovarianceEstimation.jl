@@ -45,17 +45,65 @@ end
 ##############################################################################
 # Helper functions for Linear Shrinkage estimators
 
-# M: square (symmetric)
-rescale(M::AbstractMatrix, D::Diagonal) = D * M * D
+"""
+    rescale(M, d)
 
-# uncentered cov
+Internal function to scale the rows and the columns of a square matrix `M`
+according to the elements in `d`.
+This is useful when dealing with the standardised data matrix which can be
+written `Xs=Xc*D` where `Xc` is the centered data matrix and `D=Diagonal(d)`
+so that its simple covariance is `D*S*D` where `S` is the simple covariance
+of `Xc`. Such `D*M*D` terms appear often in the computations of optimal
+shrinkage λ.
+"""
+rescale(M::AbstractMatrix, d::AbstractVector) = M .* d .* d'
+
+
+"""
+    uccov(X)
+
+Internal function to compute `X*X'/n` where `n` is the number of rows of `X`.
+This corresponds to the uncorrected covariance of `X` if `X` is centered.
+This operation appears often in the computations of optimal shrinkage λ.
+"""
 uccov(X::AbstractMatrix) = (X'*X)/size(X, 1)
 
-# sum of off diagonal elements, basically just a sum across elements
-# of a square matrix with the possibility of removing the diagonal.
+
+"""
+    sumij(S)
+
+Internal function to compute the sum of elements of a square matrix `S`.
+A keyword `with_diag` can be passed to indicate whether to include or not the
+diagonal of `S` in the sum. Both cases happen often in the computations of
+optimal shrinkage λ.
+"""
 function sumij(S::AbstractMatrix; with_diag=false)
     acc = sum(S)
     with_diag || return acc - tr(S)
+    return acc
+end
+
+
+"""
+    square(x)
+
+Internal function to compute the square of a real number `x`. Defined here
+so it can be used in the other internal function `sumij2`.
+"""
+square(x::Real) = x*x
+
+
+"""
+    sumij2(S)
+
+Internal function identical to `sumij` except that it passes the function
+`square` to the sum so that it is the sum of the elements of `S` squared
+which is computed. This is significantly more efficient than using
+`sumij(S.^2)` for large matrices as it allocates very little.
+"""
+function sumij2(S::AbstractMatrix; with_diag=false)
+    acc = sum(square, S)
+    with_diag || return acc - sum(square, Diagonal(S))
     return acc
 end
 
@@ -75,7 +123,7 @@ function sum_fij(Xc, S, n, p, corrected=false)
         αᵢⱼ   = sdS[j]/sdS[i]
         ∑fij += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
     end
-    ∑fij /= (2.0 * ifelse(corrected, n-1, n))
+    ∑fij /= (2.0 * n - Int(corrected))
     return ∑fij
 end
 ##############################################################################
@@ -94,12 +142,12 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = I
-    κ   = ifelse(corrected, n-1, n)
+    κ   = n - Int(corrected)
     γ   = κ/n
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij(S.^2, with_diag=true)
+        ΣS̄² = γ^2 * sumij2(S, with_diag=true)
         λ   = (sumij(uccov(Xc²), with_diag=true) - ΣS̄²) / κ
         λ  /=  (ΣS̄² - 2tr(S) + p)
     else
@@ -125,13 +173,13 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_B(S, p)
-    κ   = ifelse(corrected, n-1, n)
+    κ   = n - Int(corrected)
     γ   = κ/n
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
         v   = F.λ # tr(S)/p
-        ΣS̄² = γ^2 * sumij(S.^2, with_diag=true)
+        ΣS̄² = γ^2 * sumij2(S, with_diag=true)
         λ   = (sumij(uccov(Xc²), with_diag=true) - ΣS̄²) / κ
         λ  /=  (ΣS̄² - p*v^2)
     elseif λ == :rblw
@@ -169,18 +217,18 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_D(S)
-    κ   = ifelse(corrected, n-1, n)
+    κ   = n - Int(corrected)
     γ   = κ/n
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij(S.^2)
+        ΣS̄² = γ^2 * sumij2(S)
         λ   = (sumij(uccov(Xc²)) - ΣS̄²) / (κ * ΣS̄²)
     elseif λ == :ss
         # use the standardised data matrix
-        D   = Diagonal(1.0 ./ sum(Xc², dims=1)[:])
-        ΣS̄² = γ^2 * sumij(rescale(S.^2, D))
-        λ   = (sumij(rescale(uccov(Xc²), D)) - ΣS̄²) / κ
+        d   = 1.0 ./ sum(Xc², dims=1)[:]
+        ΣS̄² = γ^2 * sumij2(rescale(S, sqrt.(d)))
+        λ   = (sumij(rescale(uccov(Xc²), d)) - ΣS̄²) / κ
         λ  /= ΣS̄²
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
@@ -193,7 +241,7 @@ end
 
 function target_C(S::AbstractMatrix, p::Int)
     v = tr(S)/p
-    c = sumij(S; with_diag=false) / (p*(p - 1))
+    c = sumij(S; with_diag=false) / (p * (p - 1))
     F = c * ones(p, p)
     F -= Diagonal(F)
     F += v * I
@@ -213,12 +261,12 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F, v, c = target_C(S, p)
-    κ   = ifelse(corrected, n-1, n)
+    κ   = n - Int(corrected)
     γ   = κ/n
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij(S.^2, with_diag=true)
+        ΣS̄² = γ^2 * sumij2(S, with_diag=true)
         λ   = (sumij(uccov(Xc²), with_diag=true) - ΣS̄²) / κ
         λ  /=  (ΣS̄² - p*(p-1)*c^2 - p*v^2)
     else
@@ -247,15 +295,15 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_E(S)
-    κ   = ifelse(corrected, n-1, n)
+    κ   = n - Int(corrected)
     γ   = κ/n
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij(S.^2)
+        ΣS̄² = γ^2 * sumij2(S)
         λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
         λ  -= sum_fij(Xc, S, n, p, corrected)
-        λ  /= sumij((S - F).^2)
+        λ  /= sumij2((S - F))
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
@@ -287,15 +335,15 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F, r̄ = target_F(S, p)
-    κ    = ifelse(corrected, n-1, n)
+    κ    = n - Int(corrected)
     γ    = κ/n
     Xc²  = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij(S.^2)
+        ΣS̄² = γ^2 * sumij2(S)
         λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
         λ  -= r̄ * sum_fij(Xc, S, n, p, corrected)
-        λ  /= sumij((S - F).^2)
+        λ  /= sumij2((S - F))
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
