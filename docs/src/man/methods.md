@@ -11,7 +11,7 @@ For most estimators, the matrix is assumed to have entries in $\mathbb R$.
 
 We will write $X_c$ the *centered* matrix i.e. where each column sums up to zero.
 We will also write $X_s$ the *standardised* matrix i.e. where each column not only sums up to zero but is scaled to have sample variance one.
-Finally, we will write $S$ the standard sample covariance estimator (see below) of size $p\times p$ and $D$ the diagonal matrix with diagonal matching that of $D$.
+Finally, we will write $S$ the standard sample covariance estimator (see below) of size $p\times p$ and $D$ the diagonal matrix matching the diagonal of $S$.
 
 Note that the sample variance and covariance can be corrected or uncorrected (and this can be specified in the code).
 In order to avoid having to specify this everywhere in the document, it is useful to introduce a last symbol: $\kappa$ which is either set to $n$ (uncorrected case) or $(n-1)$ (corrected case).
@@ -33,7 +33,7 @@ It can be specified with the constructor `Simple` which can take a named argumen
 ```@example
 using CovarianceEstimation # hide
 using Random # hide
-Random.seed!(1) # hide
+Random.seed!(1)
 n, p = 5, 7
 X = randn(n, p)
 # corrected covariance
@@ -65,7 +65,7 @@ Here is an example using the identity matrix as a target and automatic shrinkage
 ```@example
 using CovarianceEstimation # hide
 using Random # hide
-Random.seed!(1) # hide
+Random.seed!(1)
 n, p = 2, 3
 X = randn(n, p)
 target = DiagonalUnitVariance()
