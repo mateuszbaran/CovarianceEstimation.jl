@@ -111,15 +111,17 @@ end
 # helper function to compute ∑_{i≂̸j} f_ij  that appears in
 # http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p 11
 """
-    sum_fij(Xc, S, )
+    sum_fij(Xc, S, n, κ)
+
+Internal function corresponding to ``∑_{i≂̸j}f_{ij}`` that appears in
+http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p.11.
 """
-function sum_fij(Xc, S, n, p, corrected=false)
-    κ  = n - Int(corrected)
-    sd = sqrt.(diag(S))
-    M1 = ((Xc.^3)'*Xc)./ sd
-    M2 = κ * S .* sd
-    M3 = (M1 - M2) .* sd'
-    return sumij(M3) / (n*κ)
+function sum_fij(Xc, S, n, κ)
+    sd  = sqrt.(diag(S))
+    M   = ((Xc.^3)'*Xc) ./ sd
+    M .-= κ * S .* sd
+    M .*= sd'
+    return sumij(M) / (n * κ)
 end
 ##############################################################################
 
@@ -297,7 +299,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
     if λ ∈ [:auto, :lw]
         ΣS̄² = γ^2 * sumij2(S)
         λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
-        λ  -= sum_fij(Xc, S, n, p, corrected)
+        λ  -= sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
@@ -337,7 +339,7 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
     if λ ∈ [:auto, :lw]
         ΣS̄² = γ^2 * sumij2(S)
         λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
-        λ  -= r̄ * sum_fij(Xc, S, n, p, corrected)
+        λ  -= r̄ * sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")

@@ -173,7 +173,7 @@ end
         d = diag(S)
         F = sqrt.(d*d')
         shrinkage  = sum_var_sij(Xtmp, S, n; with_diag=false)
-        shrinkage -= CE.sum_fij(Xtmp, S, n, p)
+        shrinkage -= CE.sum_fij(Xtmp, S, n, n)
         shrinkage /= sum((S - F).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwe) ≈ (1.0-shrinkage) * S + shrinkage * F
