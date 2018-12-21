@@ -107,24 +107,19 @@ function sumij2(S::AbstractMatrix; with_diag=false)
     return acc
 end
 
-# helper function ∑_{i≂̸j} f_ij
+
+# helper function to compute ∑_{i≂̸j} f_ij  that appears in
+# http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p 11
+"""
+    sum_fij(Xc, S, )
+"""
 function sum_fij(Xc, S, n, p, corrected=false)
-    tmat  = @inbounds [(Xc[t,:] * Xc[t,:]' - S) for t ∈ 1:n]
-    dS    = diag(S)
-    sdS   = sqrt.(dS)
-    tdiag = @inbounds [Diagonal(Xc[t,:].^2 - dS) for t ∈ 1:n]
-    # estimator for cov(s_ii, s_ij) --> row scaling
-    ϑ̂ᵢᵢ   = @inbounds sum(tdiag[t] * tmat[t] for t ∈ 1:n) / n
-    # estimator for cov(s_jj, s_ij) --> column scaling
-    ϑ̂ⱼⱼ   = @inbounds sum(tmat[t] * tdiag[t] for t ∈ 1:n) / n
-    ∑fij  = zero(eltype(Xc))
-    @inbounds for i ∈ 1:p, j ∈ 1:p
-        (j == i) && continue
-        αᵢⱼ   = sdS[j]/sdS[i]
-        ∑fij += ϑ̂ᵢᵢ[i,j]*αᵢⱼ + ϑ̂ⱼⱼ[i,j]/αᵢⱼ
-    end
-    ∑fij /= (2.0 * n - Int(corrected))
-    return ∑fij
+    κ  = n - Int(corrected)
+    sd = sqrt.(diag(S))
+    M1 = ((Xc.^3)'*Xc)./ sd
+    M2 = κ * S .* sd
+    M3 = (M1 - M2) .* sd'
+    return sumij(M3) / (n*κ)
 end
 ##############################################################################
 
