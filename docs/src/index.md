@@ -1,20 +1,19 @@
 # CovarianceEstimation.jl
 
-*Lightweight covariance estimation in Julia.*
+*Lightweight robust covariance estimation in Julia.*
 
 A package for estimating covariance matrices.
 
 ## Package Features
 
-- Simple and corrected covariance.
-- Ledoit-Wolf covariance shrinkage.
-- Rao-Blackwell theorem modified Ledoit-Wolf shrinkage
-- Oracle Approximating shrinkage
+- Standard corrected and uncorrected covariance estimators,
+- Linear and Nonlinear shrinkage estimators
+- Focus on speed and lightweight dependencies
 
 ## Manual outline
 
 ```@contents
-Pages = ["man/methods.md"]
+Pages = ["man/methods.md", "man/lshrink.md", "man/nlshrink.md"]
 ```
 
 ## Library Outline
