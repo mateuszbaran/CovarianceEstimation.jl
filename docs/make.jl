@@ -18,3 +18,7 @@ makedocs(
         ],
     ],
 )
+
+deploydocs(
+    repo = "github.com/mateuszbaran/CovarianceEstimation.jl.git"
+)

@@ -6,6 +6,7 @@ version = "0.1.0"
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -14,3 +15,6 @@ DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [targets]
 test = ["Test", "Random", "DelimitedFiles"]
+
+[compat]
+Documenter = "~0.21"
