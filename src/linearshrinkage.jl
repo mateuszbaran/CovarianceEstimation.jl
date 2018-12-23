@@ -4,14 +4,58 @@ abstract type LinearShrinkageTarget end
 # Taxonomy from http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
 # page 13
 
+"""
+    DiagonalUnitVariance
+
+Target for linear shrinkage: unit matrix.
+"""
 struct DiagonalUnitVariance       <: LinearShrinkageTarget end
+
+"""
+    DiagonalCommonVariance
+
+Target for linear shrinkage: unit matrix multiplied by average variance of
+variables.
+"""
 struct DiagonalCommonVariance     <: LinearShrinkageTarget end
+
+"""
+    DiagonalUnequalVariance
+
+Target for linear shrinkage: diagonal of covariance matrix.
+"""
 struct DiagonalUnequalVariance    <: LinearShrinkageTarget end
+
+"""
+    CommonCovariance
+
+Target for linear shrinkage: see `target_C`.
+"""
 struct CommonCovariance           <: LinearShrinkageTarget end
+
+"""
+    PerfectPositiveCorrelation
+
+Target for linear shrinkage: see `target_E`.
+"""
 struct PerfectPositiveCorrelation <: LinearShrinkageTarget end
+
+"""
+    ConstantCorrelation
+
+Target for linear shrinkage: see `target_F`.
+"""
 struct ConstantCorrelation        <: LinearShrinkageTarget end
 
+"""
+    LinearShrinkageEstimator(target, shrinkage)
 
+Linear shrinkage estimator described by equation
+``(1 - \\lambda) S + \\lambda F`` where ``S`` is standard covariance matrix,
+``F`` is shrinkage target described by argument `target` and ``\\lambda`` is a
+shrinkage parameter, either given explicitly in `shrinkage` or automatically
+determined according to one of the supported methods.
+"""
 struct LinearShrinkageEstimator{T<:LinearShrinkageTarget, S<:Shrinkage} <: CovarianceEstimator
     target::T
     shrinkage::S
@@ -124,6 +168,15 @@ function sum_fij(Xc, S, n, κ)
     return sumij(M) / (n * κ)
 end
 ##############################################################################
+
+"""
+    linear_shrinkage(target, Xc, S, λ, n, p, corrected)
+
+Performs linear shrinkage with target of type `target` for data matrix `Xc`
+of size `n` by `p` with covariance matrix `S` and shrinkage parameter `λ`.
+Calculates corrected covariance if `corrected` is true.
+"""
+linear_shrinkage
 
 ## TARGET A
 

@@ -1,3 +1,9 @@
+"""
+    AnalyticalNonlinearShrinkage
+
+Analytical nonlinear shrinkage estimator. See docs for
+`analytical_nonlinear_shrinkage` for details.
+"""
 struct AnalyticalNonlinearShrinkage <: CovarianceEstimator end
 
 const SQRT5  = sqrt(5.0)

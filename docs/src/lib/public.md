@@ -22,8 +22,12 @@ Pages = ["public.md"]
 cov
 CovarianceEstimator
 Simple
-Corrected
-LedoitWolf
-RaoBlackwellLedoitWolf
-OracleApproximatingShrinkage
+LinearShrinkageEstimator
+DiagonalUnitVariance
+DiagonalCommonVariance
+DiagonalUnequalVariance
+CommonCovariance
+PerfectPositiveCorrelation
+ConstantCorrelation
+AnalyticalNonlinearShrinkage
 ```
