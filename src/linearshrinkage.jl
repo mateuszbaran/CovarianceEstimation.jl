@@ -196,13 +196,13 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
         λ  /= (ΣS̄² - p*v̄^2)
     elseif λ == :rblw
         # https://arxiv.org/pdf/0907.4698.pdf equations 17, 19
-        trS² = sum(S.^2)
+        trS² = sum(square, S)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
         λ = ((n-2)/n * trS² + tr²S) / ((n+2) * (trS² - tr²S/p))
     elseif λ == :oas
         # https://arxiv.org/pdf/0907.4698.pdf equation 23
-        trS² = sum(S.^2)
+        trS² = sum(square, S)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
         λ = ((1.0-2.0/p) * trS² + tr²S) / ((n+1.0-2.0/p) * (trS² - tr²S/p))
@@ -234,8 +234,8 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij2(S)
-        λ   = (sumij(uccov(Xc²)) - ΣS̄²) / (κ * ΣS̄²)
+        ΣS² = γ^2 * sumij2(S)
+        λ   = (sumij(uccov(Xc²)) - ΣS²) / (κ * ΣS²)
     elseif λ == :ss
         # use the standardised data matrix
         d   = 1.0 ./ sum(Xc², dims=1)[:]
@@ -278,9 +278,12 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij2(S, with_diag=true)
-        λ   = (sumij(uccov(Xc²), with_diag=true) - ΣS̄²) / κ
-        λ  /=  (ΣS̄² - p*(p-1)*c^2 - p*v^2)
+        ΣS² = γ^2 * sumij2(S, with_diag=true)
+        λ   = (sumij(uccov(Xc²), with_diag=true) - ΣS²) / κ
+        λ  /=  (ΣS² - p*(p-1)*c^2 - p*v^2)
+    elseif λ == :ss
+        # TODO
+        error("Not yet implemented")
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
@@ -312,10 +315,13 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij2(S)
-        λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
+        ΣS² = γ^2 * sumij2(S)
+        λ   = (sumij(uccov(Xc²)) - ΣS²) / κ
         λ  -= sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
+    elseif λ == :ss
+        # TODO
+        error("Not yet implemented")
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
@@ -352,10 +358,13 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
     Xc²  = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
-        ΣS̄² = γ^2 * sumij2(S)
-        λ   = (sumij(uccov(Xc²)) - ΣS̄²) / κ
+        ΣS² = γ^2 * sumij2(S)
+        λ   = (sumij(uccov(Xc²)) - ΣS²) / κ
         λ  -= r̄ * sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
+    elseif λ == :ss
+        # TODO
+        error("Not yet implemented")
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
