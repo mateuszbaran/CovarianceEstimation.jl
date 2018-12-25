@@ -153,3 +153,31 @@ end
         @test cov(X̂, oas_fixed) ≈ CE.linshrink(Ŝ, F_ref, λ_oas_ref)
     end
 end
+
+
+@testset "LinShrink: all targets, std (SS)   " begin
+    for target ∈ [
+            DiagonalUnitVariance(),
+            DiagonalCommonVariance(),
+            DiagonalUnequalVariance(),
+            CommonCovariance(),
+            PerfectPositiveCorrelation(),
+            ConstantCorrelation()
+            ]
+        #=
+        :ss assumes that the shrinkage should be the same if the data
+        matrix is standardised. This is what is tested.
+        =#
+        for X̂ ∈ test_matrices
+            Xcs = X̂
+            Xcs = CE.centercols(Xcs)
+            n = size(Xcs, 1)
+            for i ∈ 1:size(Xcs, 2)
+                Xcs[:, i] ./= sqrt(var(Xcs[:, i], corrected=false))
+            end
+            LSEss = LinearShrinkageEstimator(target=target, shrinkage=:ss)
+            LSElw = LinearShrinkageEstimator(target=target, shrinkage=:lw)
+            @test cov(Xcs, LSEss) ≈ cov(Xcs, LSElw)
+        end
+    end
+end
