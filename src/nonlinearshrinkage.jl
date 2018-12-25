@@ -36,27 +36,30 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
         # explained in the paper
         throw(ArgumentError("The number of samples `n` must be at least 12 (given: $n)."))
     end
-    sample = cov(X, Simple())
+    Σ̂ = cov(X, Simple())
 
     # sample eigenvalues sorted in ascending order and eigenvectors
-    F    = isa(decomp, Nothing) ? eigen(sample) : decomp
+    F    = isa(decomp, Nothing) ? eigen(Σ̂) : decomp
     perm = sortperm(F.values)
     λ    = F.values[perm]
-    U    = F.vectors[:,perm]
+    U    = F.vectors[:, perm]
 
     # compute analytical nonlinear shrinkage kernel formula
     λ = λ[max(1, p-n+1):p]
     L = repeat(λ, outer=(1, min(p, n)))
+
     # Equation (4.9)
     h = n^(-1.0/3.0)
     H = h * L'
     x = (L - L') ./ H
+
     # additional useful definitions
     γ  = p/n
     πλ = π * λ
 
     # Equation (4.7) in http://www.econ.uzh.ch/static/wp/econwp264.pdf
     f̃ = mean(epanechnikov.(x) ./ H, dims=2)[:]
+
     # Equation (4.8)
     Hf̃_tmp = epanechnikov_HT1.(x)
     # if by any chance there are x such that |x| ≈ √5 ...
@@ -79,7 +82,7 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
         d̃ = [d̃0 * ones(p-n,1); d̃1]
     end
     # Equation (4.4)
-    return U*(Diagonal(d̃)*U')
+    return U*(d̃ .* U')
 end
 
 function cov(X::AbstractMatrix{<:Real}, ::AnalyticalNonlinearShrinkage;

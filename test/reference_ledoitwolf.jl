@@ -3,6 +3,7 @@
 # Their code was released under the BSD-2 license with the copyright notice
 # below.
 # https://www.econ.uzh.ch/en/people/faculty/wolf/publications.html#9
+
 ###########################################################################
 # This file is released under the BSD 2-clause license.
 
