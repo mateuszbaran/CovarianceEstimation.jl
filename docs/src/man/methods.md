@@ -21,7 +21,8 @@ With these notations we can write:
 ```math
 \begin{eqnarray}
     S &=& \kappa^{-1}X_c^T X_c \label{simple-covariance}\\
-    X_s &=& X_c D^{-1}
+    D_{ij} &=& S_{ij}\mathbf 1_{[i=j]}\\
+    X_s &=& X_c D^{-1/2}
 \end{eqnarray}
 ```
 
@@ -40,7 +41,7 @@ X = randn(n, p)
 S = cov(X, Simple(corrected=true))
 # we can also manually compute it and compare
 Xc = (X .- sum(X, dims=1)/n) # centering
-κ = n-1
+κ = n-1 # correction factor
 S ≈ (Xc'*Xc)/κ
 ```
 
@@ -49,10 +50,10 @@ S ≈ (Xc'*Xc)/κ
 Linear shrinkage estimators correspond to covariance estimators of the form
 
 ```math
-C = (1-\lambda)S + \lambda F
+\hat\Sigma = (1-\lambda)S + \lambda F
 ```
 
-where $F$ is a *target* matrix of appropriate dimensions and $\lambda\in[0,1]$ is a shrinkage intensity.
+where $F$ is a *target* matrix of appropriate dimensions, $\lambda\in[0,1]$ is a shrinkage intensity and $S$ is the sample covariance estimator.
 There are several standard targets that can be used, a simple example being the identity matrix.
 
 The shrinkage intensity $\lambda$ can be specified manually or computed automatically.
@@ -88,6 +89,8 @@ method2 = LinearShrinkageEstimator(target, shrinkage)
 cov(X, method2)
 ```
 
+[Read more on linear shrinkage estimators...](@ref nlshrink)
+
 ## Nonlinear shrinkage estimators
 
-[More on linear shrinkage estimators...](@ref nlshrink)
+[Read more on nonlinear shrinkage estimators...](@ref nlshrink)

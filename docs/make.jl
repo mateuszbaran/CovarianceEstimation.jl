@@ -17,4 +17,4 @@ makedocs(
             "Internals" => "lib/internals.md"
         ],
     ],
-)
+    )
