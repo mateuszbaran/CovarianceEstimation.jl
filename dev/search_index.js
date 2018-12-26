@@ -173,7 +173,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "Statistics.cov",
     "category": "function",
-    "text": "cov(x::AbstractVector, sc::Simple)\n\nCompute the sample variance of the vector x. The sum is scaled with n where n = length(x).\n\n\n\n\n\ncov(x::AbstractVector, y, sc::Simple)\n\nCompute the covariance of the vectors x and y using formula frac1nsum_i=1^n (x_i-bar x) (y_i-bar y)^* where * denotes complex conjugate.\n\n\n\n\n\ncov(X::AbstractMatrix, sc::Simple; dims::Int=1)\n\nCompute the covariance matrix associated with X along dimension dims. The sum is scaled with n where n\n\n\n\n\n\ncov(X, sc::Simple{<:AbstractWeights}; dims=1)\n\nCompute the weighted covariance matrix.\n\n\n\n\n\n"
+    "text": "cov(x::AbstractVector, sc::Simple)\n\nCompute the sample variance of the vector x. The sum is scaled with n where n = length(x) if sc.corrected is false and with n-1 otherwise.\n\n\n\n\n\ncov(x::AbstractVector, y, sc::Simple)\n\nCompute the covariance of the vectors x and y using formula frac1nsum_i=1^n (x_i-bar x) (y_i-bar y)^* where * denotes complex conjugate. If sc.corrected is true then the fraction frac1n is replaced with frac1n-1.\n\n\n\n\n\ncov(X::AbstractMatrix, sc::Simple; dims::Int=1)\n\nCompute the covariance matrix associated with X along dimension dims. The sum is scaled with n where  n = length(x) if sc.corrected is false and with n-1 otherwise.\n\n\n\n\n\ncov(X, sc::Simple{<:AbstractWeights}; dims=1)\n\nCompute the weighted covariance matrix.\n\n\n\n\n\ncov(X, lse::LinearShrinkageEstimator; dims=1)\n\nLinear shrinkage covariance estimator for matrix X along dimension dims. Computed using the method described by lse.\n\n\n\n\n\ncov(X, ans::AnalyticalNonlinearShrinkage; dims=1)\n\n\n\n\n\n"
 },
 
 {
@@ -197,7 +197,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "CovarianceEstimation.LinearShrinkageEstimator",
     "category": "type",
-    "text": "LinearShrinkageEstimator(target, shrinkage)\n\nLinear shrinkage estimator described by equation (1 - lambda) S + lambda F where S is standard covariance matrix, F is shrinkage target described by argument target and lambda is a shrinkage parameter, either given explicitly in shrinkage or automatically determined according to one of the supported methods.\n\n\n\n\n\n"
+    "text": "LinearShrinkageEstimator(target, shrinkage; corrected = false)\n\nLinear shrinkage estimator described by equation (1 - lambda) S + lambda F where S is standard covariance matrix, F is shrinkage target described by argument target and lambda is a shrinkage parameter, either given explicitly in shrinkage or automatically determined according to one of the supported methods.\n\nThe corrected estimator is used if corrected is true.\n\n\n\n\n\n"
 },
 
 {
