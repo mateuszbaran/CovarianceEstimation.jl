@@ -146,3 +146,24 @@ for (n, p) ∈ np
     end
     println("Size $(n)x$(p), best: $name_best ($val_best; $sig_best)")
 end
+
+
+using PyPlot
+
+for (n, p) ∈ np
+    n, p = 15, 20
+    figure()
+    rkeys = filter(κ->occursin("$(n)x$(p)_", κ), res2keys)
+    data = Vector{Vector{Float64}}(undef, length(rkeys))
+    for (i, k) ∈ enumerate(rkeys)
+        # find the results
+        matchkeys = filter(κ -> occursin(k, κ), reskeys)
+        data[i] = [results[κ] for κ ∈ matchkeys]
+    end
+    perm = sortperm(rkeys)
+    boxplot(data[perm])
+    title("Size: $(n)x$(p)")
+    xticks(1:length(rkeys), rkeys[perm], rotation=90)
+    tight_layout()
+    savefig("test/experiments/results/bm_$(n)x$(p).png")
+end
