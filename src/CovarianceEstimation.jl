@@ -3,6 +3,7 @@ module CovarianceEstimation
 using Statistics
 import Statistics: cov
 using LinearAlgebra
+using StatsBase
 
 """
     CovarianceEstimator
