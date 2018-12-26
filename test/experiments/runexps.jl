@@ -151,7 +151,6 @@ end
 using PyPlot
 
 for (n, p) ∈ np
-    n, p = 15, 20
     figure()
     rkeys = filter(κ->occursin("$(n)x$(p)_", κ), res2keys)
     data = Vector{Vector{Float64}}(undef, length(rkeys))
