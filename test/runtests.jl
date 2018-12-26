@@ -104,16 +104,16 @@ end
     # c3 = cov.shrink(tm3, lambda.var=0.0)
 
     ss = LinearShrinkageEstimator(target=DiagonalUnequalVariance(),
-                                  shrinkage=:ss)
+                                  shrinkage=:ss; corrected=true)
     test_mat1 = readdlm("test_matrices/20x100.csv")
     ref_cov1  = readdlm("test_matrices/20x100_corpcor.csv")
     test_mat2 = readdlm("test_matrices/100x20.csv")
     ref_cov2  = readdlm("test_matrices/100x20_corpcor.csv")
     test_mat3 = readdlm("test_matrices/50x50.csv")
     ref_cov3  = readdlm("test_matrices/50x50_corpcor.csv")
-    @test cov(test_mat1, ss, corrected=true) ≈ ref_cov1
-    @test cov(test_mat2, ss, corrected=true) ≈ ref_cov2
-    @test cov(test_mat3, ss, corrected=true) ≈ ref_cov3
+    @test cov(test_mat1, ss) ≈ ref_cov1
+    @test cov(test_mat2, ss) ≈ ref_cov2
+    @test cov(test_mat3, ss) ≈ ref_cov3
 end
 
 
@@ -345,5 +345,5 @@ end
         0.1311885021292079 -0.06609333359484194 0.2142067058691495 0.4037497692723672 -0.071552565104472 -0.4027374859186953 0.0218156559262466 -0.07808145299604483 0.2540797305115163 0.1373042132891731 -0.1557010845190202 0.009384419494445921 -0.4792492716833969 0.304300856893897 -0.4069572992897037
         -0.0159392231209386 -0.1522700548717422 0.149272719648131 -0.4589077823487346 0.2520400580820472 -0.2066703837721567 0.1848825122629494 -0.1209337448694974 0.3702379260247126 -0.1015163204611454 0.03621489282260958 -0.1789689050034709 0.2960886805234728 0.5595121572318335 0.08480735933411085]
     #@test cov(lwas1520, ans) ≈ lwas1520S
-    @test cov(lwas2015, ans, decomp = Eigen(lwas2015λ, lwas2015u)) ≈ lwas2015S
+    @test cov(lwas2015, AnalyticalNonlinearShrinkage(Eigen(lwas2015λ, lwas2015u))) ≈ lwas2015S
 end
