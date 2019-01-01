@@ -7,7 +7,7 @@
 #
 # - [python] sklearn
 # - [R] corpcor
-# - [Matlab/Octave] Ledoit & Wolfe's implementations
+# - [Matlab/Octave] Ledoit & Wolf's implementations
 #
 # ==========================================================================
 
@@ -112,7 +112,7 @@ speedup = mean(times_corpcor ./ times_ours)
 
 
 # ===============
-# LEDOIT WOLFE 1
+# LEDOIT WOLF 1
 # ===============
 lw = LinearShrinkageEstimator(
         target=ConstantCorrelation(),
@@ -139,7 +139,7 @@ speedup = mean(times_lw1 ./ times_ours)
 
 
 # ===============
-# LEDOIT WOLFE 2
+# LEDOIT WOLF 2
 # ===============
 lw = AnalyticalNonlinearShrinkage()
 times = zeros(length(p))
