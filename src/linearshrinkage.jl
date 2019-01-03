@@ -8,6 +8,10 @@ abstract type LinearShrinkageTarget end
     DiagonalUnitVariance
 
 Target for linear shrinkage: unit matrix.
+A subtype of `LinearShrinkageTarget` where
+
+* ``F_{ij}=1`` if ``i=j`` and
+* ``F_{ij}=0`` otherwise
 """
 struct DiagonalUnitVariance       <: LinearShrinkageTarget end
 
@@ -16,6 +20,10 @@ struct DiagonalUnitVariance       <: LinearShrinkageTarget end
 
 Target for linear shrinkage: unit matrix multiplied by average variance of
 variables.
+A subtype of `LinearShrinkageTarget` where
+
+* ``F_{ij}=v`` if ``i=j`` with ``v=\\mathrm{tr}(S)/p`` and
+* ``F_{ij}=0`` otherwise
 """
 struct DiagonalCommonVariance     <: LinearShrinkageTarget end
 
@@ -23,6 +31,10 @@ struct DiagonalCommonVariance     <: LinearShrinkageTarget end
     DiagonalUnequalVariance
 
 Target for linear shrinkage: diagonal of covariance matrix.
+A subtype of `LinearShrinkageTarget` where
+
+* ``F_{ij}=s_{ij}`` if ``i=j`` and
+* ``F_{ij}=0`` otherwise
 """
 struct DiagonalUnequalVariance    <: LinearShrinkageTarget end
 
@@ -30,6 +42,10 @@ struct DiagonalUnequalVariance    <: LinearShrinkageTarget end
     CommonCovariance
 
 Target for linear shrinkage: see `target_C`.
+A subtype `LinearShrinkageTarget` where
+
+* ``F_{ij}=v`` if ``i=j`` with ``v=\\mathrm{tr}(S)/p`` and
+* ``F_{ij}=c`` with ``c=\\sum_{i\\neq j} S_{ij}/(p(p-1))`` otherwise
 """
 struct CommonCovariance           <: LinearShrinkageTarget end
 
@@ -37,6 +53,10 @@ struct CommonCovariance           <: LinearShrinkageTarget end
     PerfectPositiveCorrelation
 
 Target for linear shrinkage: see `target_E`.
+A subtype of `LinearShrinkageTarget` where
+
+* ``F_{ij}=S_{ij}`` if ``i=j`` and
+* ``F_{ij}=\\sqrt{S_{ii}S_{jj}}`` otherwise
 """
 struct PerfectPositiveCorrelation <: LinearShrinkageTarget end
 
@@ -44,6 +64,11 @@ struct PerfectPositiveCorrelation <: LinearShrinkageTarget end
     ConstantCorrelation
 
 Target for linear shrinkage: see `target_F`.
+A subtype of `LinearShrinkageTarget` where
+
+* ``F_{ij}=S_{ij}`` if ``i=j`` and
+* ``F_{ij}=\\overline{r}\\sqrt{S_{ii}S_{jj}}`` otherwise where
+  ``\\overline{r}`` is the average sample correlation
 """
 struct ConstantCorrelation        <: LinearShrinkageTarget end
 
@@ -108,6 +133,9 @@ written `Xs=Xc*D` where `Xc` is the centered data matrix and `D=Diagonal(d)`
 so that its simple covariance is `D*S*D` where `S` is the simple covariance
 of `Xc`. Such `D*M*D` terms appear often in the computations of optimal
 shrinkage λ.
+
+* Space complexity: ``O(p^2)``
+* Time complexity: ``O(p^2)``
 """
 rescale(M::AbstractMatrix, d::AbstractVector) = M .* d .* d'
 
@@ -118,6 +146,9 @@ rescale(M::AbstractMatrix, d::AbstractVector) = M .* d .* d'
 Internal function to compute `X*X'/n` where `n` is the number of rows of `X`.
 This corresponds to the uncorrected covariance of `X` if `X` is centered.
 This operation appears often in the computations of optimal shrinkage λ.
+
+* Space complexity: ``O(p^2)``
+* Time complexity: ``O(2np^2)``
 """
 uccov(X::AbstractMatrix) = (X'*X)/size(X, 1)
 
@@ -129,6 +160,9 @@ Internal function to compute the sum of elements of a square matrix `S`.
 A keyword `with_diag` can be passed to indicate whether to include or not the
 diagonal of `S` in the sum. Both cases happen often in the computations of
 optimal shrinkage λ.
+
+* Space complexity: ``O(1)``
+* Time complexity: ``O(p^2)``
 """
 function sumij(S::AbstractMatrix; with_diag=false)
     acc = sum(S)
@@ -153,6 +187,9 @@ Internal function identical to `sumij` except that it passes the function
 `square` to the sum so that it is the sum of the elements of `S` squared
 which is computed. This is significantly more efficient than using
 `sumij(S.^2)` for large matrices as it allocates very little.
+
+* Space complexity: ``O(1)``
+* Time complexity: ``O(2p^2)``
 """
 function sumij2(S::AbstractMatrix; with_diag=false)
     acc = sum(square, S)
@@ -168,6 +205,9 @@ end
 
 Internal function corresponding to ``∑_{i≂̸j}f_{ij}`` that appears in
 http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p.11.
+
+* Space complexity: ``O(np + 2p^2)``
+* Time complexity: ``O(2np^2)``
 """
 function sum_fij(Xc, S, n, κ)
     sd  = sqrt.(diag(S))
@@ -196,6 +236,11 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
     return linshrink(S, I, λ)
 end
 
+"""
+    linear_shrinkage(::DiagonalUnitVariance, Xc, S, λ, n, p, corrected)
+
+Compute the shrinkage estimator where the target is a `DiagonalUnitVariance`.
+"""
 function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
                           corrected::Bool)
@@ -234,6 +279,11 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
     return linshrink(S, target_B(S, p), λ)
 end
 
+"""
+    linear_shrinkage(::DiagonalCommonVariance, Xc, S, λ, n, p, corrected)
+
+Compute the shrinkage estimator where the target is a `DiagonalCommonVariance`.
+"""
 function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
                           corrected::Bool)
@@ -286,6 +336,11 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
     return linshrink(S, target_D(S), λ)
 end
 
+"""
+    linear_shrinkage(::DiagonalUnequalVariance, Xc, S, λ, n, p, corrected)
+
+Compute the shrinkage estimator where the target is a `DiagonalUnequalVariance`.
+"""
 function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
                           corrected::Bool)
@@ -330,6 +385,11 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
     return linshrink(S, F, λ)
 end
 
+"""
+    linear_shrinkage(::CommonCovariance, Xc, S, λ, n, p, corrected)
+
+Compute the shrinkage estimator where the target is a `CommonCovariance`.
+"""
 function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
                           corrected::Bool)
@@ -371,6 +431,12 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
     return linshrink(S, target_E(S), λ)
 end
 
+"""
+    linear_shrinkage(::PerfectPositiveCorrelation, Xc, S, λ, n, p, corrected)
+
+Compute the shrinkage estimator where the target is a
+`PerfectPositiveCorrelation`.
+"""
 function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
                           corrected::Bool)
@@ -419,6 +485,11 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
     return linshrink(S, F, λ)
 end
 
+"""
+    linear_shrinkage(::ConstantCorrelation, Xc, S, λ, n, p, corrected)
+
+Compute the shrinkage estimator where the target is a `ConstantCorrelation`.
+"""
 function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
                           corrected::Bool)
