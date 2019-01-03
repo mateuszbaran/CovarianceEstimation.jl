@@ -4,6 +4,7 @@ using LinearAlgebra
 using Test
 using Random
 using DelimitedFiles
+using StatsBase
 
 
 include("reference_ledoitwolf.jl")
@@ -52,7 +53,6 @@ function testTranslation(ce::CovarianceEstimator, X)
     C2t = cov(X' .+ randn(1, size(X, 1)), ce)
     @test C1t ≈ C2t atol = 1e-12 rtol = 1e-16
 end
-
 
 include("test_simplecov.jl")
 include("test_linearshrinkage.jl")

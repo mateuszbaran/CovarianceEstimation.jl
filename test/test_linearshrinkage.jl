@@ -26,16 +26,16 @@ end
     # c3 = cov.shrink(tm3, lambda.var=0.0)
 
     ss = LinearShrinkageEstimator(target=DiagonalUnequalVariance(),
-                                  shrinkage=:ss)
+                                  shrinkage=:ss; corrected=true)
     test_mat1 = readdlm("test_matrices/20x100.csv")
     ref_cov1  = readdlm("test_matrices/20x100_corpcor.csv")
     test_mat2 = readdlm("test_matrices/100x20.csv")
     ref_cov2  = readdlm("test_matrices/100x20_corpcor.csv")
     test_mat3 = readdlm("test_matrices/50x50.csv")
     ref_cov3  = readdlm("test_matrices/50x50_corpcor.csv")
-    @test cov(test_mat1, ss, corrected=true) ≈ ref_cov1
-    @test cov(test_mat2, ss, corrected=true) ≈ ref_cov2
-    @test cov(test_mat3, ss, corrected=true) ≈ ref_cov3
+    @test cov(test_mat1, ss) ≈ ref_cov1
+    @test cov(test_mat2, ss) ≈ ref_cov2
+    @test cov(test_mat3, ss) ≈ ref_cov3
 end
 
 

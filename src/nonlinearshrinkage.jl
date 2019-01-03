@@ -1,4 +1,15 @@
-struct AnalyticalNonlinearShrinkage <: CovarianceEstimator end
+"""
+    AnalyticalNonlinearShrinkage
+
+Analytical nonlinear shrinkage estimator. See docs for
+`analytical_nonlinear_shrinkage` for details.
+"""
+struct AnalyticalNonlinearShrinkage{TEigen<:Union{Eigen,Nothing}} <: CovarianceEstimator
+    decomp::TEigen
+    function AnalyticalNonlinearShrinkage(decomp::TE=nothing) where TE<:Union{Eigen,Nothing}
+        new{TE}(decomp)
+    end
+end
 
 const SQRT5  = sqrt(5.0)
 const IPI    = 1.0 / π
@@ -85,10 +96,13 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
     return U*(d̃ .* U')
 end
 
-function cov(X::AbstractMatrix{<:Real}, ::AnalyticalNonlinearShrinkage;
-             dims::Int=1, decomp::Union{Eigen,Nothing}=nothing)
+"""
+    cov(X, ans::AnalyticalNonlinearShrinkage; dims=1)
+"""
+function cov(X::AbstractMatrix{<:Real}, ans::AnalyticalNonlinearShrinkage;
+             dims::Int=1)
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
 
     Xc = (dims == 1) ? centercols(X) : centercols(transpose(X))
-    return analytical_nonlinear_shrinkage(Xc, decomp = decomp)
+    return analytical_nonlinear_shrinkage(Xc, decomp = ans.decomp)
 end

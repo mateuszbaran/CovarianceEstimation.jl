@@ -19,8 +19,12 @@ Pages = ["internals.md"]
 ## Internals
 
 ```@docs
-CovarianceEstimation.rblw_optimalshrinkage
-CovarianceEstimation.rblw_shrinkagetarget
-CovarianceEstimation.shrink
-CovarianceEstimation.centercols!
+CovarianceEstimation.rescale
+CovarianceEstimation.uccov
+CovarianceEstimation.sumij
+CovarianceEstimation.square
+CovarianceEstimation.sumij2
+CovarianceEstimation.sum_fij
+CovarianceEstimation.linear_shrinkage
+CovarianceEstimation.analytical_nonlinear_shrinkage
 ```

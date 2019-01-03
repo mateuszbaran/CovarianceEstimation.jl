@@ -17,4 +17,8 @@ makedocs(
             "Internals" => "lib/internals.md"
         ],
     ],
-    )
+)
+
+deploydocs(
+    repo = "github.com/mateuszbaran/CovarianceEstimation.jl.git"
+)
