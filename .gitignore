@@ -8,3 +8,6 @@ docs/build/
 *Rhistory*
 benchmark/tune.json
 benchmark/results.md
+benchmark/tmpmat
+*ipynb
+*checkpoin*

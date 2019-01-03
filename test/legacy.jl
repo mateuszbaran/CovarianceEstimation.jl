@@ -1,3 +1,7 @@
+# NOTE: these are older implementations which were used in the past but
+# have now been optimised heavily and ultimately replaced by other functions.
+# they're only kept here for the tests.
+
 function sum_var_sij(Z::AbstractMatrix, CovZ::AbstractMatrix, n::Int,
                      corrected=false; with_diag=true)
     scale = ifelse(corrected, n-1, n)

@@ -45,6 +45,21 @@ S_05 = cov(X, method)
   - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised intensity and Oracle-Approximating intensity are also supported (see [**3**]).
   - **Note**: `S` is symmetric semi-positive definite so that if the `F` is symmetric positive definite and provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite. For the diagonal targets `DiagonalUnitVariance`, `DiagonalCommonVariance` and `DiagonalUnequalVariance` the target is necessarily SPD.
 
+## Comparison to existing libraries
+
+Rough benchmarks are run over random matrices of various sizes (`40x20, 20x40, 400x200, 200x400`).
+These benchmarks should (as usual) be taken with a pinch of salt but essentially a significant speedup should be expected for a standard problem.
+
+* **Sklearn** (implements `DiagonalCommonVariance` target with `oas` and `lw` shrinkage)
+  - average speedup: `5x`
+* **Corpcor** (implements `DiagonalUnequalVariance` target with `ss` shrinkage)
+  - average speedup: `22x`
+* **Ledoit-Wolfe 1** (implements `ConstantCorrelation` target with `lw` shrinkage, we used Octave for the comparison)
+  - average speedup: `12x`
+* **Ledoit-Wolfe 2** (implements `Nonlinear shrinkage`)
+  - average speedup: `25x`
+
+
 ## References
 
 * [**1**] J. Schäfer and K. Strimmer, *[A Shrinkage Approach to Large-Scale Covariance Matrix Estimation and Implications for Functional Genomics](http://strimmerlab.org/publications/journals/shrinkcov2005.pdf)*, Statistical Applications in Genetics and Molecular Biology, 2005.
