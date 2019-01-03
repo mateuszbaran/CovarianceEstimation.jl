@@ -69,7 +69,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Methods",
     "title": "Notations",
     "category": "section",
-    "text": "In these docs, X denotes an ntimes p data matrix describing n observations with p features (variables) and possibly p  n. For most estimators, the matrix is assumed to have entries in mathbb R.note: Note\nWhile in the docs we assume that the rows of X correspond to observations and the columns to features, in the code you can specify this using the dims keyword with dims=1 being the default whereas dims=2 will take rows as features and columns as observations.We will write X_c the centered matrix i.e. where each column sums up to zero. We will also write X_s the standardised matrix i.e. where each column not only sums up to zero but is scaled to have sample variance one. Finally, we will write S the standard sample covariance estimator (see below) of size ptimes p and D the diagonal matrix matching the diagonal of S.Note that the sample variance and covariance can be corrected or uncorrected (and this can be specified in the code). In order to avoid having to specify this everywhere in the document, it is useful to introduce a last symbol: kappa which is either set to n (uncorrected case) or (n-1) (corrected case).With these notations we can write:begineqnarray\n    S = kappa^-1X_c^T X_c labelsimple-covariance\n    X_s = X_c D^-1\nendeqnarray"
+    "text": "In these docs, X denotes an ntimes p data matrix describing n observations with p features (variables) and possibly p  n. For most estimators, the matrix is assumed to have entries in mathbb R.note: Note\nWhile in the docs we assume that the rows of X correspond to observations and the columns to features, in the code you can specify this using the dims keyword with dims=1 being the default whereas dims=2 will take rows as features and columns as observations.We will write X_c the centered matrix i.e. where each column sums up to zero. We will also write X_s the standardised matrix i.e. where each column not only sums up to zero but is scaled to have sample variance one. Finally, we will write S the standard sample covariance estimator (see below) of size ptimes p and D the diagonal matrix matching the diagonal of S.Note that the sample variance and covariance can be corrected or uncorrected (and this can be specified in the code). In order to avoid having to specify this everywhere in the document, it is useful to introduce a last symbol: kappa which is either set to n (uncorrected case) or (n-1) (corrected case).With these notations we can write:begineqnarray\n    S = kappa^-1X_c^T X_c labelsimple-covariance\n    D_ij = S_ijmathbf 1_i=j\n    X_s = X_c D^-12\nendeqnarray"
 },
 
 {
@@ -77,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Methods",
     "title": "Simple estimator",
     "category": "section",
-    "text": "The standard covariance estimator is easily obtained via \\eqref{simple-covariance}. It can be specified with the constructor Simple which can take a named argument corrected (either false (default) or true).using CovarianceEstimation # hide\nusing Random # hide\nRandom.seed!(1)\nn, p = 5, 7\nX = randn(n, p)\n# corrected covariance\nS = cov(X, Simple(corrected=true))\n# we can also manually compute it and compare\nXc = (X .- sum(X, dims=1)/n) # centering\nκ = n-1\nS ≈ (Xc\'*Xc)/κ"
+    "text": "The standard covariance estimator is easily obtained via \\eqref{simple-covariance}. It can be specified with the constructor Simple which can take a named argument corrected (either false (default) or true).using CovarianceEstimation # hide\nusing Random # hide\nRandom.seed!(1)\nn, p = 5, 7\nX = randn(n, p)\n# corrected covariance\nS = cov(X, Simple(corrected=true))\n# we can also manually compute it and compare\nXc = (X .- sum(X, dims=1)/n) # centering\nκ = n-1 # correction factor\nS ≈ (Xc\'*Xc)/κ"
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Methods",
     "title": "Linear shrinkage estimators",
     "category": "section",
-    "text": "Linear shrinkage estimators correspond to covariance estimators of the formC = (1-lambda)S + lambda Fwhere F is a target matrix of appropriate dimensions and lambdain01 is a shrinkage intensity. There are several standard targets that can be used, a simple example being the identity matrix.The shrinkage intensity lambda can be specified manually or computed automatically. Depending on the target, different approaches are implemented to compute a good intensity such as, for example, the Ledoit-Wolfe optimal intensity (which is the default intensity if you don\'t specify it).You can read more on the targets that can be used and the corresponding automatic intensities here.Here is an example using the identity matrix as a target and automatic shrinkage intensity (Ledoit-Wolfe):using CovarianceEstimation # hide\nusing Random # hide\nRandom.seed!(1)\nn, p = 2, 3\nX = randn(n, p)\ntarget = DiagonalUnitVariance()\nshrinkage = :lw # Ledoit-Wolfe optimal shrinkage\nmethod = LinearShrinkageEstimator(target, shrinkage)\ncov(X, method)You can also specify the intensity manually:using CovarianceEstimation # hide\nusing Random # hide\nRandom.seed!(1) # hide\nn, p = 2, 3 # hide\nX = randn(n, p) # hide\ntarget = DiagonalUnitVariance() # hide\nshrinkage = 0.8\nmethod2 = LinearShrinkageEstimator(target, shrinkage)\ncov(X, method2)"
+    "text": "Linear shrinkage estimators correspond to covariance estimators of the formhatSigma = (1-lambda)S + lambda Fwhere F is a target matrix of appropriate dimensions, lambdain01 is a shrinkage intensity and S is the sample covariance estimator. There are several standard targets that can be used, a simple example being the identity matrix.The shrinkage intensity lambda can be specified manually or computed automatically. Depending on the target, different approaches are implemented to compute a good intensity such as, for example, the Ledoit-Wolfe optimal intensity (which is the default intensity if you don\'t specify it).You can read more on the targets that can be used and the corresponding automatic intensities here.Here is an example using the identity matrix as a target and automatic shrinkage intensity (Ledoit-Wolfe):using CovarianceEstimation # hide\nusing Random # hide\nRandom.seed!(1)\nn, p = 2, 3\nX = randn(n, p)\ntarget = DiagonalUnitVariance()\nshrinkage = :lw # Ledoit-Wolfe optimal shrinkage\nmethod = LinearShrinkageEstimator(target, shrinkage)\ncov(X, method)You can also specify the intensity manually:using CovarianceEstimation # hide\nusing Random # hide\nRandom.seed!(1) # hide\nn, p = 2, 3 # hide\nX = randn(n, p) # hide\ntarget = DiagonalUnitVariance() # hide\nshrinkage = 0.8\nmethod2 = LinearShrinkageEstimator(target, shrinkage)\ncov(X, method2)Read more on linear shrinkage estimators..."
 },
 
 {
@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Methods",
     "title": "Nonlinear shrinkage estimators",
     "category": "section",
-    "text": "More on linear shrinkage estimators..."
+    "text": "Read more on nonlinear shrinkage estimators..."
 },
 
 {
@@ -109,15 +109,23 @@ var documenterSearchIndex = {"docs": [
     "page": "Linear shrinkage estimators",
     "title": "Linear shrinkage estimators",
     "category": "section",
-    "text": ""
+    "text": "Linear shrinkage estimators correspond to covariance estimators of the formhatSigma = (1-lambda)S + lambda Fwhere F is a target matrix of appropriate dimensions, lambdain01 is a shrinkage intensity and S is the sample covariance estimator."
 },
 
 {
-    "location": "man/lshrink/#blabla-1",
+    "location": "man/lshrink/#Targets-and-intensities-1",
     "page": "Linear shrinkage estimators",
-    "title": "blabla",
+    "title": "Targets and intensities",
     "category": "section",
-    "text": ""
+    "text": "There are several standard targets that can be used (we follow here Schaffer & Strimmer 2005):DiagonalUnitVariance where F=I the identity matrix,\nDiagonalCommonVariance where F=vI\nDiagonalUnequalVariance where F=mathrmdiag(S)\nCommonCovariance where F_ii=v and F_ij=c\nPerfectPositiveCorrelation where F_ii=S_ii and F_ij=sqrtS_iiS_jj\nConstantCorrelation where F_ii=S_ii and F_ij=overlinersqrtS_iiS_jjwhere $ v = \\mathrm{tr}(S)/p $ is the average variance, c = sum_ineq j S_ij(p*(p-1)) is the average of off-diagonal terms of S and overliner is the average of sample correlations.For each of these targets, an optimal shrinkage intensity lambda^star can be computed. A standard approach is to apply the Ledoit-Wolfe formula (shrinkage=:lw) though there are some variants that can be applied too. See Ledoit & Wolfe 2004.Notably, Schaffer & Strimmer\'s variant (shrinkage=:ss) will ensure that the lambda^star computed is the same for X_c (the centered data matrix) as for X_s (the standardised data matrix). See Schaffer & Strimmer 2005.Chen\'s variant includes a Rao-Blackwellised estimator (shrinkage=:rblw) and an Oracle-Approximating one (shrinkage=:oas) for the DiagonalCommonVariance target. See Chen, Wiesel, Eldar & Hero 2010."
+},
+
+{
+    "location": "man/lshrink/#What-to-use-1",
+    "page": "Linear shrinkage estimators",
+    "title": "What to use",
+    "category": "section",
+    "text": "In general, all linear shrinkage estimators offer roughly similar accuracies though the DiagonalCommonVariance target and the CommonCovariance with :ss shrinkage seem to perform marginally better in our experiments."
 },
 
 {
@@ -205,7 +213,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "CovarianceEstimation.DiagonalUnitVariance",
     "category": "type",
-    "text": "DiagonalUnitVariance\n\nTarget for linear shrinkage: unit matrix.\n\n\n\n\n\n"
+    "text": "DiagonalUnitVariance\n\nTarget for linear shrinkage: unit matrix. A subtype of LinearShrinkageTarget where\n\nF_ij=1 if i=j and\nF_ij=0 otherwise\n\n\n\n\n\n"
 },
 
 {
@@ -213,7 +221,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "CovarianceEstimation.DiagonalCommonVariance",
     "category": "type",
-    "text": "DiagonalCommonVariance\n\nTarget for linear shrinkage: unit matrix multiplied by average variance of variables.\n\n\n\n\n\n"
+    "text": "DiagonalCommonVariance\n\nTarget for linear shrinkage: unit matrix multiplied by average variance of variables. A subtype of LinearShrinkageTarget where\n\nF_ij=v if i=j with v=mathrmtr(S)p and\nF_ij=0 otherwise\n\n\n\n\n\n"
 },
 
 {
@@ -221,7 +229,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "CovarianceEstimation.DiagonalUnequalVariance",
     "category": "type",
-    "text": "DiagonalUnequalVariance\n\nTarget for linear shrinkage: diagonal of covariance matrix.\n\n\n\n\n\n"
+    "text": "DiagonalUnequalVariance\n\nTarget for linear shrinkage: diagonal of covariance matrix. A subtype of LinearShrinkageTarget where\n\nF_ij=s_ij if i=j and\nF_ij=0 otherwise\n\n\n\n\n\n"
 },
 
 {
@@ -229,7 +237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "CovarianceEstimation.CommonCovariance",
     "category": "type",
-    "text": "CommonCovariance\n\nTarget for linear shrinkage: see target_C.\n\n\n\n\n\n"
+    "text": "CommonCovariance\n\nTarget for linear shrinkage: see target_C. A subtype LinearShrinkageTarget where\n\nF_ij=v if i=j with v=mathrmtr(S)p and\nF_ij=c with c=sum_ineq j S_ij(p(p-1)) otherwise\n\n\n\n\n\n"
 },
 
 {
@@ -237,7 +245,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "CovarianceEstimation.PerfectPositiveCorrelation",
     "category": "type",
-    "text": "PerfectPositiveCorrelation\n\nTarget for linear shrinkage: see target_E.\n\n\n\n\n\n"
+    "text": "PerfectPositiveCorrelation\n\nTarget for linear shrinkage: see target_E. A subtype of LinearShrinkageTarget where\n\nF_ij=S_ij if i=j and\nF_ij=sqrtS_iiS_jj otherwise\n\n\n\n\n\n"
 },
 
 {
@@ -245,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public",
     "title": "CovarianceEstimation.ConstantCorrelation",
     "category": "type",
-    "text": "ConstantCorrelation\n\nTarget for linear shrinkage: see target_F.\n\n\n\n\n\n"
+    "text": "ConstantCorrelation\n\nTarget for linear shrinkage: see target_F. A subtype of LinearShrinkageTarget where\n\nF_ij=S_ij if i=j and\nF_ij=overlinersqrtS_iiS_jj otherwise where overliner is the average sample correlation\n\n\n\n\n\n"
 },
 
 {
@@ -301,7 +309,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internals",
     "title": "CovarianceEstimation.rescale",
     "category": "function",
-    "text": "rescale(M, d)\n\nInternal function to scale the rows and the columns of a square matrix M according to the elements in d. This is useful when dealing with the standardised data matrix which can be written Xs=Xc*D where Xc is the centered data matrix and D=Diagonal(d) so that its simple covariance is D*S*D where S is the simple covariance of Xc. Such D*M*D terms appear often in the computations of optimal shrinkage λ.\n\n\n\n\n\n"
+    "text": "rescale(M, d)\n\nInternal function to scale the rows and the columns of a square matrix M according to the elements in d. This is useful when dealing with the standardised data matrix which can be written Xs=Xc*D where Xc is the centered data matrix and D=Diagonal(d) so that its simple covariance is D*S*D where S is the simple covariance of Xc. Such D*M*D terms appear often in the computations of optimal shrinkage λ.\n\nSpace complexity: O(p^2)\nTime complexity: O(p^2)\n\n\n\n\n\n"
 },
 
 {
@@ -309,7 +317,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internals",
     "title": "CovarianceEstimation.uccov",
     "category": "function",
-    "text": "uccov(X)\n\nInternal function to compute X*X\'/n where n is the number of rows of X. This corresponds to the uncorrected covariance of X if X is centered. This operation appears often in the computations of optimal shrinkage λ.\n\n\n\n\n\n"
+    "text": "uccov(X)\n\nInternal function to compute X*X\'/n where n is the number of rows of X. This corresponds to the uncorrected covariance of X if X is centered. This operation appears often in the computations of optimal shrinkage λ.\n\nSpace complexity: O(p^2)\nTime complexity: O(2np^2)\n\n\n\n\n\n"
 },
 
 {
@@ -317,7 +325,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internals",
     "title": "CovarianceEstimation.sumij",
     "category": "function",
-    "text": "sumij(S)\n\nInternal function to compute the sum of elements of a square matrix S. A keyword with_diag can be passed to indicate whether to include or not the diagonal of S in the sum. Both cases happen often in the computations of optimal shrinkage λ.\n\n\n\n\n\n"
+    "text": "sumij(S)\n\nInternal function to compute the sum of elements of a square matrix S. A keyword with_diag can be passed to indicate whether to include or not the diagonal of S in the sum. Both cases happen often in the computations of optimal shrinkage λ.\n\nSpace complexity: O(1)\nTime complexity: O(p^2)\n\n\n\n\n\n"
 },
 
 {
@@ -333,7 +341,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internals",
     "title": "CovarianceEstimation.sumij2",
     "category": "function",
-    "text": "sumij2(S)\n\nInternal function identical to sumij except that it passes the function square to the sum so that it is the sum of the elements of S squared which is computed. This is significantly more efficient than using sumij(S.^2) for large matrices as it allocates very little.\n\n\n\n\n\n"
+    "text": "sumij2(S)\n\nInternal function identical to sumij except that it passes the function square to the sum so that it is the sum of the elements of S squared which is computed. This is significantly more efficient than using sumij(S.^2) for large matrices as it allocates very little.\n\nSpace complexity: O(1)\nTime complexity: O(2p^2)\n\n\n\n\n\n"
 },
 
 {
@@ -341,7 +349,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internals",
     "title": "CovarianceEstimation.sum_fij",
     "category": "function",
-    "text": "sum_fij(Xc, S, n, κ)\n\nInternal function corresponding to _ijf_ij that appears in http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p.11.\n\n\n\n\n\n"
+    "text": "sum_fij(Xc, S, n, κ)\n\nInternal function corresponding to _ijf_ij that appears in http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p.11.\n\nSpace complexity: O(np + 2p^2)\nTime complexity: O(2np^2)\n\n\n\n\n\n"
 },
 
 {
