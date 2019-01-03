@@ -4,42 +4,95 @@ abstract type LinearShrinkageTarget end
 # Taxonomy from http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
 # page 13
 
+"""
+    DiagonalUnitVariance
+
+Target for linear shrinkage: unit matrix.
+"""
 struct DiagonalUnitVariance       <: LinearShrinkageTarget end
+
+"""
+    DiagonalCommonVariance
+
+Target for linear shrinkage: unit matrix multiplied by average variance of
+variables.
+"""
 struct DiagonalCommonVariance     <: LinearShrinkageTarget end
+
+"""
+    DiagonalUnequalVariance
+
+Target for linear shrinkage: diagonal of covariance matrix.
+"""
 struct DiagonalUnequalVariance    <: LinearShrinkageTarget end
+
+"""
+    CommonCovariance
+
+Target for linear shrinkage: see `target_C`.
+"""
 struct CommonCovariance           <: LinearShrinkageTarget end
+
+"""
+    PerfectPositiveCorrelation
+
+Target for linear shrinkage: see `target_E`.
+"""
 struct PerfectPositiveCorrelation <: LinearShrinkageTarget end
+
+"""
+    ConstantCorrelation
+
+Target for linear shrinkage: see `target_F`.
+"""
 struct ConstantCorrelation        <: LinearShrinkageTarget end
 
+"""
+    LinearShrinkageEstimator(target, shrinkage; corrected = false)
 
+Linear shrinkage estimator described by equation
+``(1 - \\lambda) S + \\lambda F`` where ``S`` is standard covariance matrix,
+``F`` is shrinkage target described by argument `target` and ``\\lambda`` is a
+shrinkage parameter, either given explicitly in `shrinkage` or automatically
+determined according to one of the supported methods.
+
+The corrected estimator is used if `corrected` is true.
+"""
 struct LinearShrinkageEstimator{T<:LinearShrinkageTarget, S<:Shrinkage} <: CovarianceEstimator
     target::T
     shrinkage::S
-    function LinearShrinkageEstimator(t::TT, s::SS) where {TT<:LinearShrinkageTarget, SS<:Real}
+    corrected::Bool
+    function LinearShrinkageEstimator(t::TT, s::SS; corrected = false) where {TT<:LinearShrinkageTarget, SS<:Real}
         @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
-        new{TT, SS}(t, s)
+        new{TT, SS}(t, s, corrected)
     end
-    function LinearShrinkageEstimator(t::TT, s::Symbol=:auto) where TT <: LinearShrinkageTarget
+    function LinearShrinkageEstimator(t::TT, s::Symbol=:auto; corrected = false) where TT <: LinearShrinkageTarget
         @assert s ∈ [:auto, :lw, :ss, :rblw, :oas] "Shrinkage method not supported"
-        new{TT, Symbol}(t, s)
+        new{TT, Symbol}(t, s, corrected)
     end
 end
 
 LinearShrinkageEstimator(;
     target::LinearShrinkageTarget=DiagonalUnitVariance(),
-    shrinkage::Shrinkage) = LinearShrinkageEstimator(target, shrinkage)
+    shrinkage::Shrinkage,
+    corrected::Bool = false) = LinearShrinkageEstimator(target, shrinkage, corrected = corrected)
 
+"""
+    cov(X, lse::LinearShrinkageEstimator; dims=1)
 
+Linear shrinkage covariance estimator for matrix `X` along dimension `dims`.
+Computed using the method described by `lse`.
+"""
 function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
-             corrected::Bool=false, dims::Int=1)
+             dims::Int=1)
 
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
 
     Xc = (dims == 1) ? centercols(X) : centercols(transpose(X))
     # sample covariance of size (p x p)
     n, p = size(Xc)
-    S    = cov(Xc, Simple(corrected=corrected))
-    return linear_shrinkage(lse.target, Xc, S, lse.shrinkage, n, p, corrected)
+    S    = cov(Xc, Simple(corrected=lse.corrected))
+    return linear_shrinkage(lse.target, Xc, S, lse.shrinkage, n, p, lse.corrected)
 end
 
 ##############################################################################
@@ -124,6 +177,15 @@ function sum_fij(Xc, S, n, κ)
     return sumij(M) / (n * κ)
 end
 ##############################################################################
+
+"""
+    linear_shrinkage(target, Xc, S, λ, n, p, corrected)
+
+Performs linear shrinkage with target of type `target` for data matrix `Xc`
+of size `n` by `p` with covariance matrix `S` and shrinkage parameter `λ`.
+Calculates corrected covariance if `corrected` is true.
+"""
+linear_shrinkage
 
 ## TARGET A
 
