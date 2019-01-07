@@ -144,13 +144,13 @@ end
         λ_oas_ref = ((1-2/p)*tr(Ŝ^2)+tr(Ŝ)^2)/((n+1-2/p)*(tr(Ŝ^2)-tr(Ŝ)^2/p))
         λ_oas_ref = clamp(λ_oas_ref, 0.0, 1.0)
 
-        @test cov(X̂, rblw) ≈ CE.linshrink(Ŝ, F_ref, λ_rblw_ref)
-        @test cov(X̂, oas) ≈ CE.linshrink(Ŝ, F_ref, λ_oas_ref)
+        @test cov(X̂, rblw) ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref)
+        @test cov(X̂, oas) ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref)
 
         rblw_fixed = LinearShrinkageEstimator(DiagonalCommonVariance(), λ_rblw_ref)
         oas_fixed = LinearShrinkageEstimator(DiagonalCommonVariance(), λ_oas_ref)
-        @test cov(X̂, rblw_fixed) ≈ CE.linshrink(Ŝ, F_ref, λ_rblw_ref)
-        @test cov(X̂, oas_fixed) ≈ CE.linshrink(Ŝ, F_ref, λ_oas_ref)
+        @test cov(X̂, rblw_fixed) ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref)
+        @test cov(X̂, oas_fixed) ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref)
     end
 end
 
