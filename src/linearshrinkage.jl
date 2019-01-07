@@ -156,10 +156,10 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
     elseif λ == :ss
         # use the standardised data matrix
         d   = 1.0 ./ sum(Xc², dims=1)[:]
-        S̄   = rescale(S, sqrt.(d))
+        S̄   = rescale(S, sqrt.(d)) # this has diagonal 1/κ
         ΣS̄² = γ^2 * sumij2(S̄, with_diag=true)
         λ   = (sumij(rescale!(uccov(Xc²), d), with_diag=true) - ΣS̄²) / κ
-        λ  /= ΣS̄² - γ^2 * sum(square, diag(S̄))
+        λ  /= ΣS̄² - p/n^2
     else
         error("Unsupported shrinkage method for target DiagonalUnitVariance.")
     end
@@ -199,7 +199,7 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
         v̄   = κ # tr(S̄)/p
         ΣS̄² = γ^2 * sumij2(S̄, with_diag=true)
         λ   = (sumij(rescale!(uccov(Xc²), d), with_diag=true) - ΣS̄²) / κ
-        λ  /= ΣS̄² - γ^2 * sum(square, diag(S̄))
+        λ  /= ΣS̄² - p/n^2
     elseif λ == :rblw
         # https://arxiv.org/pdf/0907.4698.pdf equations 17, 19
         trS² = sum(square, S)
@@ -292,7 +292,7 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
         S̄   = rescale(S, sqrt.(d))
         ΣS̄² = γ^2 * sumij2(S̄, with_diag=true)
         λ   = (sumij(rescale!(uccov(Xc²), d), with_diag=true) - ΣS̄²) / κ
-        λ  /= (ΣS̄² - γ^2 * sum(square, diag(S̄)) - γ^2 * sumij(S̄; with_diag=false)^2 / (p * (p - 1)))
+        λ  /= (ΣS̄² - p/n^2 - γ^2 * sumij(S̄; with_diag=false)^2 / (p * (p - 1)))
     else
         error("Unsupported shrinkage method for target DiagonalCommonVariance.")
     end
