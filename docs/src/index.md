@@ -13,7 +13,7 @@ A package for estimating covariance matrices.
 ## Manual outline
 
 ```@contents
-Pages = ["man/methods.md", "man/lshrink.md", "man/nlshrink.md"]
+Pages = ["man/methods.md", "man/lshrink.md", "man/nlshrink.md", "man/msecomp.md"]
 ```
 
 ## Library Outline
