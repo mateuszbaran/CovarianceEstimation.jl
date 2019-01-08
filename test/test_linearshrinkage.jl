@@ -12,10 +12,8 @@
 end
 
 
-# NOTE: these tests can only be called from the package module via
-# ] test CovarianceEstimation
-# otherwise it will fail to appropriately find the CSV files.
 @testset "LinShrink: target D with SS (ref⭒) " begin
+    p = ifelse(endswith(pwd(), "CovarianceEstimation"), "test", "")
     ## R Script used to compare:
     # require(corpcor)
     # tm1 = read.table("20x100.csv")
@@ -27,12 +25,12 @@ end
 
     ss = LinearShrinkageEstimator(target=DiagonalUnequalVariance(),
                                   shrinkage=:ss; corrected=true)
-    test_mat1 = readdlm("test_matrices/20x100.csv")
-    ref_cov1  = readdlm("test_matrices/20x100_corpcor.csv")
-    test_mat2 = readdlm("test_matrices/100x20.csv")
-    ref_cov2  = readdlm("test_matrices/100x20_corpcor.csv")
-    test_mat3 = readdlm("test_matrices/50x50.csv")
-    ref_cov3  = readdlm("test_matrices/50x50_corpcor.csv")
+    test_mat1 = readdlm(joinpath(p, "test_matrices/20x100.csv"))
+    ref_cov1  = readdlm(joinpath(p, "test_matrices/20x100_corpcor.csv"))
+    test_mat2 = readdlm(joinpath(p, "test_matrices/100x20.csv"))
+    ref_cov2  = readdlm(joinpath(p, "test_matrices/100x20_corpcor.csv"))
+    test_mat3 = readdlm(joinpath(p, "test_matrices/50x50.csv"))
+    ref_cov3  = readdlm(joinpath(p, "test_matrices/50x50_corpcor.csv"))
     @test cov(test_mat1, ss) ≈ ref_cov1
     @test cov(test_mat2, ss) ≈ ref_cov2
     @test cov(test_mat3, ss) ≈ ref_cov3
@@ -162,21 +160,21 @@ end
             DiagonalUnequalVariance(),
             CommonCovariance(),
             PerfectPositiveCorrelation(),
-            ConstantCorrelation()
+            # ConstantCorrelation()
             ]
         #=
         :ss assumes that the shrinkage should be the same if the data
         matrix is standardised. This is what is tested.
         =#
-        for X̂ ∈ test_matrices
+        for c ∈ [false, true], X̂ ∈ test_matrices
             Xcs = X̂
             Xcs = CE.centercols(Xcs)
             n = size(Xcs, 1)
             for i ∈ 1:size(Xcs, 2)
-                Xcs[:, i] ./= sqrt(var(Xcs[:, i], corrected=false))
+                Xcs[:, i] ./= sqrt(var(Xcs[:, i], corrected=c))
             end
-            LSEss = LinearShrinkageEstimator(target=target, shrinkage=:ss)
-            LSElw = LinearShrinkageEstimator(target=target, shrinkage=:lw)
+            LSEss = LinearShrinkageEstimator(target, :ss, corrected=c)
+            LSElw = LinearShrinkageEstimator(target, :lw, corrected=c)
             @test cov(Xcs, LSEss) ≈ cov(Xcs, LSElw)
         end
     end
