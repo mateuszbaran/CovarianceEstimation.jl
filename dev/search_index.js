@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Linear shrinkage estimators",
     "title": "Linear shrinkage estimators",
     "category": "section",
-    "text": "Linear shrinkage estimators correspond to covariance estimators of the formhatSigma = (1-lambda)S + lambda Fwhere F is a target matrix of appropriate dimensions, lambdain01 is a shrinkage intensity and S is the sample covariance estimator."
+    "text": "Linear shrinkage estimators correspond to covariance estimators of the formhatSigma = (1-lambda)S + lambda Fwhere F is a target matrix of appropriate dimensions, lambdain01 is a shrinkage intensity and S is the sample covariance estimator (corrected or uncorrected depending on the corrected keyword)."
 },
 
 {
@@ -117,7 +117,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Linear shrinkage estimators",
     "title": "Targets and intensities",
     "category": "section",
-    "text": "There are several standard targets that can be used (we follow here Schaffer & Strimmer 2005):DiagonalUnitVariance where F=I the identity matrix,\nDiagonalCommonVariance where F=vI\nDiagonalUnequalVariance where F=mathrmdiag(S)\nCommonCovariance where F_ii=v and F_ij=c\nPerfectPositiveCorrelation where F_ii=S_ii and F_ij=sqrtS_iiS_jj\nConstantCorrelation where F_ii=S_ii and F_ij=overlinersqrtS_iiS_jjwhere $ v = \\mathrm{tr}(S)/p $ is the average variance, c = sum_ineq j S_ij(p*(p-1)) is the average of off-diagonal terms of S and overliner is the average of sample correlations.For each of these targets, an optimal shrinkage intensity lambda^star can be computed. A standard approach is to apply the Ledoit-Wolfe formula (shrinkage=:lw) though there are some variants that can be applied too. See Ledoit & Wolfe 2004.Notably, Schaffer & Strimmer\'s variant (shrinkage=:ss) will ensure that the lambda^star computed is the same for X_c (the centered data matrix) as for X_s (the standardised data matrix). See Schaffer & Strimmer 2005.Chen\'s variant includes a Rao-Blackwellised estimator (shrinkage=:rblw) and an Oracle-Approximating one (shrinkage=:oas) for the DiagonalCommonVariance target. See Chen, Wiesel, Eldar & Hero 2010."
+    "text": "There are several standard target matrices (denoted by F) that can be used (we follow here the notations and naming conventions of Schaffer & Strimmer 2005):Target name F_ii F_ij (ineq j) Comment\nDiagonalUnitVariance 1 0 F = mathbf I\nDiagonalCommonVariance v 0 F = vmathbf I\nDiagonalUnequalVariance S_ii 0 F = mathrmdiag(S), very common\nCommonCovariance v c \nPerfectPositiveCorrelation S_ii sqrtS_iiS_jj \nConstantCorrelation S_ii overlinersqrtS_iiS_jj used in Ledoit & Wolf 2004where $ v = \\mathrm{tr}(S)/p $ is the average variance, c = sum_ineq j S_ij(p(p-1)) is the average of off-diagonal terms of S and overliner is the average of sample correlations (see Schaffer & Strimmer 2005).For each of these targets, an optimal shrinkage intensity lambda^star can be computed. A standard approach is to apply the Ledoit-Wolf formula (shrinkage=:lw, see Ledoit & Wolf 2004) though there are some variants that can be applied too. Notably, Schaffer & Strimmer\'s variant (shrinkage=:ss) will ensure that the lambda^star computed is the same for X_c (the centered data matrix) as for X_s (the standardised data matrix). See Schaffer & Strimmer 2005.Chen\'s variant includes a Rao-Blackwellised estimator (shrinkage=:rblw) and an Oracle-Approximating one (shrinkage=:oas) for the DiagonalCommonVariance target. See Chen, Wiesel, Eldar & Hero 2010."
 },
 
 {
@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Linear shrinkage estimators",
     "title": "What to use",
     "category": "section",
-    "text": "In general, all linear shrinkage estimators offer roughly similar accuracies though the DiagonalCommonVariance target and the CommonCovariance with :ss shrinkage seem to perform marginally better in our experiments."
+    "text": "In general, all linear shrinkage estimators offer roughly similar accuracies though the DiagonalCommonVariance target and the CommonCovariance with :ss shrinkage seem to perform marginally better in our rough experiments."
 },
 
 {
