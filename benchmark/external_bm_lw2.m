@@ -1,3 +1,6 @@
+% NOTE: Based on Matlab code in Olivier Ledoit and Michael Wolf. Analytical
+%       Nonlinear Shrinkage of Large-Dimensional Covariance Matrices. (Nov 2018)
+%       http://www.econ.uzh.ch/static/wp/econwp264.pdf
 % NOTE: this assumes that X has centered columns
 function sigmatilde=analytical_shrinkage(X, lambda, u)
     % extract sample eigenvalues sorted in ascending order and eigenvectors
