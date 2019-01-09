@@ -7,10 +7,14 @@ Analytical nonlinear shrinkage estimator. See docs for
 struct AnalyticalNonlinearShrinkage{TEigen<:Union{Eigen,Nothing}} <: CovarianceEstimator
     decomp::TEigen
     corrected::Bool
-    function AnalyticalNonlinearShrinkage(decomp::TE=nothing) where TE<:Union{Eigen,Nothing}
-        new{TE}(decomp)
+    function AnalyticalNonlinearShrinkage(;corrected=false)
+        new{Nothing}(nothing, corrected)
+    end
+    function AnalyticalNonlinearShrinkage(decomp::Eigen; corrected=false)
+        new{Eigen}(decomp, corrected)
     end
 end
+
 
 const SQRT5  = sqrt(5.0)
 const INVPI  = 1.0 / π
@@ -58,11 +62,12 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
     U    = F.vectors[:, perm]
 
     # compute analytical nonlinear shrinkage kernel formula
-    λ = (p < n) ? λ[1:p] : λ[2+(p-n):p]
-    L = repeat(λ, outer=(1, min(p, n - 1))) # size (2+(p-n)) x n
+    η = ifelse(p < n, n, n-1) # effective sample size
+    λ = λ[max(1, (p - η) + 1):p]
+    L = repeat(λ, outer=(1, min(p, η))) # size (2+(p-n)) x n
 
     # Equation (4.9)
-    h = n^(-1//3)
+    h = η^(-1//3)
     H = h * L'
     x = (L - L') ./ H
 
@@ -94,7 +99,7 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
         d̃0 = INVPI / ((γ - 1.0) * Hf̃0)
         # Eq. (C.4)
         d̃1 = @. 1.0 / (π * πλ * (f̃^2 + Hf̃^2))
-        d̃  = [d̃0 * ones(1+(p-n), 1); d̃1]
+        d̃  = [d̃0 * ones(p - η, 1); d̃1]
     end
 
     # Equation (4.4)
