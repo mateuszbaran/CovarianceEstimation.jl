@@ -41,7 +41,7 @@ end
 
 
 """
-    analytical_nonlinear_shrinkage(S; decomp)
+    analytical_nonlinear_shrinkage(S, n, p; decomp)
 
 Internal implementation of the analytical nonlinear shrinkage. The
 implementation is inspired from the Matlab code given in section C of
