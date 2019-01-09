@@ -72,7 +72,7 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
     x = (L - L') ./ H
 
     # additional useful definitions
-    γ  = p/n
+    γ  = p/η
     πλ = π * λ
 
     # Equation (4.7) in http://www.econ.uzh.ch/static/wp/econwp264.pdf

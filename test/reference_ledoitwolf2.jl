@@ -34,9 +34,9 @@ function matlab_ledoitwolf_analytical_shrinkage(X)
         dtilde = lambda ./ ((pi*(p/n)*lambda.*ftilde).^2 .+ (1 .- (p/n) .- pi*(p/n)*lambda.*Hftilde).^2);
     else
         Hftilde0 = (1/pi)*(3/10/h^2 + 3/4/sqrt(5)/h*(1-1/5/h^2) * log((1+sqrt(5)*h)/(1-sqrt(5)*h))) * mean(1 ./ lambda);
-        dtilde0 = 1/(pi*(p-n)/n*Hftilde0);
+        dtilde0 = 1/(pi*(p-η)/η*Hftilde0);
         dtilde1 = lambda ./ (pi^2*lambda.^2 .* (ftilde.^2 .+ Hftilde.^2));
-        dtilde = vcat(dtilde0 * ones(p-n+1,1), dtilde1);
+        dtilde = vcat(dtilde0 * ones(p-η,1), dtilde1);
     end
 
     u * (dtilde[:] .* u')
