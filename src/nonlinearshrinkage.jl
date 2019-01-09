@@ -46,6 +46,10 @@ end
 Based on Matlab code in Olivier Ledoit and Michael Wolf. Analytical Nonlinear
 Shrinkage of Large-Dimensional Covariance Matrices. (Nov 2018)
 http://www.econ.uzh.ch/static/wp/econwp264.pdf
+
+* Time complexity:
+    - (p<n): O(np^2 + n^2) with moderate constant
+    - (p>n): O(p^3) with low constant
 """
 function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,Nothing}=nothing, corrected=false)
     n, p = size(X)
@@ -53,18 +57,20 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
         # explained in the paper
         throw(ArgumentError("The number of samples `n` must be at least 12 (given: $n)."))
     end
-    Σ̂ = cov(X, Simple(corrected=corrected))
+    S = cov(X, Simple(corrected=corrected)) # p x p
 
     # sample eigenvalues sorted in ascending order and eigenvectors
-    F    = isa(decomp, Nothing) ? eigen(Σ̂) : decomp
+    F    = isa(decomp, Nothing) ? eigen(S) : decomp # O(p^3)
     perm = sortperm(F.values)
     λ    = F.values[perm]
     U    = F.vectors[:, perm]
 
+    # dominant cost forming of S or eigen(S) --> O(max{np^2, p^3})
+
     # compute analytical nonlinear shrinkage kernel formula
     η = ifelse(p < n, n, n-1) # effective sample size
     λ = λ[max(1, (p - η) + 1):p]
-    L = repeat(λ, outer=(1, min(p, η))) # size (2+(p-n)) x n
+    L = repeat(λ, outer=(1, min(p, η)))
 
     # Equation (4.9)
     h = η^(-1//3)
@@ -84,6 +90,8 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
     mask = (@. abs(x) ≈ SQRT5)
     any(mask) && (Hf̃_tmp[mask] = epanechnikov_HT2.(x[mask]))
     Hf̃ = mean(Hf̃_tmp ./ H, dims=2)[:]
+
+    # dominant cost up to here: elementwise ops on x --> O(max{p^2, η^2})
 
     if p < n
         # Equation (4.3)
