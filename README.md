@@ -39,7 +39,7 @@ S_05 = cov(X, method)
 
 ## Currently supported algorithms
 
-In this section, `X` is the data matrix of size `n × p`, `S` is the sample covariance matrix with `S = κ (Xc' * Xc)` where `κ` is either `n` (uncorrected) or `n-1` (corrected) and `Xc` is the centred data matrix (see [docs](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev))).
+In this section, `X` is the data matrix of size `n × p`, `S` is the sample covariance matrix with `S = κ (Xc' * Xc)` where `κ` is either `n` (uncorrected) or `n-1` (corrected) and `Xc` is the centred data matrix (see [docs](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev)).
 
 * `Simple`: basic corrected and uncorrected sample covariance (via the `Statistics` package)
 
@@ -53,7 +53,7 @@ These methods build an estimator of the covariance derived from `S`.
   - common targets are implemented following the taxonomy given in [**1**] along with Ledoit-Wolf optimal shrinkage intensities [**2**].
   - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised Ledoit-Wolf shrinkage (`:rblw`) and Oracle-Approximating shrinkage (`:oas`) are also supported (see [**3**]).
   - **Note**: `S` is symmetric semi-positive definite so that if the `F` is symmetric positive definite and provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite. For the diagonal targets `DiagonalUnitVariance`, `DiagonalCommonVariance` and `DiagonalUnequalVariance` the target is necessarily SPD.
-* `NonlinearShrinkageEstimator`: estimators of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.
+* `NonlinearShrinkageEstimator`: estimator of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.[**4**]
 
 **Time complexity**:
 - Linear shrinkage: `O(p^2n)` with a low constant (main cost is forming `S`)
@@ -89,3 +89,4 @@ These benchmarks should (as usual) be taken with a pinch of salt but essentially
 * [**1**] J. Schäfer and K. Strimmer, *[A Shrinkage Approach to Large-Scale Covariance Matrix Estimation and Implications for Functional Genomics](http://strimmerlab.org/publications/journals/shrinkcov2005.pdf)*, Statistical Applications in Genetics and Molecular Biology, 2005.
 * [**2**] O. Ledoit and M. Wolf, *[Honey, I Shrunk the Sample Covariance Matrix](http://www.ledoit.net/honey.pdf)*, The Journal of Portfolio Management, 2004.
 * [**3**] Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero, *[Shrinkage Algorithms for MMSE Covariance Estimation](https://arxiv.org/pdf/0907.4698.pdf)*, IEEE Transactions on Signal Processing, 2010.
+* [**4**] O. Ledoit and M. Wolf, *[Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices](http://www.econ.uzh.ch/static/wp/econwp264.pdf)*, Working Paper, 2018.
