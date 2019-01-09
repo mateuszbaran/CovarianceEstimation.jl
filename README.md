@@ -57,7 +57,9 @@ These methods build an estimator of the covariance derived from `S`.
 
 **Time complexity**:
 - Linear shrinkage: `O(p^2n)` with a low constant (main cost is forming `S`)
-- Nonlinear shrinkage: `O(max(p^3, p^2n))` with a low constant (main cost is either forming `S` or computing the eigen decomposition of `S`).
+- Nonlinear shrinkage:
+  * if `p<n`: `O(p^2n + n^2)` with a moderate constant (main cost is forming `S` and manipulating a matrix of `n^2` elements)
+  * if `p>n`: `O(p^3)` with a low constant (main cost is computing the eigen decomposition of `S`).
 
 ### Other estimators (coming)
 
