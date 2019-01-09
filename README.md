@@ -39,11 +39,35 @@ S_05 = cov(X, method)
 
 ## Currently supported algorithms
 
-* `Simple`: basic corrected and uncorrected sample covariance (via the `Statistics` package),
-* `LinearShrinkageEstimator`: James-Stein type estimator of the form `(1-λ)S+λF` where `S` is the uncorrected simple estimator, `F` is a target and `λ∈[0,1]` a shrinkage intensity.
+In this section, `X` is the data matrix of size `n × p`, `S` is the sample covariance matrix with `S = κ (Xc' * Xc)` where `κ` is either `n` (uncorrected) or `n-1` (corrected) and `Xc` is the centred data matrix (see [docs](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev))).
+
+* `Simple`: basic corrected and uncorrected sample covariance (via the `Statistics` package)
+
+**Time complexity**: `O(p^2n)` with a low constant
+
+### Sample covariance based methods
+
+These methods build an estimator of the covariance derived from `S`.
+
+* `LinearShrinkageEstimator`: James-Stein type estimator of the form `(1-λ)S+λF` where `F` is a target and `λ∈[0,1]` a shrinkage intensity.
   - common targets are implemented following the taxonomy given in [**1**] along with Ledoit-Wolf optimal shrinkage intensities [**2**].
-  - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised intensity and Oracle-Approximating intensity are also supported (see [**3**]).
+  - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised Ledoit-Wolf shrinkage (`:rblw`) and Oracle-Approximating shrinkage (`:oas`) are also supported (see [**3**]).
   - **Note**: `S` is symmetric semi-positive definite so that if the `F` is symmetric positive definite and provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite. For the diagonal targets `DiagonalUnitVariance`, `DiagonalCommonVariance` and `DiagonalUnequalVariance` the target is necessarily SPD.
+* `NonlinearShrinkageEstimator`: estimators of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.
+
+**Time complexity**:
+- Linear shrinkage: `O(p^2n)` with a low constant (main cost is forming `S`)
+- Nonlinear shrinkage: `O(max(p^3, p^2n))` with a low constant (main cost is either forming `S` or computing the eigen decomposition of `S`).
+
+### Other estimators (coming)
+
+These are estimators that may be implemented in the future, see also [this review  paper](https://arxiv.org/pdf/1504.02995.pdf).
+
+* Sparsity based estimators for either the covariance or the precision
+* Rank based approaches
+* [POET](https://arxiv.org/pdf/1201.0175.pdf)
+* HAC
+* ...
 
 ## Comparison to existing libraries
 
