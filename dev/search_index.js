@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Manual outline",
     "category": "section",
-    "text": "Pages = [\"man/methods.md\", \"man/lshrink.md\", \"man/nlshrink.md\"]"
+    "text": "Pages = [\"man/methods.md\", \"man/lshrink.md\", \"man/nlshrink.md\", \"man/msecomp.md\"]"
 },
 
 {
@@ -97,6 +97,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "man/methods/#Comparing-estimators-1",
+    "page": "Methods",
+    "title": "Comparing estimators",
+    "category": "section",
+    "text": "You may want to look at our simple comparison of covariance estimators which compares the MSE of the various estimators in a range of situations. Long story short, the LinearShrinkageEstimator with DiagonalUnequalVariance target performs well in the case np though most other estimators don\'t fare too badly in comparison. In the case np, the nonlinear shrinkage method does very well (though it is more expensive to compute)."
+},
+
+{
     "location": "man/lshrink/#",
     "page": "Linear shrinkage estimators",
     "title": "Linear shrinkage estimators",
@@ -121,14 +129,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/lshrink/#What-to-use-1",
-    "page": "Linear shrinkage estimators",
-    "title": "What to use",
-    "category": "section",
-    "text": "In general, all linear shrinkage estimators offer roughly similar accuracies though the DiagonalCommonVariance target and the CommonCovariance with :ss shrinkage seem to perform marginally better in our rough experiments."
-},
-
-{
     "location": "man/nlshrink/#",
     "page": "Nonlinear shrinkage estimators",
     "title": "Nonlinear shrinkage estimators",
@@ -142,6 +142,38 @@ var documenterSearchIndex = {"docs": [
     "title": "Nonlinear shrinkage estimators",
     "category": "section",
     "text": ""
+},
+
+{
+    "location": "man/msecomp/#",
+    "page": "MSE comparisons",
+    "title": "MSE comparisons",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "man/msecomp/#[MSE-Comparison](@id_msecomp)-1",
+    "page": "MSE comparisons",
+    "title": "MSE Comparison",
+    "category": "section",
+    "text": "Below are results obtained with a variety of data matrices of dimensions ntimes p. For each pair of dimension, 50 covariance matrices are generated with associated sample data matrices. The covariance obtained with the different estimators are then compared to the ground-truth and the MSE is reported.Abbreviation Method\nanshrink analytical nonlinear shrinkage\nccor LSE with constant correlation target\nccov LSE with constant covariance target\nd1v LSE with identity target\ndcv LSE with diagonal common variance target\nduv LSE with diagonal unequal variance target\nppc LSE with perfect positive correlation target\ns Simple estimator (baseline)\n_lw uses ledoit-wolf shrinkage\n_ss uses schaffer-strimmer shrinkage\n_oas uses oracle approximating shrinkage\n_rblw uses rao-blackwellised ledoit-wolf shrinkage"
+},
+
+{
+    "location": "man/msecomp/#Fat-matrices-1",
+    "page": "MSE comparisons",
+    "title": "Fat matrices",
+    "category": "section",
+    "text": "(Image: ) (Image: ) (Image: ) (Image: )"
+},
+
+{
+    "location": "man/msecomp/#Tall-matrices-1",
+    "page": "MSE comparisons",
+    "title": "Tall matrices",
+    "category": "section",
+    "text": "(Image: ) (Image: ) (Image: ) (Image: )"
 },
 
 {
@@ -365,7 +397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internals",
     "title": "CovarianceEstimation.analytical_nonlinear_shrinkage",
     "category": "function",
-    "text": "analytical_nonlinear_shrinkage(X)\n\nBased on Matlab code in Olivier Ledoit and Michael Wolf. Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices. (Nov 2018) http://www.econ.uzh.ch/static/wp/econwp264.pdf\n\n\n\n\n\n"
+    "text": "analytical_nonlinear_shrinkage(X)\n\nBased on Matlab code in Olivier Ledoit and Michael Wolf. Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices. (Nov 2018) http://www.econ.uzh.ch/static/wp/econwp264.pdf\n\nTime complexity:\n(p<n): O(np^2 + n^2) with moderate constant\n(p>n): O(p^3) with low constant\n\n\n\n\n\n"
 },
 
 {
