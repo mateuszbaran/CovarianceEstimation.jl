@@ -32,7 +32,3 @@ See [Schaffer & Strimmer 2005](http://strimmerlab.org/publications/journals/shri
 
 Chen's variant includes a Rao-Blackwellised estimator (`shrinkage=:rblw`) and an Oracle-Approximating one (`shrinkage=:oas`) for the `DiagonalCommonVariance` target.
 See [Chen, Wiesel, Eldar & Hero 2010](https://arxiv.org/pdf/0907.4698.pdf).
-
-## What to use
-
-In general, all linear shrinkage estimators offer roughly similar accuracies though the `DiagonalCommonVariance` target and the `CommonCovariance` with `:ss` shrinkage seem to perform marginally better in our rough experiments.

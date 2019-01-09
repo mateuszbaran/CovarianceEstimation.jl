@@ -94,3 +94,9 @@ cov(X, method2)
 ## Nonlinear shrinkage estimators
 
 [Read more on nonlinear shrinkage estimators...](@ref nlshrink)
+
+## Comparing estimators
+
+You may want to look at our simple [comparison of covariance estimators](@ref_msecomp) which compares the MSE of the various estimators in a range of situations.
+Long story short, the `LinearShrinkageEstimator` with `DiagonalUnequalVariance` target performs well in the case $n<p$ though most other estimators don't fare too badly in comparison.
+In the case $n>p$, the nonlinear shrinkage method does very well (though it is more expensive to compute).

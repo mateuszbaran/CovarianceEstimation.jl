@@ -4,6 +4,7 @@ using LinearAlgebra
 using Random:seed!
 using DelimitedFiles
 using ProgressMeter
+using PyPlot
 
 const CE = CovarianceEstimation
 
@@ -11,31 +12,81 @@ seed!(6312)
 
 # dimensions
 
-np = (
+const np = (
     # fat matrices
-    (15, 20), (20, 30), (20, 50), (100, 1000),
+    (15, 20), (20, 30), (20, 50), (100, 200),
     # tall matrices
-    (20, 15), (30, 20), (50, 20), (1000, 100),
+    (20, 15), (30, 20), (50, 20), (200, 100),
     )
 
 const LSE = LinearShrinkageEstimator
 
 const estimators = Dict(
-    "d1v_lw"        => LSE(target=DiagonalUnitVariance(),      shrinkage=:lw),
-    "d1v_ss"        => LSE(target=DiagonalUnitVariance(),      shrinkage=:ss),
-    "dcv_lw"        => LSE(target=DiagonalCommonVariance(),    shrinkage=:lw),
-    "dcv_ss"        => LSE(target=DiagonalCommonVariance(),    shrinkage=:ss),
-    "dcv_rblw"      => LSE(target=DiagonalCommonVariance(),    shrinkage=:rblw),
-    "dcv_oas"       => LSE(target=DiagonalCommonVariance(),    shrinkage=:oas),
-    "duv_lw"        => LSE(target=DiagonalUnequalVariance(),   shrinkage=:lw),
-    "duv_ss"        => LSE(target=DiagonalUnequalVariance(),   shrinkage=:ss),
-    "ccov_lw"       => LSE(target=CommonCovariance(),          shrinkage=:lw),
-    "ccov_ss"       => LSE(target=CommonCovariance(),          shrinkage=:ss),
-    "ppc_lw"        => LSE(target=PerfectPositiveCorrelation(),shrinkage=:lw),
-    "ppc_ss"        => LSE(target=PerfectPositiveCorrelation(),shrinkage=:ss),
-    "ccor_lw"       => LSE(target=ConstantCorrelation(),       shrinkage=:lw),
-    "ccor_ss"       => LSE(target=ConstantCorrelation(),       shrinkage=:ss),
-    "anshrink"      => AnalyticalNonlinearShrinkage()
+    # BASELINE ESTIMATORS
+    "s_uncorr" => Simple(),
+    "s_corr"   => Simple(corrected=true),
+    # LINEAR SHRINKAGE, BASED ON UNCORRECTED SAMPLE COV
+    "d1v_lw_uncorr"   => LSE(target=DiagonalUnitVariance(),
+                              shrinkage=:lw),
+    "d1v_ss_uncorr"   => LSE(target=DiagonalUnitVariance(),
+                              shrinkage=:ss),
+    "dcv_lw_uncorr"   => LSE(target=DiagonalCommonVariance(),
+                              shrinkage=:lw),
+    "dcv_ss_uncorr"   => LSE(target=DiagonalCommonVariance(),
+                              shrinkage=:ss),
+    "dcv_rblw_uncorr" => LSE(target=DiagonalCommonVariance(),
+                              shrinkage=:rblw),
+    "dcv_oas_uncorr"  => LSE(target=DiagonalCommonVariance(),
+                              shrinkage=:oas),
+    "duv_lw_uncorr"   => LSE(target=DiagonalUnequalVariance(),
+                              shrinkage=:lw),
+    "duv_ss_uncorr"   => LSE(target=DiagonalUnequalVariance(),
+                              shrinkage=:ss),
+    "ccov_lw_uncorr"  => LSE(target=CommonCovariance(),
+                              shrinkage=:lw),
+    "ccov_ss_uncorr"  => LSE(target=CommonCovariance(),
+                              shrinkage=:ss),
+    "ppc_lw_uncorr"   => LSE(target=PerfectPositiveCorrelation(),
+                              shrinkage=:lw),
+    "ppc_ss_uncorr"   => LSE(target=PerfectPositiveCorrelation(),
+                              shrinkage=:ss),
+    "ccor_lw_uncorr"  => LSE(target=ConstantCorrelation(),
+                              shrinkage=:lw),
+    "ccor_ss_uncorr"  => LSE(target=ConstantCorrelation(),
+                              shrinkage=:ss),
+    # LINEAR SHRINKAGE, BASED ON CORRECTED SAMPLE COV
+    "d1v_lw_corr"   => LSE(target=DiagonalUnitVariance(),
+                            shrinkage=:lw, corrected=true),
+    "d1v_ss_corr"   => LSE(target=DiagonalUnitVariance(),
+                            shrinkage=:ss, corrected=true),
+    "dcv_lw_corr"   => LSE(target=DiagonalCommonVariance(),
+                            shrinkage=:lw, corrected=true),
+    "dcv_ss_corr"   => LSE(target=DiagonalCommonVariance(),
+                            shrinkage=:ss, corrected=true),
+    "dcv_rblw_corr" => LSE(target=DiagonalCommonVariance(),
+                            shrinkage=:rblw, corrected=true),
+    "dcv_oas_corr"  => LSE(target=DiagonalCommonVariance(),
+                            shrinkage=:oas, corrected=true),
+    "duv_lw_corr"   => LSE(target=DiagonalUnequalVariance(),
+                            shrinkage=:lw, corrected=true),
+    "duv_ss_corr"   => LSE(target=DiagonalUnequalVariance(),
+                            shrinkage=:ss, corrected=true),
+    "ccov_lw_corr"  => LSE(target=CommonCovariance(),
+                            shrinkage=:lw, corrected=true),
+    "ccov_ss_corr"  => LSE(target=CommonCovariance(),
+                            shrinkage=:ss, corrected=true),
+    "ppc_lw_corr"   => LSE(target=PerfectPositiveCorrelation(),
+                            shrinkage=:lw, corrected=true),
+    "ppc_ss_corr"   => LSE(target=PerfectPositiveCorrelation(),
+                            shrinkage=:ss, corrected=true),
+    "ccor_lw_corr"  => LSE(target=ConstantCorrelation(),
+                            shrinkage=:lw, corrected=true),
+    "ccor_ss_corr"  => LSE(target=ConstantCorrelation(),
+                            shrinkage=:ss, corrected=true),
+    # NONLINEAR SHRINKAGE, BASED ON UNCORRECTED SAMPLE COV
+    "anshrink_uncorr" => AnalyticalNonlinearShrinkage(),
+    # NONLINEAR SHRINKAGE, BASED ON CORRECTED SAMPLE COV
+    "anshrink_uncorr" => AnalyticalNonlinearShrinkage()
     )
 
 # warmup case
@@ -54,31 +105,21 @@ nrounds = 50
 
 results = Dict{String, Float64}()
 
-@showprogress for (n, p) ∈ np
+for (n, p) ∈ np
     # Generate a colouring matrix (cholesky of true cov)
-    L = randn() .* randn(p, p)
+    # the first randn allows for different amplitudes, the last one allows
+    # for the various dimensions to have their variance on different scales
+    L = randn() .* randn(p, p) .* randn(p)
     Σ = L * L'
     p2 = p^2
-    for round ∈ 1:nrounds
+    println("Dims: $n x $p...")
+    @showprogress for round ∈ 1:nrounds
         # generate a sample matrix
         X = randn(n, p) * L
-        # baseline estimators
-        results["s_uncorr_$(n)x$(p)_$round"] =
-            norm(cov(X, Simple()) - Σ) / p2
-        results["s_corr_$(n)x$(p)_$round"] =
-            norm(cov(X, Simple(true)) - Σ) / p2
         # estimate the covariance
         for (name, estimator) ∈ estimators
-            if estimator isa LSE
-                results[name * "_uncorr_$(n)x$(p)_$round"] =
-                    norm(cov(X, estimator, corrected=false) - Σ) / p2
-                results[name * "_corr_$(n)x$(p)_$round"] =
-                    norm(cov(X, estimator, corrected=true) - Σ) / p2
-            else
-                # XXX this will be fixed with #37
-                results[name * "_uncorr_$(n)x$(p)_$round"] =
-                    norm(cov(X, estimator) - Σ) / p2
-            end
+            results[name * "_$(n)x$(p)_$round"] =
+                norm(cov(X, estimator) - Σ) / p2
         end
     end
 end
@@ -89,41 +130,12 @@ results2 = Dict{String, NTuple{2, Float64}}()
 
 # print results for each size and every estimator (cumbersome)
 for (name, estimator) ∈ estimators
-    if estimator isa LSE
-        println("Res for $(name)_uncorr")
-        for (n, p) ∈ np
-            # find all the results that match
-            matchkeys = filter(k -> occursin("$(name)_uncorr_$(n)x$(p)_", k),
-                               reskeys)
-            r = [results[key] for key ∈ matchkeys]
-            μ = mean(r)
-            σ = std(r)
-            results2["$(name)_uncorr_$(n)x$(p)_"] = (μ, σ)
-            println("$(n)x$(p) -- $μ ($σ)")
-        end
-        println("Res for $(name)_corr")
-        for (n, p) ∈ np
-            # find all the results that match
-            matchkeys = filter(k -> occursin("$(name)_corr_$(n)x$(p)_", k),
-                               reskeys)
-            r = [results[key] for key ∈ matchkeys]
-            μ = mean(r)
-            σ = std(r)
-            results2["$(name)_corr_$(n)x$(p)_"] = (μ, σ)
-            println("$(n)x$(p) -- $μ ($σ)")
-        end
-    else
-        println("Res for $(name)_uncorr")
-        for (n, p) ∈ np
-            # find all the results that match
-            matchkeys = filter(k -> occursin("$(name)_uncorr_$(n)x$(p)_", k),
-                               reskeys)
-            r = [results[key] for key ∈ matchkeys]
-            μ = mean(r)
-            σ = std(r)
-            results2["$(name)_uncorr_$(n)x$(p)_"] = (μ, σ)
-            println("$(n)x$(p) -- $μ ($σ)")
-        end
+    for (n, p) ∈ np
+        # find all the results that match
+        matchkeys = filter(k -> occursin("$(name)_$(n)x$(p)_", k), reskeys)
+        r = [results[key] for key ∈ matchkeys]
+        med, iqr = mean(r), -(quantile(r, [0.75, 0.25])...)
+        results2["$(name)_$(n)x$(p)_"] = (med, iqr)
     end
 end
 
@@ -135,20 +147,18 @@ for (n, p) ∈ np
     # dirty way to find the min
     name_best = ""
     val_best = Inf
-    sig_best = Inf
+    iqr_best = Inf
     for key ∈ matchkeys
-        μ, σ = results2[key]
-        if μ < val_best
+        med, iqr = results2[key]
+        if med < val_best
             name_best = key
-            val_best = μ
-            sig_best = σ
+            val_best = med
+            iqr_best = iqr
         end
     end
-    println("Size $(n)x$(p), best: $name_best ($val_best; $sig_best)")
+    println("Size $(n)x$(p), best: $name_best ($val_best; $iqr_best)")
 end
 
-
-using PyPlot
 
 for (n, p) ∈ np
     figure()
@@ -164,5 +174,5 @@ for (n, p) ∈ np
     title("Size: $(n)x$(p)")
     xticks(1:length(rkeys), rkeys[perm], rotation=90)
     tight_layout()
-    savefig("test/experiments/results/bm_$(n)x$(p).png")
+    savefig("docs/src/assets/mse_comp/bm_$(n)x$(p).png")
 end
