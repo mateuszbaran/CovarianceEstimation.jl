@@ -7,8 +7,8 @@ using DelimitedFiles
 using StatsBase
 
 
-include("reference_ledoitwolf.jl")
-include("reference_ledoitwolf2.jl")
+include("ref_lw_lshrink.jl")
+include("ref_lw_nlshrink.jl")
 include("legacy.jl")
 Random.seed!(1234)
 

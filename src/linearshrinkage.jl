@@ -73,7 +73,7 @@ A subtype of `LinearShrinkageTarget` where
 struct ConstantCorrelation <: LinearShrinkageTarget end
 
 """
-    LinearShrinkageEstimator(target, shrinkage; corrected = false)
+    LinearShrinkage(target, shrinkage; corrected=false)
 
 Linear shrinkage estimator described by equation
 ``(1 - \\lambda) S + \\lambda F`` where ``S`` is standard covariance matrix,
@@ -83,32 +83,32 @@ determined according to one of the supported methods.
 
 The corrected estimator is used if `corrected` is true.
 """
-struct LinearShrinkageEstimator{T<:LinearShrinkageTarget, S<:Shrinkage} <: CovarianceEstimator
+struct LinearShrinkage{T<:LinearShrinkageTarget, S<:Shrinkage} <: CovarianceEstimator
     target::T
     shrinkage::S
     corrected::Bool
-    function LinearShrinkageEstimator(t::TT, s::SS; corrected=false) where {TT<:LinearShrinkageTarget, SS<:Real}
+    function LinearShrinkage(t::TT, s::SS; corrected=false) where {TT<:LinearShrinkageTarget, SS<:Real}
         @assert 0 ≤ s ≤ 1 "Shrinkage value should be between 0 and 1"
         new{TT, SS}(t, s, corrected)
     end
-    function LinearShrinkageEstimator(t::TT, s::Symbol=:auto; corrected=false) where TT <: LinearShrinkageTarget
+    function LinearShrinkage(t::TT, s::Symbol=:auto; corrected=false) where TT <: LinearShrinkageTarget
         @assert s ∈ [:auto, :lw, :ss, :rblw, :oas] "Shrinkage method not supported"
         new{TT, Symbol}(t, s, corrected)
     end
 end
 
-LinearShrinkageEstimator(;
+LinearShrinkage(;
     target::LinearShrinkageTarget=DiagonalUnitVariance(),
     shrinkage::Shrinkage,
-    corrected::Bool=false) = LinearShrinkageEstimator(target, shrinkage, corrected=corrected)
+    corrected::Bool=false) = LinearShrinkage(target, shrinkage, corrected=corrected)
 
 """
-    cov(X, lse::LinearShrinkageEstimator; dims=1)
+    cov(X, lse::LinearShrinkage; dims=1)
 
 Linear shrinkage covariance estimator for matrix `X` along dimension `dims`.
 Computed using the method described by `lse`.
 """
-function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
+function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkage;
              dims::Int=1, mean=nothing)
 
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
