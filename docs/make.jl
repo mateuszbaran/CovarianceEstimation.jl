@@ -10,7 +10,8 @@ makedocs(
         "Manual" => Any[
             "Methods" => "man/methods.md",
             "Linear shrinkage estimators" => "man/lshrink.md",
-            "Nonlinear shrinkage estimators" => "man/nlshrink.md"
+            "Nonlinear shrinkage estimators" => "man/nlshrink.md",
+            "MSE comparisons" => "man/msecomp.md"
         ],
         "Library" => Any[
             "Public" => "lib/public.md",
