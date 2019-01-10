@@ -113,7 +113,7 @@ function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
 
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
 
-    Xc   = (dims == 1) ? copy(X) : cov(transpose(X))
+    Xc   = (dims == 1) ? copy(X) : copy(transpose(X))
     n, p = size(Xc)
     # sample covariance of size (p x p)
     S = cov(Xc, Simple(corrected=lse.corrected); mean=mean)
