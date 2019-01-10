@@ -1,6 +1,3 @@
-centercols(X::AbstractMatrix) = (X .- mean(X, dims=1))
-
-
 function linshrink(F::Union{UniformScaling, AbstractMatrix},
                    S::AbstractMatrix, λ::Real)
     return (1.0 - λ)*S + λ*F

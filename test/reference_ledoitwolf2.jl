@@ -11,7 +11,7 @@ using Statistics
 function matlab_ledoitwolf_analytical_shrinkage(X)
     n, p = size(X);
     @assert n ≥ 12 "there must be more than 12 samples"
-    sample = cov(X, Simple());
+    sample = cov(X, Simple()); # note centering is applied here
     lambda, u = eigen(sample)
     perm = sortperm(lambda)
     lambda = lambda[perm]
@@ -30,7 +30,7 @@ function matlab_ledoitwolf_analytical_shrinkage(X)
     Hftemp[abs.(x).==sqrt(5)] .= (-3/10/pi)*x[abs.(x).==sqrt(5)];
     Hftilde = mean(Hftemp./H, dims=2);
 
-    if p < n
+    if p <= η
         dtilde = lambda ./ ((pi*(p/n)*lambda.*ftilde).^2 .+ (1 .- (p/n) .- pi*(p/n)*lambda.*Hftilde).^2);
     else
         Hftilde0 = (1/pi)*(3/10/h^2 + 3/4/sqrt(5)/h*(1-1/5/h^2) * log((1+sqrt(5)*h)/(1-sqrt(5)*h))) * mean(1 ./ lambda);

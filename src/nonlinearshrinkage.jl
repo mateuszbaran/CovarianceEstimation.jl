@@ -41,23 +41,17 @@ end
 
 
 """
-    analytical_nonlinear_shrinkage(X)
+    analytical_nonlinear_shrinkage(S, n, p; decomp)
 
-Based on Matlab code in Olivier Ledoit and Michael Wolf. Analytical Nonlinear
-Shrinkage of Large-Dimensional Covariance Matrices. (Nov 2018)
+Internal implementation of the analytical nonlinear shrinkage. The
+implementation is inspired from the Matlab code given in section C of
+Olivier Ledoit and Michael Wolf's paper "Analytical Nonlinear
+Shrinkage of Large-Dimensional Covariance Matrices". (Nov 2018)
 http://www.econ.uzh.ch/static/wp/econwp264.pdf
-
-* Time complexity:
-    - (p<n): O(np^2 + n^2) with moderate constant
-    - (p>n): O(p^3) with low constant
 """
-function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,Nothing}=nothing, corrected=false)
-    n, p = size(X)
-    if n < 12
-        # explained in the paper
-        throw(ArgumentError("The number of samples `n` must be at least 12 (given: $n)."))
-    end
-    S = cov(X, Simple(corrected=corrected)) # p x p
+function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
+                                        n::Int, p::Int, est_mean::Bool;
+                                        decomp::Union{Nothing,Eigen}=nothing)
 
     # sample eigenvalues sorted in ascending order and eigenvectors
     F    = isa(decomp, Nothing) ? eigen(S) : decomp # O(p^3)
@@ -68,7 +62,7 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
     # dominant cost forming of S or eigen(S) --> O(max{np^2, p^3})
 
     # compute analytical nonlinear shrinkage kernel formula
-    η = ifelse(p < n, n, n-1) # effective sample size
+    η = ifelse(p < n, n, n - Int(est_mean)) # effective sample size
     λ = λ[max(1, (p - η) + 1):p]
     L = repeat(λ, outer=(1, min(p, η)))
 
@@ -93,7 +87,7 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
 
     # dominant cost up to here: elementwise ops on x --> O(max{p^2, η^2})
 
-    if p < n
+    if p <= η
         # Equation (4.3)
         πγλ = γ * πλ
         denom = @. (πγλ * f̃)^2 + (1.0 - γ - πγλ * Hf̃)^2
@@ -115,12 +109,37 @@ function analytical_nonlinear_shrinkage(X::AbstractMatrix; decomp::Union{Eigen,N
 end
 
 """
-    cov(X, ans::AnalyticalNonlinearShrinkage; dims=1)
+    cov(X, ans::AnalyticalNonlinearShrinkage; dims=1, mean=nothing)
+
+Nonlinear covariance estimator derived from the sample covariance estimator `S`
+and its eigenvalue decomposition (which can be given through `decomp`).
+See Ledoit and Wolf's paper http://www.econ.uzh.ch/static/wp/econwp264.pdf
+The keyword `mean` can be `nothing` (centering via estimated mean),
+zero (no centering) or a provided vector. In the first case, a rank-1
+modification is applied and therefore the effective sample size is decreased
+by one (see `analytical_nonlinear_shrinkage`). In the latter two case the mean
+cannot have been estimated on the data (otherwise the effective sample size
+will be 1 larger than it should be resulting in numerical instabilities).
+If you are unsure, use either `nothing` or provide an explicit (non-estimated)
+vector (possibly a zero vector) and avoid the use of `mean=0`.
+
+* Time complexity (including formation of `S`)
+    - (p<n): O(np^2 + n^2) with moderate constant
+    - (p>n): O(p^3) with low constant (dominated by eigendecomposition of S)
 """
 function cov(X::AbstractMatrix{<:Real}, ans::AnalyticalNonlinearShrinkage;
-             dims::Int=1)
+             dims::Int=1, mean=nothing)
+
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
 
-    Xc = (dims == 1) ? centercols(X) : centercols(transpose(X))
-    return analytical_nonlinear_shrinkage(Xc, decomp=ans.decomp, corrected=ans.corrected)
+    szx    = size(X)
+    (n, p) = ifelse(dims==1, szx, reverse(szx))
+
+    # explained in the paper there must be at least 12 samples
+    (n < 12) && throw(ArgumentError("The number of samples `n` must be at " *
+                                    "least 12 (given: $n)."))
+
+    S  = cov(X, Simple(corrected=ans.corrected); dims=dims, mean=mean)
+    return analytical_nonlinear_shrinkage(S, n, p, mean === nothing;
+                decomp=ans.decomp)
 end

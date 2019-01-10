@@ -109,14 +109,22 @@ Linear shrinkage covariance estimator for matrix `X` along dimension `dims`.
 Computed using the method described by `lse`.
 """
 function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkageEstimator;
-             dims::Int=1)
+             dims::Int=1, mean=nothing)
 
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
 
-    Xc = (dims == 1) ? centercols(X) : centercols(transpose(X))
-    # sample covariance of size (p x p)
+    Xc   = (dims == 1) ? copy(X) : transpose(X)
     n, p = size(Xc)
-    S    = cov(Xc, Simple(corrected=lse.corrected))
+    # sample covariance of size (p x p)
+    S = cov(Xc, Simple(corrected=lse.corrected); mean=mean)
+
+    # NOTE: don't need to check if mean is proper as this is already done above
+    if mean === nothing
+        Xc .-= Statistics.mean(Xc, dims=1)
+    elseif mean isa AbstractArray
+        Xc .-= mean
+    end
+
     return linear_shrinkage(lse.target, Xc, S, lse.shrinkage, n, p, lse.corrected)
 end
 

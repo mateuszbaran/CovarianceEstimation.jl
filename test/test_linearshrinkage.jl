@@ -43,7 +43,7 @@ end
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
-        Xtmp = CE.centercols(X̂)
+        Xtmp = centercols(X̂)
         shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-1).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
@@ -56,7 +56,7 @@ end
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
-        Xtmp = CE.centercols(X̂)
+        Xtmp = centercols(X̂)
         v = tr(S)/p
         F = v * I
         shrinkage  = sum_var_sij(Xtmp, S, n)
@@ -71,7 +71,7 @@ end
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
-        Xtmp = CE.centercols(X̂)
+        Xtmp = centercols(X̂)
         v = tr(S)/p
         c = sum(S-Diagonal(S))/(p*(p-1))
         F = v * I + c * (ones(p, p) - I)
@@ -87,7 +87,7 @@ end
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
-        Xtmp = CE.centercols(X̂)
+        Xtmp = centercols(X̂)
         F = Diagonal(S)
         shrinkage  = sum_var_sij(Xtmp, S, n, false; with_diag=false)
         shrinkage /= sum((S-Diagonal(S)).^2)
@@ -101,7 +101,7 @@ end
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
-        Xtmp = CE.centercols(X̂)
+        Xtmp = centercols(X̂)
         d = diag(S)
         F = sqrt.(d*d')
         shrinkage  = sum_var_sij(Xtmp, S, n; with_diag=false)
@@ -130,7 +130,7 @@ end
         Ŝ_rblw = cov(X̂, rblw)
         Ŝ_oas  = cov(X̂, oas)
 
-        X̂ = CE.centercols(X̂)
+        X̂ = centercols(X̂)
         n, p = size(X̂)
         Ŝ    = cov(X̂, Simple())
 
@@ -168,7 +168,7 @@ end
         =#
         for c ∈ [false, true], X̂ ∈ test_matrices
             Xcs = X̂
-            Xcs = CE.centercols(Xcs)
+            Xcs = centercols(Xcs)
             n = size(Xcs, 1)
             for i ∈ 1:size(Xcs, 2)
                 Xcs[:, i] ./= sqrt(var(Xcs[:, i], corrected=c))

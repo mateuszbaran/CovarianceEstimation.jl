@@ -15,39 +15,80 @@ Simple(w::AbstractWeights; corrected::Bool = false) = Simple(corrected, w)
 
 
 """
-    cov(x::AbstractVector, sc::Simple)
-
-Compute the sample variance of the vector `x`. The sum is scaled with `n`
-where `n = length(x)` if `sc.corrected` is false and with `n-1` otherwise.
-"""
-cov(x::AbstractVector, sc::Simple) = cov(x; corrected = sc.corrected)
-
-
-"""
-    cov(x::AbstractVector, y, sc::Simple)
+    cov(x::AbstractVector, y::AbstractVector, sc::Simple)
 
 Compute the covariance of the vectors `x` and `y` using formula
 ``\\frac{1}{n}\\sum_{i=1}^n (x_i-\\bar x) (y_i-\\bar y)^*`` where ``*`` denotes
 complex conjugate. If `sc.corrected` is true then the fraction ``\\frac{1}{n}``
 is replaced with ``\\frac{1}{n-1}``.
 """
-cov(x::AbstractVector, y::AbstractVector, sc::Simple) = cov(x, y; corrected = sc.corrected)
+cov(x::AbstractVector, y::AbstractVector, sc::Simple) =
+    cov(x, y; corrected=sc.corrected)
 
 
 """
-    cov(X::AbstractMatrix, sc::Simple; dims::Int=1)
+    cov(X::AbstractMatrix, sc::Simple; dims=1, mean=nothing)
 
-Compute the covariance matrix associated with `X` along dimension `dims`.
-The sum is scaled with `n` where  `n = length(x)` if `sc.corrected` is false
-and with `n-1` otherwise.
+Compute the sample variance of `X`. The sum is scaled with the number of
+observations `n` if `sc.corrected` is false and with `n-1` otherwise.
+If `dims=1` the rows are assumed to be observations and the columns the
+features. If `dims=2` the opposite is assumed. The keyword `mean` can be
+
+    * `nothing` (default) in which case the mean is estimated then subtracted
+    from the data `X`,
+    * `zero` in which case the data is assumed to have already been centred,
+    * a given vector of appropriate dimensions in which case that provided mean
+    is subtracted from the data `X`.
 """
-cov(X::AbstractMatrix, sc::Simple; dims::Int=1) = cov(X; dims=dims, corrected = sc.corrected)
+function cov(X::AbstractMatrix, sc::Simple; dims::Int=1, mean=nothing)
+    @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
+
+    # weighted case via StatsBase (no argument mean supported)
+    sc.weights === nothing || return StatsBase.cov(X, sc.weights, dims;
+                                        corrected=sc.corrected)
+    # unweighted case via Statistics
+    if mean === nothing
+        return Statistics.cov(X; dims=dims, corrected=sc.corrected)
+    elseif iszero(mean)
+        return Statistics.covzm(X, dims, corrected=sc.corrected)
+    elseif mean isa AbstractVector
+        pdim = 2 - mod(dims+1, 2)
+        length(mean) == size(X, pdim) || throw(DimensionMismatch(
+                                "Provided mean length must match the " *
+                                "dimensions of `X`. Got $(length(mean)), " *
+                                "expected $(size(X, dims))."))
+        return Statistics.covm(X, mean, dims; corrected=sc.corrected)
+   else
+       throw(ArgumentError("`mean` kw expects `0`, `nothing` or a vector."))
+   end
+end
+
 
 """
-    cov(X, sc::Simple{<:AbstractWeights}; dims=1)
+    cov(X::AbstractVector, sc::Simple; mean=nothing)
 
-Compute the weighted covariance matrix.
+Compute the sample variance of `X`. The sum is scaled with the number of
+observations `n` if `sc.corrected` is false and with `n-1` otherwise. The
+keyword `mean` can be
+
+    * `nothing` (default) in which case the mean is estimated then subtracted
+    from the data `X`,
+    * `zero` in which case the data is assumed to have already been centred,
+    * a given number in which case that provided mean is subtracted from the
+    data `X`.
 """
-function cov(X::DenseMatrix, sc::Simple{<:AbstractWeights}; dims::Int=1)
-    return cov(X, sc.weights, dims, corrected = sc.corrected)
+function cov(X::AbstractVector, sc::Simple; mean=nothing)
+    # weighted case via StatsBase (no argument mean supported)
+    sc.weights === nothing || return StatsBase.cov(X, sc.weights;
+                                        corrected=sc.corrected)
+    # unweighted case via Statistics
+    if mean === nothing
+        return Statistics.cov(X; corrected=sc.corrected)
+    elseif iszero(mean)
+        return Statistics.covzm(X; corrected=sc.corrected)
+    elseif mean isa Number
+        return Statistics.covm(X, mean; corrected=sc.corrected)
+   else
+       throw(ArgumentError("`mean` kw expects `0`, `nothing` or a number."))
+   end
 end
