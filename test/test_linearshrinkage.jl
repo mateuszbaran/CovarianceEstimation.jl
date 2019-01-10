@@ -1,11 +1,11 @@
 @testset "LinShrink: target F with LW (ref⭒) " begin
-    lw = LinearShrinkageEstimator(ConstantCorrelation())
+    lw = LinearShrinkage(ConstantCorrelation())
     testTransposition(lw, X)
     testUncorrelated(lw)
     testTranslation(lw, X)
     for X̂ ∈ test_matrices
         ref_results = matlab_ledoitwolf_covcor(X̂)
-        lwfixed = LinearShrinkageEstimator(ConstantCorrelation(), ref_results["shrinkage"])
+        lwfixed = LinearShrinkage(ConstantCorrelation(), ref_results["shrinkage"])
         @test cov(X̂, lw) ≈ ref_results["lwcov"]
         @test cov(X̂, lwfixed) ≈ ref_results["lwcov"]
     end
@@ -23,7 +23,7 @@ end
     # c2 = cov.shrink(tm2, lambda.var=0.0)
     # c3 = cov.shrink(tm3, lambda.var=0.0)
 
-    ss = LinearShrinkageEstimator(target=DiagonalUnequalVariance(),
+    ss = LinearShrinkage(target=DiagonalUnequalVariance(),
                                   shrinkage=:ss; corrected=true)
     test_mat1 = readdlm(joinpath(p, "test_matrices/20x100.csv"))
     ref_cov1  = readdlm(joinpath(p, "test_matrices/20x100_corpcor.csv"))
@@ -39,7 +39,7 @@ end
 
 @testset "LinShrink: target ABCDE with LW    " begin
     # TARGET A
-    lwa = LinearShrinkageEstimator(DiagonalUnitVariance())
+    lwa = LinearShrinkage(DiagonalUnitVariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
@@ -48,11 +48,11 @@ end
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-1).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwa) ≈ (1.0-shrinkage) * S + shrinkage * I
-        lwafixed = LinearShrinkageEstimator(DiagonalUnitVariance(), shrinkage)
+        lwafixed = LinearShrinkage(DiagonalUnitVariance(), shrinkage)
         @test cov(X̂, lwafixed) ≈ (1.0 - shrinkage) * S + shrinkage * I
     end
     # TARGET B
-    lwb = LinearShrinkageEstimator(DiagonalCommonVariance())
+    lwb = LinearShrinkage(DiagonalCommonVariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
@@ -63,11 +63,11 @@ end
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-v).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwb) ≈ (1.0-shrinkage) * S + shrinkage * F
-        lwbfixed = LinearShrinkageEstimator(DiagonalCommonVariance(), shrinkage)
+        lwbfixed = LinearShrinkage(DiagonalCommonVariance(), shrinkage)
         @test cov(X̂, lwbfixed) ≈ (1.0 - shrinkage) * S + shrinkage * F
     end
     # TARGET C
-    lwc = LinearShrinkageEstimator(CommonCovariance())
+    lwc = LinearShrinkage(CommonCovariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
@@ -79,11 +79,11 @@ end
         shrinkage /= sum(((S-Diagonal(S)) - c*(ones(p, p)-I)).^2) + sum((diag(S) .- v).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwc) ≈ (1.0-shrinkage) * S + shrinkage * F
-        lwcfixed = LinearShrinkageEstimator(CommonCovariance(), shrinkage)
+        lwcfixed = LinearShrinkage(CommonCovariance(), shrinkage)
         @test cov(X̂, lwcfixed) ≈ (1.0-shrinkage) * S + shrinkage * F
     end
     # TARGET D
-    lwd = LinearShrinkageEstimator(DiagonalUnequalVariance())
+    lwd = LinearShrinkage(DiagonalUnequalVariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
@@ -93,11 +93,11 @@ end
         shrinkage /= sum((S-Diagonal(S)).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwd) ≈ (1.0-shrinkage) * S + shrinkage * F
-        lwdfixed = LinearShrinkageEstimator(DiagonalUnequalVariance(), shrinkage)
+        lwdfixed = LinearShrinkage(DiagonalUnequalVariance(), shrinkage)
         @test cov(X̂, lwdfixed) ≈ (1.0-shrinkage) * S + shrinkage * F
     end
     # TARGET E
-    lwe = LinearShrinkageEstimator(PerfectPositiveCorrelation())
+    lwe = LinearShrinkage(PerfectPositiveCorrelation())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
         S = cov(X̂, Simple())
@@ -109,19 +109,19 @@ end
         shrinkage /= sum((S - F).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
         @test cov(X̂, lwe) ≈ (1.0-shrinkage) * S + shrinkage * F
-        lwefixed = LinearShrinkageEstimator(PerfectPositiveCorrelation(), shrinkage)
+        lwefixed = LinearShrinkage(PerfectPositiveCorrelation(), shrinkage)
         @test cov(X̂, lwefixed) ≈ (1.0-shrinkage) * S + shrinkage * F
     end
 end
 
 
 @testset "LinShrink: target B with RBLW+OAS  " begin
-    rblw = LinearShrinkageEstimator(DiagonalCommonVariance(), :rblw)
+    rblw = LinearShrinkage(DiagonalCommonVariance(), :rblw)
     testTransposition(rblw, X)
     testUncorrelated(rblw)
     testTranslation(rblw, X)
 
-    oas = LinearShrinkageEstimator(DiagonalCommonVariance(), :oas)
+    oas = LinearShrinkage(DiagonalCommonVariance(), :oas)
     testTransposition(oas, X)
     testUncorrelated(oas)
     testTranslation(oas, X)
@@ -145,8 +145,8 @@ end
         @test cov(X̂, rblw) ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref)
         @test cov(X̂, oas) ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref)
 
-        rblw_fixed = LinearShrinkageEstimator(DiagonalCommonVariance(), λ_rblw_ref)
-        oas_fixed = LinearShrinkageEstimator(DiagonalCommonVariance(), λ_oas_ref)
+        rblw_fixed = LinearShrinkage(DiagonalCommonVariance(), λ_rblw_ref)
+        oas_fixed = LinearShrinkage(DiagonalCommonVariance(), λ_oas_ref)
         @test cov(X̂, rblw_fixed) ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref)
         @test cov(X̂, oas_fixed) ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref)
     end
@@ -173,8 +173,8 @@ end
             for i ∈ 1:size(Xcs, 2)
                 Xcs[:, i] ./= sqrt(var(Xcs[:, i], corrected=c))
             end
-            LSEss = LinearShrinkageEstimator(target, :ss, corrected=c)
-            LSElw = LinearShrinkageEstimator(target, :lw, corrected=c)
+            LSEss = LinearShrinkage(target, :ss, corrected=c)
+            LSElw = LinearShrinkage(target, :lw, corrected=c)
             @test cov(Xcs, LSEss) ≈ cov(Xcs, LSElw)
         end
     end

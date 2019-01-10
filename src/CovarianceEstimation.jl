@@ -14,7 +14,7 @@ abstract type CovarianceEstimator end
 
 export cov
 export CovarianceEstimator, Simple,
-    LinearShrinkageEstimator,
+    LinearShrinkage,
     # Targets for linear shrinkage
     DiagonalUnitVariance, DiagonalCommonVariance, DiagonalUnequalVariance,
     CommonCovariance, PerfectPositiveCorrelation, ConstantCorrelation,
