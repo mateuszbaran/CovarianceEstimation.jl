@@ -47,7 +47,7 @@ In this section, `X` is the data matrix of size `n × p`, `S` is the sample cova
 
 * `Simple`: basic corrected and uncorrected sample covariance (via the `Statistics` package)
 
-**Time complexity**: `O(p^2n)` with a low constant
+**Time complexity**: `O(p²n)` with a low constant
 
 ### Sample covariance based methods
 
@@ -60,10 +60,10 @@ These methods build an estimator of the covariance derived from `S`.
 * `NonlinearShrinkageEstimator`: estimator of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.[**4**]
 
 **Time complexity**:
-- Linear shrinkage: `O(p^2n)` with a low constant (main cost is forming `S`)
+- Linear shrinkage: `O(p²n)` with a low constant (main cost is forming `S`)
 - Nonlinear shrinkage:
-  * if `p<n`: `O(p^2n + n^2)` with a moderate constant (main cost is forming `S` and manipulating a matrix of `n^2` elements)
-  * if `p>n`: `O(p^3)` with a low constant (main cost is computing the eigen decomposition of `S`).
+  * if `p<n`: `O(p²n + n²)` with a moderate constant (main cost is forming `S` and manipulating a matrix of `n²` elements)
+  * if `p>n`: `O(p³)` with a low constant (main cost is computing the eigen decomposition of `S`).
 
 ### Other estimators (coming)
 
