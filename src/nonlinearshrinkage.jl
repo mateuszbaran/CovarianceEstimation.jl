@@ -50,7 +50,7 @@ Shrinkage of Large-Dimensional Covariance Matrices". (Nov 2018)
 http://www.econ.uzh.ch/static/wp/econwp264.pdf
 """
 function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
-                                        n::Int, p::Int;
+                                        n::Int, p::Int, est_mean::Bool;
                                         decomp::Union{Nothing,Eigen}=nothing)
 
     # sample eigenvalues sorted in ascending order and eigenvectors
@@ -62,7 +62,7 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
     # dominant cost forming of S or eigen(S) --> O(max{np^2, p^3})
 
     # compute analytical nonlinear shrinkage kernel formula
-    η = ifelse(p < n, n, n-1) # effective sample size
+    η = ifelse(p < n, n, n - Int(est_mean)) # effective sample size
     λ = λ[max(1, (p - η) + 1):p]
     L = repeat(λ, outer=(1, min(p, η)))
 
@@ -87,7 +87,7 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
 
     # dominant cost up to here: elementwise ops on x --> O(max{p^2, η^2})
 
-    if p < n
+    if p <= η
         # Equation (4.3)
         πγλ = γ * πλ
         denom = @. (πγλ * f̃)^2 + (1.0 - γ - πγλ * Hf̃)^2
@@ -109,11 +109,19 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
 end
 
 """
-    cov(X, ans::AnalyticalNonlinearShrinkage; dims=1)
+    cov(X, ans::AnalyticalNonlinearShrinkage; dims=1, mean=nothing)
 
 Nonlinear covariance estimator derived from the sample covariance estimator `S`
 and its eigenvalue decomposition (which can be given through `decomp`).
 See Ledoit and Wolf's paper http://www.econ.uzh.ch/static/wp/econwp264.pdf
+The keyword `mean` can be `nothing` (centering via estimated mean),
+zero (no centering) or a provided vector. In the first case, a rank-1
+modification is applied and therefore the effective sample size is decreased
+by one (see `analytical_nonlinear_shrinkage`). In the latter two case the mean
+cannot have been estimated on the data (otherwise the effective sample size
+will be 1 larger than it should be resulting in numerical instabilities).
+If you are unsure, use either `nothing` or provide an explicit (non-estimated)
+vector (possibly a zero vector) and avoid the use of `mean=0`.
 
 * Time complexity (including formation of `S`)
     - (p<n): O(np^2 + n^2) with moderate constant
@@ -132,5 +140,6 @@ function cov(X::AbstractMatrix{<:Real}, ans::AnalyticalNonlinearShrinkage;
                                     "least 12 (given: $n)."))
 
     S  = cov(X, Simple(corrected=ans.corrected); dims=dims, mean=mean)
-    return analytical_nonlinear_shrinkage(S, n, p; decomp=ans.decomp)
+    return analytical_nonlinear_shrinkage(S, n, p, mean === nothing;
+                decomp=ans.decomp)
 end

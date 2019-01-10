@@ -32,7 +32,13 @@ cov(x::AbstractVector, y::AbstractVector, sc::Simple) =
 Compute the sample variance of `X`. The sum is scaled with the number of
 observations `n` if `sc.corrected` is false and with `n-1` otherwise.
 If `dims=1` the rows are assumed to be observations and the columns the
-features. If `dims=2` the opposite is assumed.
+features. If `dims=2` the opposite is assumed. The keyword `mean` can be
+
+    * `nothing` (default) in which case the mean is estimated then subtracted
+    from the data `X`,
+    * `zero` in which case the data is assumed to have already been centred,
+    * a given vector of appropriate dimensions in which case that provided mean
+    is subtracted from the data `X`.
 """
 function cov(X::AbstractMatrix, sc::Simple; dims::Int=1, mean=nothing)
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
@@ -45,7 +51,7 @@ function cov(X::AbstractMatrix, sc::Simple; dims::Int=1, mean=nothing)
         return Statistics.cov(X; dims=dims, corrected=sc.corrected)
     elseif iszero(mean)
         return Statistics.covzm(X, dims, corrected=sc.corrected)
-    elseif mean isa AbstractArray
+    elseif mean isa AbstractVector
         pdim = 2 - mod(dims+1, 2)
         length(mean) == size(X, pdim) || throw(DimensionMismatch(
                                 "Provided mean length must match the " *
@@ -62,7 +68,14 @@ end
     cov(X::AbstractVector, sc::Simple; mean=nothing)
 
 Compute the sample variance of `X`. The sum is scaled with the number of
-observations `n` if `sc.corrected` is false and with `n-1` otherwise.
+observations `n` if `sc.corrected` is false and with `n-1` otherwise. The
+keyword `mean` can be
+
+    * `nothing` (default) in which case the mean is estimated then subtracted
+    from the data `X`,
+    * `zero` in which case the data is assumed to have already been centred,
+    * a given number in which case that provided mean is subtracted from the
+    data `X`.
 """
 function cov(X::AbstractVector, sc::Simple; mean=nothing)
     # weighted case via StatsBase (no argument mean supported)
@@ -76,6 +89,6 @@ function cov(X::AbstractVector, sc::Simple; mean=nothing)
     elseif mean isa Number
         return Statistics.covm(X, mean; corrected=sc.corrected)
    else
-       throw(ArgumentError("`mean` kw expects `0`, `nothing` or a vector."))
+       throw(ArgumentError("`mean` kw expects `0`, `nothing` or a number."))
    end
 end
