@@ -38,7 +38,7 @@ Random.seed!(1)
 n, p = 5, 7
 X = randn(n, p)
 # corrected covariance
-S = cov(X, Simple(corrected=true))
+S = cov(Simple(corrected=true), X)
 # we can also manually compute it and compare
 Xc = (X .- sum(X, dims=1)/n) # centering
 κ = n-1 # correction factor
@@ -57,7 +57,7 @@ where $F$ is a *target* matrix of appropriate dimensions, $\lambda\in[0,1]$ is a
 There are several standard targets that can be used, a simple example being the identity matrix.
 
 The shrinkage intensity $\lambda$ can be specified manually or computed automatically.
-Depending on the target, different approaches are implemented to compute a good intensity such as, for example, the Ledoit-Wolfe optimal intensity (which is the default intensity if you don't specify it).
+Depending on the target, different approaches are implemented to compute a good intensity such as, for example, the Ledoit-Wolf optimal intensity (which is the default intensity if you don't specify it).
 
 You can read more on the targets that can be used and the corresponding automatic intensities [here](@ref lshrink).
 
@@ -70,9 +70,9 @@ Random.seed!(1)
 n, p = 2, 3
 X = randn(n, p)
 target = DiagonalUnitVariance()
-shrinkage = :lw # Ledoit-Wolfe optimal shrinkage
-method = LinearShrinkageEstimator(target, shrinkage)
-cov(X, method)
+shrinkage = :lw # Ledoit-Wolf optimal shrinkage
+method = LinearShrinkage(target, shrinkage)
+cov(method, X)
 ```
 
 You can also specify the intensity manually:
@@ -85,11 +85,11 @@ n, p = 2, 3 # hide
 X = randn(n, p) # hide
 target = DiagonalUnitVariance() # hide
 shrinkage = 0.8
-method2 = LinearShrinkageEstimator(target, shrinkage)
-cov(X, method2)
+method2 = LinearShrinkage(target, shrinkage)
+cov(method2, X)
 ```
 
-[Read more on linear shrinkage estimators...](@ref nlshrink)
+[Read more on linear shrinkage estimators...](@ref lshrink)
 
 ## Nonlinear shrinkage estimators
 
@@ -97,6 +97,6 @@ cov(X, method2)
 
 ## Comparing estimators
 
-You may want to look at our simple [comparison of covariance estimators](@ref_msecomp) which compares the MSE of the various estimators in a range of situations.
+You may want to look at our simple [comparison of covariance estimators](@ref msecomp) which compares the MSE of the various estimators in a range of situations.
 Long story short, the `LinearShrinkageEstimator` with `DiagonalUnequalVariance` target performs well in the case $n<p$ though most other estimators don't fare too badly in comparison.
 In the case $n>p$, the nonlinear shrinkage method does very well (though it is more expensive to compute).

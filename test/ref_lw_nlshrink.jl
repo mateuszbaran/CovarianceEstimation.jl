@@ -11,7 +11,7 @@ using Statistics
 function matlab_ledoitwolf_analytical_shrinkage(X)
     n, p = size(X);
     @assert n ≥ 12 "there must be more than 12 samples"
-    sample = cov(X, Simple()); # note centering is applied here
+    sample = cov(Simple(), X); # note centering is applied here
     lambda, u = eigen(sample)
     perm = sortperm(lambda)
     lambda = lambda[perm]

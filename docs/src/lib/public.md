@@ -22,7 +22,7 @@ Pages = ["public.md"]
 cov
 CovarianceEstimator
 Simple
-LinearShrinkageEstimator
+LinearShrinkage
 DiagonalUnitVariance
 DiagonalCommonVariance
 DiagonalUnequalVariance

@@ -1,4 +1,4 @@
-# [MSE Comparison](@id_msecomp)
+# [MSE Comparison](@id msecomp)
 
 Below are results obtained with a variety of data matrices of dimensions $n\times p$.
 For each pair of dimension, 50 covariance matrices are generated with associated sample data matrices.

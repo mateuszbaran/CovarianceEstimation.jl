@@ -21,24 +21,24 @@ using CovarianceEstimation
 
 X = randn(5, 7)
 
-S_uncorrected  = cov(X, Simple())
-S_corrected    = cov(X, Simple(corrected=true))
+S_uncorrected  = cov(Simple(), X)
+S_corrected    = cov(Simple(corrected=true), X)
 
 # using linear shrinkage with different targets
 LSE = LinearShrinkageEstimator
 # - Ledoit-Wolf target + shrinkage
 method = LSE(ConstantCorrelation())
-S_ledoitwolf = cov(X, method)
+S_ledoitwolf = cov(method, X)
 # - Chen target + shrinkage (using the more verbose call)
 method = LSE(target=DiagonalCommonVariance(), shrinkage=:rblw)
-S_chen_rblw = cov(X, method)
+S_chen_rblw = cov(method, X)
 method = LSE(target=DiagonalCommonVariance(), shrinkage=:oas)
-S_chen_oas = cov(X, method)
+S_chen_oas = cov(method, X)
 
 # a pre-defined shrinkage can be used as well
-method = LinearShrinkageEstimator(DiagonalUnitVariance(), 0.5)
+method = LinearShrinkage(DiagonalUnitVariance(), 0.5)
 # using a given shrinkage
-S_05 = cov(X, method)
+S_05 = cov(method, X)
 ```
 
 ## Currently supported algorithms
@@ -75,6 +75,8 @@ These are estimators that may be implemented in the future, see also [this revie
 * HAC
 * ...
 
+For HAC (and other estimators of covariance of coefficient of regression models) you can currently use the [CovarianceMatrices.jl](https://github.com/gragusa/CovarianceMatrices.jl) package.
+
 ## Comparison to existing libraries
 
 Rough benchmarks are run over random matrices of various sizes (`40x20, 20x40, 400x200, 200x400`).
@@ -84,9 +86,9 @@ These benchmarks should (as usual) be taken with a pinch of salt but essentially
   - average speedup: `5x`
 * **Corpcor** (implements `DiagonalUnequalVariance` target with `ss` shrinkage)
   - average speedup: `22x`
-* **Ledoit-Wolfe 1** (implements `ConstantCorrelation` target with `lw` shrinkage, we used Octave for the comparison)
+* **Ledoit-Wolf 1** (implements `ConstantCorrelation` target with `lw` shrinkage, we used Octave for the comparison)
   - average speedup: `12x`
-* **Ledoit-Wolfe 2** (implements `Nonlinear shrinkage`)
+* **Ledoit-Wolf 2** (implements `Nonlinear shrinkage`)
   - average speedup: `25x`
 
 

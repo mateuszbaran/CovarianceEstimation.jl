@@ -15,19 +15,19 @@ Simple(w::AbstractWeights; corrected::Bool = false) = Simple(corrected, w)
 
 
 """
-    cov(x::AbstractVector, y::AbstractVector, sc::Simple)
+    cov(sc::Simple, x::AbstractVector, y::AbstractVector)
 
 Compute the covariance of the vectors `x` and `y` using formula
 ``\\frac{1}{n}\\sum_{i=1}^n (x_i-\\bar x) (y_i-\\bar y)^*`` where ``*`` denotes
 complex conjugate. If `sc.corrected` is true then the fraction ``\\frac{1}{n}``
 is replaced with ``\\frac{1}{n-1}``.
 """
-cov(x::AbstractVector, y::AbstractVector, sc::Simple) =
+cov(sc::Simple, x::AbstractVector, y::AbstractVector) =
     cov(x, y; corrected=sc.corrected)
 
 
 """
-    cov(X::AbstractMatrix, sc::Simple; dims=1, mean=nothing)
+    cov(sc::Simple, X::AbstractMatrix; dims=1, mean=nothing)
 
 Compute the sample variance of `X`. The sum is scaled with the number of
 observations `n` if `sc.corrected` is false and with `n-1` otherwise.
@@ -40,7 +40,7 @@ features. If `dims=2` the opposite is assumed. The keyword `mean` can be
     * a given vector of appropriate dimensions in which case that provided mean
     is subtracted from the data `X`.
 """
-function cov(X::AbstractMatrix, sc::Simple; dims::Int=1, mean=nothing)
+function cov(sc::Simple, X::AbstractMatrix; dims::Int=1, mean=nothing)
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
 
     # weighted case via StatsBase (no argument mean supported)
@@ -65,7 +65,7 @@ end
 
 
 """
-    cov(X::AbstractVector, sc::Simple; mean=nothing)
+    cov(sc::Simple, X::AbstractVector; mean=nothing)
 
 Compute the sample variance of `X`. The sum is scaled with the number of
 observations `n` if `sc.corrected` is false and with `n-1` otherwise. The
@@ -77,7 +77,7 @@ keyword `mean` can be
     * a given number in which case that provided mean is subtracted from the
     data `X`.
 """
-function cov(X::AbstractVector, sc::Simple; mean=nothing)
+function cov(sc::Simple, X::AbstractVector; mean=nothing)
     # weighted case via StatsBase (no argument mean supported)
     sc.weights === nothing || return StatsBase.cov(X, sc.weights;
                                         corrected=sc.corrected)

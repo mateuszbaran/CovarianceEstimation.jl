@@ -103,12 +103,12 @@ LinearShrinkage(;
     corrected::Bool=false) = LinearShrinkage(target, shrinkage, corrected=corrected)
 
 """
-    cov(X, lse::LinearShrinkage; dims=1)
+    cov(lse::LinearShrinkage, X; dims=1)
 
 Linear shrinkage covariance estimator for matrix `X` along dimension `dims`.
 Computed using the method described by `lse`.
 """
-function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkage;
+function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real};
              dims::Int=1, mean=nothing)
 
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
@@ -116,7 +116,7 @@ function cov(X::AbstractMatrix{<:Real}, lse::LinearShrinkage;
     Xc   = (dims == 1) ? copy(X) : copy(transpose(X))
     n, p = size(Xc)
     # sample covariance of size (p x p)
-    S = cov(Xc, Simple(corrected=lse.corrected); mean=mean)
+    S = cov(Simple(corrected=lse.corrected), Xc; mean=mean)
 
     # NOTE: don't need to check if mean is proper as this is already done above
     if mean === nothing

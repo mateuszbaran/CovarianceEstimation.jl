@@ -28,29 +28,29 @@ const test_matrices = [X, Xa, Xb, Xc, Xd, Xe, Z]
 
 
 function testTransposition(ce::CovarianceEstimator, X)
-    @test cov(X, ce; dims=1) ≈ cov(transpose(X), ce; dims=2)
-    @test cov(X, ce; dims=2) ≈ cov(transpose(X), ce; dims=1)
+    @test cov(ce, X; dims=1) ≈ cov(ce, transpose(X); dims=2)
+    @test cov(ce, X; dims=2) ≈ cov(ce, transpose(X); dims=1)
 
     # XXX broken?
-    # @test_throws ArgumentError cov(X, ce, dims=0)
+    # @test_throws ArgumentError cov(ce, X, dims=0)
     # @test_throws ArgumentError cov(ce, X, dims=3)
 end
 
 
 function testUncorrelated(ce::CovarianceEstimator)
     for X2 ∈ X2s
-        @test isdiag(cov(X2, ce))
+        @test isdiag(cov(ce, X2))
     end
 
 end
 
 
 function testTranslation(ce::CovarianceEstimator, X)
-    C1 = cov(X, ce)
-    C2 = cov(X .+ randn(1, size(X, 2)), ce)
+    C1 = cov(ce, X)
+    C2 = cov(ce, X .+ randn(1, size(X, 2)))
     @test C1 ≈ C2 atol = 1e-12 rtol = 1e-16
-    C1t = cov(X', ce)
-    C2t = cov(X' .+ randn(1, size(X, 1)), ce)
+    C1t = cov(ce, X')
+    C2t = cov(ce, X' .+ randn(1, size(X, 1)))
     @test C1t ≈ C2t atol = 1e-12 rtol = 1e-16
 end
 

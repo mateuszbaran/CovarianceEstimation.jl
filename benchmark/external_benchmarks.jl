@@ -43,10 +43,10 @@ end
 # =========
 # SKLEARN
 # =========
-oas = LinearShrinkageEstimator(
+oas = LinearShrinkage(
         target=DiagonalCommonVariance(),
         shrinkage=:oas)
-lw = LinearShrinkageEstimator(
+lw = LinearShrinkage(
         target=DiagonalCommonVariance(),
         shrinkage=:lw)
 times = zeros(length(p))
@@ -55,7 +55,7 @@ for i ∈ eachindex(p)
     Xᵢ = X[i]
     Cᵢ = C[i]
     start = time()
-    C_oas = cov(Xᵢ, oas)
+    C_oas = cov(oas, Xᵢ)
     times[i] = time() - start
     res[i] = norm(C_oas - Cᵢ)
 end
@@ -71,7 +71,7 @@ for i ∈ eachindex(p)
     Xᵢ = X[i]
     Cᵢ = C[i]
     start = time()
-    C_lw = cov(Xᵢ, lw)
+    C_lw = cov(lw, Xᵢ)
     times[i] = time() - start
     res[i] = norm(C_lw - Cᵢ)
 end
@@ -87,7 +87,7 @@ speedup = mean(times_sklearn ./ times_ours)
 # =========
 # CORPCOR
 # =========
-ss = LinearShrinkageEstimator(
+ss = LinearShrinkage(
         target=DiagonalUnequalVariance(),
         shrinkage=:ss)
 times = zeros(length(p))
@@ -96,7 +96,7 @@ for i ∈ eachindex(p)
     Xᵢ = X[i]
     Cᵢ = C[i]
     start = time()
-    C_ss = cov(Xᵢ, ss)
+    C_ss = cov(ss, Xᵢ)
     times[i] = time() - start
     res[i] = norm(C_ss - Cᵢ)
 end
@@ -114,7 +114,7 @@ speedup = mean(times_corpcor ./ times_ours)
 # ===============
 # LEDOIT WOLF 1
 # ===============
-lw = LinearShrinkageEstimator(
+lw = LinearShrinkage(
         target=ConstantCorrelation(),
         shrinkage=:lw)
 times = zeros(length(p))
@@ -123,7 +123,7 @@ for i ∈ eachindex(p)
     Xᵢ = X[i]
     Cᵢ = C[i]
     start = time()
-    C_lw = cov(Xᵢ, lw)
+    C_lw = cov(lw, Xᵢ)
     times[i] = time() - start
     res[i] = norm(C_lw - Cᵢ)
 end
@@ -148,7 +148,7 @@ for i ∈ [1, 3] # fat matrix don't work reliably atm, see #38
     Xᵢ = X[i]
     Cᵢ = C[i]
     start = time()
-    C_lw = cov(Xᵢ, lw)
+    C_lw = cov(lw, Xᵢ)
     times[i] = time() - start
     res[i] = norm(C_lw - Cᵢ)
 end

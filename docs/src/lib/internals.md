@@ -19,7 +19,10 @@ Pages = ["internals.md"]
 ## Internals
 
 ```@docs
+CovarianceEstimation.epanechnikov
+CovarianceEstimation.epanechnikov_HT1
 CovarianceEstimation.rescale
+CovarianceEstimation.rescale!
 CovarianceEstimation.uccov
 CovarianceEstimation.sumij
 CovarianceEstimation.square
