@@ -93,10 +93,10 @@ const estimators = Dict(
 begin
     println("Warmup...")
     X = randn(15, 5)
-    cov(X, Simple())
-    cov(X, Simple(corrected=true))
+    cov(Simple(), X)
+    cov(Simple(corrected=true), X)
     @showprogress for (_, estimator) ∈ estimators
-        cov(X, estimator)
+        cov(estimator, X)
     end
 end
 
@@ -119,7 +119,7 @@ for (n, p) ∈ np
         # estimate the covariance
         for (name, estimator) ∈ estimators
             results[name * "_$(n)x$(p)_$round"] =
-                norm(cov(X, estimator) - Σ) / p2
+                norm(cov(estimator, X) - Σ) / p2
         end
     end
 end

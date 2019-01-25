@@ -16,14 +16,14 @@ const X1000_10000  = randn(1000, 10000)
 matrices = [X10_100, X100_100, X100_1000, X100_10000, X1000_10000]
 estimators = Dict(
     "Simple" => (ce = Simple(), maxfeatures = 10000),
-    "Linear constant correlation" => (ce = LinearShrinkageEstimator(ConstantCorrelation()), maxfeatures = 1000),
-    "Linear diagonal unit variance" => (ce = LinearShrinkageEstimator(DiagonalUnitVariance()), maxfeatures = 1000),
-    "Linear diagonal common variance" => (ce = LinearShrinkageEstimator(DiagonalCommonVariance()), maxfeatures = 1000),
-    "Linear common covariance" => (ce = LinearShrinkageEstimator(CommonCovariance()), maxfeatures = 1000),
-    "Linear diagonal unequal variance" => (ce = LinearShrinkageEstimator(DiagonalUnequalVariance()), maxfeatures = 1000),
-    "Linear perfect positive correlation" => (ce = LinearShrinkageEstimator(PerfectPositiveCorrelation()), maxfeatures = 1000),
-    "Linear RBLW" => (ce = LinearShrinkageEstimator(DiagonalCommonVariance(), :rblw), maxfeatures = 10000),
-    "Linear OAS" => (ce = LinearShrinkageEstimator(DiagonalCommonVariance(), :oas), maxfeatures = 10000),
+    "Linear constant correlation" => (ce = LinearShrinkage(ConstantCorrelation()), maxfeatures = 1000),
+    "Linear diagonal unit variance" => (ce = LinearShrinkage(DiagonalUnitVariance()), maxfeatures = 1000),
+    "Linear diagonal common variance" => (ce = LinearShrinkage(DiagonalCommonVariance()), maxfeatures = 1000),
+    "Linear common covariance" => (ce = LinearShrinkage(CommonCovariance()), maxfeatures = 1000),
+    "Linear diagonal unequal variance" => (ce = LinearShrinkage(DiagonalUnequalVariance()), maxfeatures = 1000),
+    "Linear perfect positive correlation" => (ce = LinearShrinkage(PerfectPositiveCorrelation()), maxfeatures = 1000),
+    "Linear RBLW" => (ce = LinearShrinkage(DiagonalCommonVariance(), :rblw), maxfeatures = 10000),
+    "Linear OAS" => (ce = LinearShrinkage(DiagonalCommonVariance(), :oas), maxfeatures = 10000),
     "Analytical nonlinear shrinkage" => (ce = AnalyticalNonlinearShrinkage(), maxfeatures = 1000)
 )
 
@@ -31,7 +31,7 @@ for (k, v) in estimators
     SUITE[k] = BenchmarkGroup()
     for m in matrices
         if size(m, 2) ≤ v[:maxfeatures]
-            SUITE[k]["Size $(size(m))"] = @benchmarkable cov($m, $v[:ce])
+            SUITE[k]["Size $(size(m))"] = @benchmarkable cov($v[:ce], $m)
         end
     end
 end

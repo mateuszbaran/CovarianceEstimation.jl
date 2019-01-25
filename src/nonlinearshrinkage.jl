@@ -109,7 +109,7 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
 end
 
 """
-    cov(X, ans::AnalyticalNonlinearShrinkage; dims=1, mean=nothing)
+    cov(ans::AnalyticalNonlinearShrinkage, X; dims=1, mean=nothing)
 
 Nonlinear covariance estimator derived from the sample covariance estimator `S`
 and its eigenvalue decomposition (which can be given through `decomp`).
@@ -127,7 +127,7 @@ vector (possibly a zero vector) and avoid the use of `mean=0`.
     - (p<n): O(np^2 + n^2) with moderate constant
     - (p>n): O(p^3) with low constant (dominated by eigendecomposition of S)
 """
-function cov(X::AbstractMatrix{<:Real}, ans::AnalyticalNonlinearShrinkage;
+function cov(ans::AnalyticalNonlinearShrinkage, X::AbstractMatrix{<:Real};
              dims::Int=1, mean=nothing)
 
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
@@ -139,7 +139,7 @@ function cov(X::AbstractMatrix{<:Real}, ans::AnalyticalNonlinearShrinkage;
     (n < 12) && throw(ArgumentError("The number of samples `n` must be at " *
                                     "least 12 (given: $n)."))
 
-    S  = cov(X, Simple(corrected=ans.corrected); dims=dims, mean=mean)
+    S  = cov(Simple(corrected=ans.corrected), X; dims=dims, mean=mean)
     return analytical_nonlinear_shrinkage(S, n, p, mean === nothing;
                 decomp=ans.decomp)
 end
