@@ -25,7 +25,7 @@ S_uncorrected  = cov(Simple(), X)
 S_corrected    = cov(Simple(corrected=true), X)
 
 # using linear shrinkage with different targets
-LSE = LinearShrinkageEstimator
+LSE = LinearShrinkage
 # - Ledoit-Wolf target + shrinkage
 method = LSE(ConstantCorrelation())
 S_ledoitwolf = cov(method, X)
