@@ -53,11 +53,11 @@ In this section, `X` is the data matrix of size `n × p`, `S` is the sample cova
 
 These methods build an estimator of the covariance derived from `S`.
 
-* `LinearShrinkageEstimator`: James-Stein type estimator of the form `(1-λ)S+λF` where `F` is a target and `λ∈[0,1]` a shrinkage intensity.
+* `LinearShrinkage`: James-Stein type estimator of the form `(1-λ)S+λF` where `F` is a target and `λ∈[0,1]` a shrinkage intensity.
   - common targets are implemented following the taxonomy given in [**1**] along with Ledoit-Wolf optimal shrinkage intensities [**2**].
   - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised Ledoit-Wolf shrinkage (`:rblw`) and Oracle-Approximating shrinkage (`:oas`) are also supported (see [**3**]).
   - **Note**: `S` is symmetric semi-positive definite so that if the `F` is symmetric positive definite and provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite. For the diagonal targets `DiagonalUnitVariance`, `DiagonalCommonVariance` and `DiagonalUnequalVariance` the target is necessarily SPD.
-* `NonlinearShrinkageEstimator`: estimator of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.[**4**]
+* `AnalyticalNonlinearShrinkage`: estimator of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.[**4**]
 
 **Time complexity**:
 - Linear shrinkage: `O(p²n)` with a low constant (main cost is forming `S`)
@@ -88,7 +88,7 @@ These benchmarks should (as usual) be taken with a pinch of salt but essentially
   - average speedup: `22x`
 * **Ledoit-Wolf 1** (implements `ConstantCorrelation` target with `lw` shrinkage, we used Octave for the comparison)
   - average speedup: `12x`
-* **Ledoit-Wolf 2** (implements `Nonlinear shrinkage`)
+* **Ledoit-Wolf 2** (implements `AnalyticalNonlinearShrinkage`)
   - average speedup: `25x`
 
 
