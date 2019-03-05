@@ -3,17 +3,10 @@ module CovarianceEstimation
 using Statistics
 using StatsBase
 using LinearAlgebra
-import Statistics: cov
-
-"""
-    CovarianceEstimator
-
-Basic type for all covariance estimators.
-"""
-abstract type CovarianceEstimator end
+import StatsBase: cov
 
 export cov
-export CovarianceEstimator, Simple,
+export CovarianceEstimator, SimpleCovariance,
     LinearShrinkage,
     # Targets for linear shrinkage
     DiagonalUnitVariance, DiagonalCommonVariance, DiagonalUnequalVariance,
@@ -23,7 +16,6 @@ export CovarianceEstimator, Simple,
 
 
 include("utils.jl")
-include("simplecov.jl")
 include("linearshrinkage.jl")
 include("nonlinearshrinkage.jl")
 

@@ -15,7 +15,7 @@ const X1000_10000  = randn(1000, 10000)
 
 matrices = [X10_100, X100_100, X100_1000, X100_10000, X1000_10000]
 estimators = Dict(
-    "Simple" => (ce = Simple(), maxfeatures = 10000),
+    "Simple" => (ce = SimpleCovariance(), maxfeatures = 10000),
     "Linear constant correlation" => (ce = LinearShrinkage(ConstantCorrelation()), maxfeatures = 1000),
     "Linear diagonal unit variance" => (ce = LinearShrinkage(DiagonalUnitVariance()), maxfeatures = 1000),
     "Linear diagonal common variance" => (ce = LinearShrinkage(DiagonalCommonVariance()), maxfeatures = 1000),

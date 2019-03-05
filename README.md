@@ -21,8 +21,8 @@ using CovarianceEstimation
 
 X = randn(5, 7)
 
-S_uncorrected  = cov(Simple(), X)
-S_corrected    = cov(Simple(corrected=true), X)
+S_uncorrected  = cov(SimpleCovariance(), X)
+S_corrected    = cov(SimpleCovariance(corrected=true), X)
 
 # using linear shrinkage with different targets
 LSE = LinearShrinkage
@@ -45,13 +45,13 @@ S_05 = cov(method, X)
 
 In this section, `X` is the data matrix of size `n × p`, `S` is the sample covariance matrix with `S = κ (Xc' * Xc)` where `κ` is either `n` (uncorrected) or `n-1` (corrected) and `Xc` is the centred data matrix (see [docs](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev)).
 
-* `Simple`: basic corrected and uncorrected sample covariance (via the `Statistics` package)
+* `SimpleCovariance`: basic corrected and uncorrected sample covariance (implemented in `StatsBase.jl`).
 
 **Time complexity**: `O(p²n)` with a low constant
 
 ### Sample covariance based methods
 
-These methods build an estimator of the covariance derived from `S`.
+These methods build an estimator of the covariance derived from `S`. They are implemented using abstract covariance estimation interface from `StatsBase.jl`.
 
 * `LinearShrinkage`: James-Stein type estimator of the form `(1-λ)S+λF` where `F` is a target and `λ∈[0,1]` a shrinkage intensity.
   - common targets are implemented following the taxonomy given in [**1**] along with Ledoit-Wolf optimal shrinkage intensities [**2**].
