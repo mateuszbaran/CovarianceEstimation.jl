@@ -3,11 +3,11 @@
     S &amp;=&amp; \kappa^{-1}X_c^T X_c \label{simple-covariance}\\
     D_{ij} &amp;=&amp; S_{ij}\mathbf 1_{[i=j]}\\
     X_s &amp;=&amp; X_c D^{-1/2}
-\end{eqnarray}\]</div><h2><a class="nav-anchor" id="Simple-estimator-1" href="#Simple-estimator-1">Simple estimator</a></h2><p>The standard covariance estimator is easily obtained via \eqref{simple-covariance}. It can be specified with the constructor <code>Simple</code> which can take a named argument <code>corrected</code> (either <code>false</code> (default) or <code>true</code>).</p><div><pre><code class="language-julia">Random.seed!(1)
+\end{eqnarray}\]</div><h2><a class="nav-anchor" id="Simple-estimator-1" href="#Simple-estimator-1">Simple estimator</a></h2><p>The standard covariance estimator is easily obtained via \eqref{simple-covariance}. It can be specified with the constructor <code>SimpleCovariance</code> which can take a named argument <code>corrected</code> (either <code>false</code> (default) or <code>true</code>).</p><div><pre><code class="language-julia">Random.seed!(1)
 n, p = 5, 7
 X = randn(n, p)
 # corrected covariance
-S = cov(Simple(corrected=true), X)
+S = cov(SimpleCovariance(corrected=true), X)
 # we can also manually compute it and compare
 Xc = (X .- sum(X, dims=1)/n) # centering
 κ = n-1 # correction factor
