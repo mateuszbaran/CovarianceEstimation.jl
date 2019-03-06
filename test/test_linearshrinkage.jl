@@ -160,7 +160,7 @@ end
             DiagonalUnequalVariance(),
             CommonCovariance(),
             PerfectPositiveCorrelation(),
-            # ConstantCorrelation()
+            ConstantCorrelation()
             ]
         #=
         :ss assumes that the shrinkage should be the same if the data
