@@ -45,7 +45,7 @@ S_05 = cov(method, X)
 
 In this section, `X` is the data matrix of size `n × p`, `S` is the sample covariance matrix with `S = κ (Xc' * Xc)` where `κ` is either `n` (uncorrected) or `n-1` (corrected) and `Xc` is the centred data matrix (see [docs](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev)).
 
-* `SimpleCovariance`: basic corrected and uncorrected sample covariance (implemented in `StatsBase.jl`).
+* `SimpleCovariance`: basic corrected or uncorrected sample covariance (implemented in `StatsBase.jl`).
 
 **Time complexity**: `O(p²n)` with a low constant
 
