@@ -139,7 +139,7 @@ function cov(ans::AnalyticalNonlinearShrinkage, X::AbstractMatrix{<:Real};
     (n < 12) && throw(ArgumentError("The number of samples `n` must be at " *
                                     "least 12 (given: $n)."))
 
-    S  = cov(Simple(corrected=ans.corrected), X; dims=dims, mean=mean)
+    S  = cov(SimpleCovariance(corrected=ans.corrected), X; dims=dims, mean=mean)
     return analytical_nonlinear_shrinkage(S, n, p, mean === nothing;
                 decomp=ans.decomp)
 end

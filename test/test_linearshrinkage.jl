@@ -42,7 +42,7 @@ end
     lwa = LinearShrinkage(DiagonalUnitVariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
-        S = cov(Simple(), X̂)
+        S = cov(SimpleCovariance(), X̂)
         Xtmp = centercols(X̂)
         shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-1).^2)
@@ -55,7 +55,7 @@ end
     lwb = LinearShrinkage(DiagonalCommonVariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
-        S = cov(Simple(), X̂)
+        S = cov(SimpleCovariance(), X̂)
         Xtmp = centercols(X̂)
         v = tr(S)/p
         F = v * I
@@ -70,7 +70,7 @@ end
     lwc = LinearShrinkage(CommonCovariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
-        S = cov(Simple(), X̂)
+        S = cov(SimpleCovariance(), X̂)
         Xtmp = centercols(X̂)
         v = tr(S)/p
         c = sum(S-Diagonal(S))/(p*(p-1))
@@ -86,7 +86,7 @@ end
     lwd = LinearShrinkage(DiagonalUnequalVariance())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
-        S = cov(Simple(), X̂)
+        S = cov(SimpleCovariance(), X̂)
         Xtmp = centercols(X̂)
         F = Diagonal(S)
         shrinkage  = sum_var_sij(Xtmp, S, n, false; with_diag=false)
@@ -100,7 +100,7 @@ end
     lwe = LinearShrinkage(PerfectPositiveCorrelation())
     for X̂ ∈ test_matrices
         n, p = size(X̂)
-        S = cov(Simple(), X̂)
+        S = cov(SimpleCovariance(), X̂)
         Xtmp = centercols(X̂)
         d = diag(S)
         F = sqrt.(d*d')
@@ -132,7 +132,7 @@ end
 
         X̂ = centercols(X̂)
         n, p = size(X̂)
-        Ŝ    = cov(Simple(), X̂)
+        Ŝ    = cov(SimpleCovariance(), X̂)
 
         F_ref = tr(Ŝ)/p * I
         # https://arxiv.org/pdf/0907.4698.pdf eq 17
@@ -160,7 +160,7 @@ end
             DiagonalUnequalVariance(),
             CommonCovariance(),
             PerfectPositiveCorrelation(),
-            # ConstantCorrelation()
+            ConstantCorrelation()
             ]
         #=
         :ss assumes that the shrinkage should be the same if the data
@@ -176,6 +176,12 @@ end
             LSEss = LinearShrinkage(target, :ss, corrected=c)
             LSElw = LinearShrinkage(target, :lw, corrected=c)
             @test cov(LSEss, Xcs) ≈ cov(LSElw, Xcs)
+            # weights are not currently exported but it seems to be a good
+            # idea to ensure proper errors
+            fw1 = FrequencyWeights(rand(1:10, size(Xcs, 1)))
+            @test_throws ErrorException cov(LSEss, Xcs, fw1)
+            @test_throws ErrorException cov(LSEss, Xcs, fw1; dims=2)
+            @test_throws ErrorException cov(LSEss, Xcs, fw1; mean=nothing)
         end
     end
 end

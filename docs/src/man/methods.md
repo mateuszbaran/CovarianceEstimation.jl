@@ -29,7 +29,7 @@ With these notations we can write:
 ## Simple estimator
 
 The standard covariance estimator is easily obtained via \eqref{simple-covariance}.
-It can be specified with the constructor `Simple` which can take a named argument `corrected` (either `false` (default) or `true`).
+It can be specified with the constructor `SimpleCovariance` which can take a named argument `corrected` (either `false` (default) or `true`).
 
 ```@example
 using CovarianceEstimation # hide
@@ -38,7 +38,7 @@ Random.seed!(1)
 n, p = 5, 7
 X = randn(n, p)
 # corrected covariance
-S = cov(Simple(corrected=true), X)
+S = cov(SimpleCovariance(corrected=true), X)
 # we can also manually compute it and compare
 Xc = (X .- sum(X, dims=1)/n) # centering
 κ = n-1 # correction factor

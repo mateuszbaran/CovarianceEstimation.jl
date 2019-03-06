@@ -20,8 +20,8 @@ Pages = ["public.md"]
 
 ```@docs
 cov
-CovarianceEstimator
-Simple
+StatsBase.CovarianceEstimator
+StatsBase.SimpleCovariance
 LinearShrinkage
 DiagonalUnitVariance
 DiagonalCommonVariance

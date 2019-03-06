@@ -54,6 +54,5 @@ function testTranslation(ce::CovarianceEstimator, X)
     @test C1t ≈ C2t atol = 1e-12 rtol = 1e-16
 end
 
-include("test_simplecov.jl")
 include("test_linearshrinkage.jl")
 include("test_nonlinearshrinkage.jl")

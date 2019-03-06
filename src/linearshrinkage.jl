@@ -116,7 +116,7 @@ function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real};
     Xc   = (dims == 1) ? copy(X) : copy(transpose(X))
     n, p = size(Xc)
     # sample covariance of size (p x p)
-    S = cov(Simple(corrected=lse.corrected), Xc; mean=mean)
+    S = cov(SimpleCovariance(corrected=lse.corrected), Xc; mean=mean)
 
     # NOTE: don't need to check if mean is proper as this is already done above
     if mean === nothing
