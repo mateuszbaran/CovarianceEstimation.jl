@@ -185,3 +185,30 @@ end
         end
     end
 end
+
+@testset "LinShrink: all targets, mean arg   " begin
+    for target ∈ [
+            DiagonalUnitVariance(),
+            DiagonalCommonVariance(),
+            DiagonalUnequalVariance(),
+            CommonCovariance(),
+            PerfectPositiveCorrelation(),
+            ConstantCorrelation()
+            ]
+        for c ∈ [true, false], dim ∈ [1, 2], X̂ ∈ test_matrices[1:3]
+            Xcs = X̂
+            Xcs = centercols(Xcs)
+            n = size(Xcs, dim)
+            LSEss = LinearShrinkage(target, :ss, corrected=c)
+            LSElw = LinearShrinkage(target, :lw, corrected=c)
+            m = mean(cov(LSEss, Xcs, dims=dim, mean=nothing))
+            @test cov(LSEss, Xcs, dims=dim, mean=mean(Xcs, dims=dim)) ≈ cov(LSEss, Xcs, dims=dim, mean=nothing)
+            @test cov(LSElw, Xcs, dims=dim, mean=mean(Xcs, dims=dim)) ≈ cov(LSElw, Xcs, dims=dim, mean=nothing)
+            if dim == 2
+                meanvec = vec(mean(Xcs, dims=dim))
+                @test cov(LSEss, Xcs, dims=dim, mean=meanvec) ≈ cov(LSEss, Xcs, dims=dim, mean=nothing)
+                @test cov(LSElw, Xcs, dims=dim, mean=meanvec) ≈ cov(LSElw, Xcs, dims=dim, mean=nothing)
+            end
+        end
+    end
+end
