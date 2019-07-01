@@ -30,12 +30,12 @@ const test_matrices = [X, Xa, Xb, Xc, Xd, Xe, Z]
 function testTransposition(ce::CovarianceEstimator, X)
     @test cov(ce, X; dims=1) ≈ cov(ce, transpose(X); dims=2)
     @test cov(ce, X; dims=2) ≈ cov(ce, transpose(X); dims=1)
-
-    # XXX broken?
-    # @test_throws ArgumentError cov(ce, X, dims=0)
-    # @test_throws ArgumentError cov(ce, X, dims=3)
 end
 
+function testDims(ce::CovarianceEstimator, X)
+    @test_throws ArgumentError cov(ce, X, dims=0)
+    @test_throws ArgumentError cov(ce, X, dims=3)
+end
 
 function testUncorrelated(ce::CovarianceEstimator)
     for X2 ∈ X2s
@@ -43,7 +43,6 @@ function testUncorrelated(ce::CovarianceEstimator)
     end
 
 end
-
 
 function testTranslation(ce::CovarianceEstimator, X)
     C1 = cov(ce, X)
