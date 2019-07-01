@@ -25,7 +25,6 @@ CovarianceEstimation.rescale
 CovarianceEstimation.rescale!
 CovarianceEstimation.uccov
 CovarianceEstimation.sumij
-CovarianceEstimation.square
 CovarianceEstimation.sumij2
 CovarianceEstimation.sum_fij
 CovarianceEstimation.linear_shrinkage
