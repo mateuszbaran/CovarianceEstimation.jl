@@ -92,7 +92,7 @@ struct LinearShrinkage{T<:LinearShrinkageTarget, S<:Shrinkage} <: CovarianceEsti
         new{TT, SS}(t, s, corrected)
     end
     function LinearShrinkage(t::TT, s::Symbol=:auto; corrected=false) where TT <: LinearShrinkageTarget
-        @assert s ∈ [:auto, :lw, :ss, :rblw, :oas] "Shrinkage method not supported"
+        @assert s ∈ (:auto, :lw, :ss, :rblw, :oas) "Shrinkage method not supported"
         new{TT, Symbol}(t, s, corrected)
     end
 end
@@ -111,7 +111,7 @@ Computed using the method described by `lse`.
 function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real};
              dims::Int=1, mean=nothing)
 
-    @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"
+    @assert dims ∈ (1, 2) "Argument dims can only be 1 or 2 (given: $dims)"
 
     Xc   = (dims == 1) ? copy(X) : copy(transpose(X))
     n, p = size(Xc)
