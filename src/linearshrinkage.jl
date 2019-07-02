@@ -192,19 +192,10 @@ end
 
 
 """
-    square(x)
-
-Internal function to compute the square of a real number `x`. Defined here
-so it can be used in the other internal function `sumij2`.
-"""
-square(x::Real) = x * x
-
-
-"""
     sumij2(S)
 
 Internal function identical to `sumij` except that it passes the function
-`square` to the sum so that it is the sum of the elements of `S` squared
+`abs2` to the sum so that it is the sum of the elements of `S` squared
 which is computed. This is significantly more efficient than using
 `sumij(S.^2)` for large matrices as it allocates very little.
 
@@ -212,8 +203,8 @@ which is computed. This is significantly more efficient than using
 * Time complexity: ``O(2p^2)``
 """
 function sumij2(S::AbstractMatrix; with_diag=false)
-    acc = sum(square, S)
-    with_diag || return acc - sum(square, diag(S))
+    acc = sum(abs2, S)
+    with_diag || return acc - sum(abs2, diag(S))
     return acc
 end
 
@@ -326,13 +317,13 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
         λ  /= κ * ΣS̄² - p/κ
     elseif λ == :rblw
         # https://arxiv.org/pdf/0907.4698.pdf equations 17, 19
-        trS² = sum(square, S)
+        trS² = sum(abs2, S)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
         λ = ((n-2)/n * trS² + tr²S) / ((n+2) * (trS² - tr²S/p))
     elseif λ == :oas
         # https://arxiv.org/pdf/0907.4698.pdf equation 23
-        trS² = sum(square, S)
+        trS² = sum(abs2, S)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
         λ = ((1.0-2.0/p) * trS² + tr²S) / ((n+1.0-2.0/p) * (trS² - tr²S/p))
