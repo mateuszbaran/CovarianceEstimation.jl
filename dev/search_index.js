@@ -297,19 +297,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals/#CovarianceEstimation.square",
-    "page": "Internals",
-    "title": "CovarianceEstimation.square",
-    "category": "function",
-    "text": "square(x)\n\nInternal function to compute the square of a real number x. Defined here so it can be used in the other internal function sumij2.\n\n\n\n\n\n"
-},
-
-{
     "location": "lib/internals/#CovarianceEstimation.sumij2",
     "page": "Internals",
     "title": "CovarianceEstimation.sumij2",
     "category": "function",
-    "text": "sumij2(S)\n\nInternal function identical to sumij except that it passes the function square to the sum so that it is the sum of the elements of S squared which is computed. This is significantly more efficient than using sumij(S.^2) for large matrices as it allocates very little.\n\nSpace complexity: O(1)\nTime complexity: O(2p^2)\n\n\n\n\n\n"
+    "text": "sumij2(S)\n\nInternal function identical to sumij except that it passes the function abs2 to the sum so that it is the sum of the elements of S squared which is computed. This is significantly more efficient than using sumij(S.^2) for large matrices as it allocates very little.\n\nSpace complexity: O(1)\nTime complexity: O(2p^2)\n\n\n\n\n\n"
 },
 
 {
@@ -341,7 +333,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internals",
     "title": "Internals",
     "category": "section",
-    "text": "CovarianceEstimation.epanechnikov\r\nCovarianceEstimation.epanechnikov_HT1\r\nCovarianceEstimation.rescale\r\nCovarianceEstimation.rescale!\r\nCovarianceEstimation.uccov\r\nCovarianceEstimation.sumij\r\nCovarianceEstimation.square\r\nCovarianceEstimation.sumij2\r\nCovarianceEstimation.sum_fij\r\nCovarianceEstimation.linear_shrinkage\r\nCovarianceEstimation.analytical_nonlinear_shrinkage"
+    "text": "CovarianceEstimation.epanechnikov\r\nCovarianceEstimation.epanechnikov_HT1\r\nCovarianceEstimation.rescale\r\nCovarianceEstimation.rescale!\r\nCovarianceEstimation.uccov\r\nCovarianceEstimation.sumij\r\nCovarianceEstimation.sumij2\r\nCovarianceEstimation.sum_fij\r\nCovarianceEstimation.linear_shrinkage\r\nCovarianceEstimation.analytical_nonlinear_shrinkage"
 },
 
 ]}
