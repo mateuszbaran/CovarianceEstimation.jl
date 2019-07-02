@@ -1,7 +1,7 @@
 name = "CovarianceEstimation"
 uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
 authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Thibaut Lienart"]
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
