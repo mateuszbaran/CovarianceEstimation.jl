@@ -3,6 +3,7 @@
     testTransposition(lw, X)
     testUncorrelated(lw)
     testTranslation(lw, X)
+    testDims(lw, X)
     for X̂ ∈ test_matrices
         ref_results = matlab_ledoitwolf_covcor(X̂)
         lwfixed = LinearShrinkage(ConstantCorrelation(), ref_results["shrinkage"])
@@ -120,11 +121,13 @@ end
     testTransposition(rblw, X)
     testUncorrelated(rblw)
     testTranslation(rblw, X)
+    testDims(rblw, X)
 
     oas = LinearShrinkage(DiagonalCommonVariance(), :oas)
     testTransposition(oas, X)
     testUncorrelated(oas)
     testTranslation(oas, X)
+    testDims(oas, X)
 
     for X̂ ∈ test_matrices
         Ŝ_rblw = cov(rblw, X̂)
