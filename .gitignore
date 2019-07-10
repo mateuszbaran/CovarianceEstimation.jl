@@ -12,3 +12,4 @@ benchmark/tmpmat
 *ipynb
 *checkpoin*
 test/experiments/results/
+Manifest.toml
