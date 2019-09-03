@@ -3,7 +3,8 @@
     for X̂ ∈ test_matrices
         size(X̂, 1) < 12 && continue
         ref_result = matlab_ledoitwolf_analytical_shrinkage(X̂)
-        @test cov(ANS, X̂) ≈ ref_result
+        c = cov(ANS, X̂); @test c ≈ ref_result
+        @test issymmetric(c)
     end
 
     # weights are not currently exported but it seems to be a good

@@ -2,7 +2,7 @@
 
 *Lightweight robust covariance estimation in Julia.*
 
-A package for estimating covariance matrices.
+A package for robustly estimating covariance matrices of real-valued data.
 
 ## Package Features
 

@@ -7,8 +7,8 @@
     for X̂ ∈ test_matrices
         ref_results = matlab_ledoitwolf_covcor(X̂)
         lwfixed = LinearShrinkage(ConstantCorrelation(), ref_results["shrinkage"])
-        @test cov(lw, X̂) ≈ ref_results["lwcov"]
-        @test cov(lwfixed, X̂) ≈ ref_results["lwcov"]
+        c = cov(lw, X̂); @test c ≈ ref_results["lwcov"]; @test issymmetric(c)
+        c = cov(lwfixed, X̂); @test c ≈ ref_results["lwcov"]; @test issymmetric(c)
     end
 end
 
@@ -32,9 +32,9 @@ end
     ref_cov2  = readdlm(joinpath(p, "test_matrices/100x20_corpcor.csv"))
     test_mat3 = readdlm(joinpath(p, "test_matrices/50x50.csv"))
     ref_cov3  = readdlm(joinpath(p, "test_matrices/50x50_corpcor.csv"))
-    @test cov(ss, test_mat1) ≈ ref_cov1
-    @test cov(ss, test_mat2) ≈ ref_cov2
-    @test cov(ss, test_mat3) ≈ ref_cov3
+    c = cov(ss, test_mat1); @test c ≈ ref_cov1; @test issymmetric(c)
+    c = cov(ss, test_mat2); @test c ≈ ref_cov2; @test issymmetric(c)
+    c = cov(ss, test_mat3); @test c ≈ ref_cov3; @test issymmetric(c)
 end
 
 
@@ -48,9 +48,10 @@ end
         shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-1).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
-        @test cov(lwa, X̂) ≈ (1.0-shrinkage) * S + shrinkage * I
+        c = cov(lwa, X̂); @test c ≈ (1.0-shrinkage) * S + shrinkage * I; @test issymmetric(c)
         lwafixed = LinearShrinkage(DiagonalUnitVariance(), shrinkage)
-        @test cov(lwafixed, X̂) ≈ (1.0 - shrinkage) * S + shrinkage * I
+        c = cov(lwafixed, X̂); @test c ≈ (1.0 - shrinkage) * S + shrinkage * I
+        @test issymmetric(c)
     end
     # TARGET B
     lwb = LinearShrinkage(DiagonalCommonVariance())
@@ -63,9 +64,10 @@ end
         shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum((S-Diagonal(S)).^2) + sum((diag(S).-v).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
-        @test cov(lwb, X̂) ≈ (1.0-shrinkage) * S + shrinkage * F
+        c = cov(lwb, X̂); @test c ≈ (1.0-shrinkage) * S + shrinkage * F; @test issymmetric(c)
         lwbfixed = LinearShrinkage(DiagonalCommonVariance(), shrinkage)
-        @test cov(lwbfixed, X̂) ≈ (1.0 - shrinkage) * S + shrinkage * F
+        c = cov(lwbfixed, X̂); @test c ≈ (1.0 - shrinkage) * S + shrinkage * F
+        @test issymmetric(c)
     end
     # TARGET C
     lwc = LinearShrinkage(CommonCovariance())
@@ -79,9 +81,9 @@ end
         shrinkage  = sum_var_sij(Xtmp, S, n)
         shrinkage /= sum(((S-Diagonal(S)) - c*(ones(p, p)-I)).^2) + sum((diag(S) .- v).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
-        @test cov(lwc, X̂) ≈ (1.0-shrinkage) * S + shrinkage * F
+        c = cov(lwc, X̂); @test c ≈ (1.0-shrinkage) * S + shrinkage * F; @test issymmetric(c)
         lwcfixed = LinearShrinkage(CommonCovariance(), shrinkage)
-        @test cov(lwcfixed, X̂) ≈ (1.0-shrinkage) * S + shrinkage * F
+        c = cov(lwcfixed, X̂); @test  c ≈ (1.0-shrinkage) * S + shrinkage * F; @test issymmetric(c)
     end
     # TARGET D
     lwd = LinearShrinkage(DiagonalUnequalVariance())
@@ -93,9 +95,9 @@ end
         shrinkage  = sum_var_sij(Xtmp, S, n, false; with_diag=false)
         shrinkage /= sum((S-Diagonal(S)).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
-        @test cov(lwd, X̂) ≈ (1.0-shrinkage) * S + shrinkage * F
+        c = cov(lwd, X̂); @test c ≈ (1.0-shrinkage) * S + shrinkage * F; @test issymmetric(c)
         lwdfixed = LinearShrinkage(DiagonalUnequalVariance(), shrinkage)
-        @test cov(lwdfixed, X̂) ≈ (1.0-shrinkage) * S + shrinkage * F
+        c = cov(lwdfixed, X̂); @test c ≈ (1.0-shrinkage) * S + shrinkage * F; @test issymmetric(c)
     end
     # TARGET E
     lwe = LinearShrinkage(PerfectPositiveCorrelation())
@@ -109,9 +111,9 @@ end
         shrinkage -= CE.sum_fij(Xtmp, S, n, n)
         shrinkage /= sum((S - F).^2)
         shrinkage = clamp(shrinkage, 0.0, 1.0)
-        @test cov(lwe, X̂) ≈ (1.0-shrinkage) * S + shrinkage * F
+        c = cov(lwe, X̂); @test c ≈ (1.0-shrinkage) * S + shrinkage * F; @test issymmetric(c)
         lwefixed = LinearShrinkage(PerfectPositiveCorrelation(), shrinkage)
-        @test cov(lwefixed, X̂) ≈ (1.0-shrinkage) * S + shrinkage * F
+        c = cov(lwefixed, X̂); @test c ≈ (1.0-shrinkage) * S + shrinkage * F; @test issymmetric(c)
     end
 end
 
@@ -145,13 +147,14 @@ end
         λ_oas_ref = ((1-2/p)*tr(Ŝ^2)+tr(Ŝ)^2)/((n+1-2/p)*(tr(Ŝ^2)-tr(Ŝ)^2/p))
         λ_oas_ref = clamp(λ_oas_ref, 0.0, 1.0)
 
-        @test cov(rblw, X̂) ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref)
-        @test cov(oas, X̂) ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref)
+        c = cov(rblw, X̂); @test c ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref); @test issymmetric(c)
+        c = cov(oas, X̂); @test c ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref); @test issymmetric(c)
 
         rblw_fixed = LinearShrinkage(DiagonalCommonVariance(), λ_rblw_ref)
         oas_fixed = LinearShrinkage(DiagonalCommonVariance(), λ_oas_ref)
-        @test cov(rblw_fixed, X̂) ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref)
-        @test cov(oas_fixed, X̂) ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref)
+        c = cov(rblw_fixed, X̂); @test c ≈ CE.linshrink(F_ref, Ŝ, λ_rblw_ref)
+        @test issymmetric(c)
+        c = cov(oas_fixed, X̂); @test c ≈ CE.linshrink(F_ref, Ŝ, λ_oas_ref); @test issymmetric(c)
     end
 end
 
@@ -178,7 +181,7 @@ end
             end
             LSEss = LinearShrinkage(target, :ss, corrected=c)
             LSElw = LinearShrinkage(target, :lw, corrected=c)
-            @test cov(LSEss, Xcs) ≈ cov(LSElw, Xcs)
+            c = cov(LSEss, Xcs); @test c ≈ cov(LSElw, Xcs); @test issymmetric(c)
             # weights are not currently exported but it seems to be a good
             # idea to ensure proper errors
             fw1 = FrequencyWeights(rand(1:10, size(Xcs, 1)))
@@ -205,8 +208,10 @@ end
             LSEss = LinearShrinkage(target, :ss, corrected=c)
             LSElw = LinearShrinkage(target, :lw, corrected=c)
             m = mean(cov(LSEss, Xcs, dims=dim, mean=nothing))
-            @test cov(LSEss, Xcs, dims=dim, mean=mean(Xcs, dims=dim)) ≈ cov(LSEss, Xcs, dims=dim, mean=nothing)
-            @test cov(LSElw, Xcs, dims=dim, mean=mean(Xcs, dims=dim)) ≈ cov(LSElw, Xcs, dims=dim, mean=nothing)
+            c = cov(LSEss, Xcs, dims=dim, mean=mean(Xcs, dims=dim));
+            @test c ≈ cov(LSEss, Xcs, dims=dim, mean=nothing); @test issymmetric(c)
+            c = cov(LSElw, Xcs, dims=dim, mean=mean(Xcs, dims=dim));
+            @test c ≈ cov(LSElw, Xcs, dims=dim, mean=nothing); @test issymmetric(c)
             if dim == 2
                 meanvec = vec(mean(Xcs, dims=dim))
                 @test cov(LSEss, Xcs, dims=dim, mean=meanvec) ≈ cov(LSEss, Xcs, dims=dim, mean=nothing)
