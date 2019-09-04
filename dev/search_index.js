@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "CovarianceEstimation.jl",
     "category": "section",
-    "text": "Lightweight robust covariance estimation in Julia.A package for estimating covariance matrices."
+    "text": "Lightweight robust covariance estimation in Julia.A package for robustly estimating covariance matrices of real-valued data."
 },
 
 {

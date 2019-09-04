@@ -17,12 +17,12 @@ X = randn(n, p)
 target = DiagonalUnitVariance()
 shrinkage = :lw # Ledoit-Wolf optimal shrinkage
 method = LinearShrinkage(target, shrinkage)
-cov(method, X)</code></pre><pre><code class="language-none">3×3 Array{Float64,2}:
+cov(method, X)</code></pre><pre><code class="language-none">3×3 LinearAlgebra.Symmetric{Float64,Array{Float64,2}}:
  0.00181084  0.0124936  0.0244715
  0.0124936   0.0861978  0.168837
  0.0244715   0.168837   0.330704</code></pre></div><p>You can also specify the intensity manually:</p><div><pre><code class="language-julia">shrinkage = 0.8
 method2 = LinearShrinkage(target, shrinkage)
-cov(method2, X)</code></pre><pre><code class="language-none">3×3 Array{Float64,2}:
+cov(method2, X)</code></pre><pre><code class="language-none">3×3 LinearAlgebra.Symmetric{Float64,Array{Float64,2}}:
  0.800362    0.00249872  0.0048943
  0.00249872  0.81724     0.0337674
  0.0048943   0.0337674   0.866141</code></pre></div><p><a href="../lshrink/#lshrink-1">Read more on linear shrinkage estimators...</a></p><h2><a class="nav-anchor" id="Nonlinear-shrinkage-estimators-1" href="#Nonlinear-shrinkage-estimators-1">Nonlinear shrinkage estimators</a></h2><p><a href="../nlshrink/#nlshrink-1">Read more on nonlinear shrinkage estimators...</a></p><h2><a class="nav-anchor" id="Comparing-estimators-1" href="#Comparing-estimators-1">Comparing estimators</a></h2><p>You may want to look at our simple <a href="../msecomp/#msecomp-1">comparison of covariance estimators</a> which compares the MSE of the various estimators in a range of situations. Long story short, the <code>LinearShrinkageEstimator</code> with <code>DiagonalUnequalVariance</code> target performs well in the case <span>$n&lt;p$</span> though most other estimators don&#39;t fare too badly in comparison. In the case <span>$n&gt;p$</span>, the nonlinear shrinkage method does very well (though it is more expensive to compute).</p><footer><hr/><a class="previous" href="../../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../lshrink/"><span class="direction">Next</span><span class="title">Linear shrinkage estimators</span></a></footer></article></body></html>
