@@ -105,7 +105,7 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
     end
 
     # Equation (4.4)
-    return U*(d̃ .* U')
+    return Symmetric(U*(d̃ .* U'))
 end
 
 """

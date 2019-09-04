@@ -6,12 +6,10 @@ using Random
 using DelimitedFiles
 using StatsBase
 
-
 include("ref_lw_lshrink.jl")
 include("ref_lw_nlshrink.jl")
 include("legacy.jl")
 Random.seed!(1234)
-
 
 const CE = CovarianceEstimation
 
