@@ -76,27 +76,24 @@ function nrtme( X::AbstractMatrix{T};
     n, t = size(X)
     R = Matrix{T}(I, n, n)
     Rnew = zeros(T, n, n)
-    x² = Vector{T}(undef, t)
     x = Matrix{T}(undef, n, 1)
     v = Vector{T}(undef, n)
     iter, 😋, α, β, nt⁻¹ = 1, false, 0.0, 0.0, n / t
-
-    @inbounds @views for i = 1:t
-        x²[i] = X[:, i] ⋅ X[:, i]
-    end
+    x² = zeros(real(T), t)
+    for i=1:t, j=1:n @inbounds x²[i] += abs2(X[j, i]) end
 
     if reg == :RMT
-        @inbounds for i = 1:t
-            x[:] = X[:, i]# |
-            BLAS.gemm!('N', 'T', inv(x²[i]), x, x, 1.0, Rnew) # | instead of Rnew += (X[:, i].*X[:, i]')./x²[i]
+        @inbounds for i=1:t
+            x[:] = X[:, i]
+            BLAS.gemm!('N', 'T', inv(x²[i]), x, x, 1., Rnew) # | instead of Rnew += (X[:, i].*X[:, i]')./x²[i]
         end
-        ζ = n * tr((Rnew ./ t)^2) - nt⁻¹ - 1.0
+        ζ = n * tr((Rnew ./ t)^2) - nt⁻¹ - 1.
     else
         scm = (X * X') .* inv(n)
-        ζ = (n * tr(scm^2) / (tr(scm))^2) - 1.0
+        ζ = (n * tr(scm^2) / (tr(scm))^2) - 1.
     end
-    α = clamp(inv(t) * ((ζ + 1 + n) / (ζ + nt⁻¹)), 0.0, 1.0)
-    β = 1.0 - α
+    α = clamp(inv(t) * ((ζ + 1 + n) / (ζ + nt⁻¹)), 0., 1.)
+    β = 1. - α
     αn⁻¹ = α / n
     g(x, β) = BLAS.gemm('N', 'T', β, x, x)
 
@@ -107,18 +104,16 @@ function nrtme( X::AbstractMatrix{T};
         L = cholesky(R)
         L⁻¹ = inv(L.L)
         trR⁻¹ = T(0)
-        @inbounds for j = 1:n, i = j:n
-            trR⁻¹ += abs2(L⁻¹[i, j])
-        end
+        for j = 1:n, i = j:n @inbounds trR⁻¹ += abs2(L⁻¹[i, j]) end
         if n<400 BLAS.set_num_threads(Sys.CPU_THREADS) end
 
         fill!(Rnew, zero(T))
         for i = 1:t
             x[:] = X[:, i]
             v[:] = L \ x
+            c = αn⁻¹ * x²[i]
+            Rnew += (g(x, β) + c*I) ./ (β*(v⋅v) + c*trR⁻¹)
             #Rnew += (β*(x.*x')+(αn⁻¹*x²[i])*I) ./ (β*(v⋅v)+αn⁻¹*trR⁻¹*x²[i])
-            Rnew += (g(x, β) + (αn⁻¹ * x²[i]) * I) ./
-                    (β * (v ⋅ v) + αn⁻¹ * trR⁻¹ * x²[i])
         end
         Rnew *= (inv(tr(Rnew)))
         conv = norm(Rnew - R) / norm(R)
