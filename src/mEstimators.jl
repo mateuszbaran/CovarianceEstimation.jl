@@ -92,7 +92,7 @@ function nrtme( X::AbstractMatrix{T};
         end
         ζ = n * tr((Rnew ./ t)^2) - nt⁻¹ - 1.0
     else
-        scm = (X' * X) .* inv(n)
+        scm = (X * X') .* inv(n)
         ζ = (n * tr(scm^2) / (tr(scm))^2) - 1.0
     end
     α = clamp(inv(t) * ((ζ + 1 + n) / (ζ + nt⁻¹)), 0.0, 1.0)
