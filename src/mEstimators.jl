@@ -36,28 +36,28 @@ function tme(   X::AbstractMatrix{T};
                 verbose::Bool = false) where {T<:Union{Real,Complex}}
     n, t = size(X)
     R = Matrix{T}(I, n, n)
-    💡 = Matrix{T}(undef, n, n)
+    Rnew = Matrix{T}(undef, n, n)
     iter, 😋 = 1, false
 
     verbose && println("Iterating M-estimator fixed-point algorithm...")
     while true
         C = cholesky(R)
-        fill!(💡, zero(T))
+        fill!(Rnew, zero(T))
         @inbounds for i = 1:t
             @views v = C.L \ X[:, i]
-            💡 += (X[:, i] .* X[:, i]') ./ (v ⋅ v)
+            Rnew += (X[:, i] .* X[:, i]') ./ (v ⋅ v)
         end
-        💡 *= inv(tr(💡))
-        conv = norm(💡 - R) / norm(R)
+        Rnew *= inv(tr(Rnew))
+        conv = norm(Rnew - R) / norm(R)
         verbose && println("iteration: ", iter, "; convergence: ", conv)
         (overRun = iter == maxiter) && @warn(
             "M-estimator reached the max number of iterations before convergence:",
             iter,
         )
-        (😋 = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = 💡)
+        (😋 = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = Rnew)
     end # while
     verbose && @info("Convergence has " * (😋 ? "" : "not ") * "been attained.\n\n")
-    return 💡
+    return Rnew
 end
 
 
@@ -75,7 +75,7 @@ function nrtme( X::AbstractMatrix{T};
                 verbose::Bool = false) where {T<:Union{Real,Complex}}
     n, t = size(X)
     R = Matrix{T}(I, n, n)
-    💡 = zeros(T, n, n)
+    Rnew = zeros(T, n, n)
     x² = Vector{T}(undef, t)
     x = Matrix{T}(undef, n, 1)
     v = Vector{T}(undef, n)
@@ -88,9 +88,9 @@ function nrtme( X::AbstractMatrix{T};
     if reg == :RMT
         @inbounds for i = 1:t
             x[:] = X[:, i]# |
-            BLAS.gemm!('N', 'T', inv(x²[i]), x, x, 1.0, 💡) # | instead of 💡 += (X[:, i].*X[:, i]')./x²[i]
+            BLAS.gemm!('N', 'T', inv(x²[i]), x, x, 1.0, Rnew) # | instead of Rnew += (X[:, i].*X[:, i]')./x²[i]
         end
-        ζ = n * tr((💡 ./ t)^2) - nt⁻¹ - 1.0
+        ζ = n * tr((Rnew ./ t)^2) - nt⁻¹ - 1.0
     else
         scm = (X' * X) .* inv(n)
         ζ = (n * tr(scm^2) / (tr(scm))^2) - 1.0
@@ -112,26 +112,26 @@ function nrtme( X::AbstractMatrix{T};
         end
         if n<400 BLAS.set_num_threads(Sys.CPU_THREADS) end
 
-        fill!(💡, zero(T))
+        fill!(Rnew, zero(T))
         for i = 1:t
             x[:] = X[:, i]
             v[:] = L \ x
-            #💡 += (β*(x.*x')+(αn⁻¹*x²[i])*I) ./ (β*(v⋅v)+αn⁻¹*trR⁻¹*x²[i])
-            💡 += (g(x, β) + (αn⁻¹ * x²[i]) * I) ./
-                 (β * (v ⋅ v) + αn⁻¹ * trR⁻¹ * x²[i])
+            #Rnew += (β*(x.*x')+(αn⁻¹*x²[i])*I) ./ (β*(v⋅v)+αn⁻¹*trR⁻¹*x²[i])
+            Rnew += (g(x, β) + (αn⁻¹ * x²[i]) * I) ./
+                    (β * (v ⋅ v) + αn⁻¹ * trR⁻¹ * x²[i])
         end
-        💡 *= (inv(tr(💡)))
-        conv = norm(💡 - R) / norm(R)
+        Rnew *= (inv(tr(Rnew)))
+        conv = norm(Rnew - R) / norm(R)
 
         verbose && println("iteration: ", iter, "; convergence: ", conv)
         (overRun = iter == maxiter) && @warn(
             "nrM-estimator reached the max number of iterations before convergence:",
             iter,
         )
-        (😋 = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = 💡)
+        (😋 = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = Rnew)
     end # while
     verbose && @info("Convergence has " * (😋 ? "" : "not ") * "been attained.\n\n")
-    return 💡
+    return Rnew
 end
 
 
