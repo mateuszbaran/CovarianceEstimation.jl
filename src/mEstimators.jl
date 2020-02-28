@@ -25,6 +25,7 @@
 
 using LinearAlgebra
 
+
 ## Tyler M-Estimator fixed point algorithm (Tyler, 1987)
 # `X` (the data) must be a wide matrix (for the sake of efficiency)
 # `tol` is the stopping criterion
@@ -79,8 +80,7 @@ function nrtme( X::AbstractMatrix{T};
     x = Matrix{T}(undef, n, 1)
     v = Vector{T}(undef, n)
     iter, 😋, α, β, nt⁻¹ = 1, false, 0.0, 0.0, n / t
-    x² = zeros(real(T), t)
-    for i=1:t, j=1:n @inbounds x²[i] += abs2(X[j, i]) end
+    x² = [x⋅x for x ∈ eachcol(X)]
 
     if reg == :RMT
         @inbounds for i=1:t
@@ -132,8 +132,8 @@ end
 
 
 ## EXAMPLE usage
-X = rand(10, 10) * randn(10, 100)
-tyler = tme(X, verbose = true)
+X = rand(10, 10) * randn(10, 100) # a wide matrix
+tyler = tme(X, verbose = true) # the shape matrix is 10x10
 nrtmeRMT = nrtme(X, verbose = true)
 nrtmeLW = nrtme(X, reg = :LW, verbose = true)
 
@@ -162,7 +162,7 @@ for i = 1:ntrials
     println("trial ", i, " of ", ntrials)
     tdist = MvTDist(df, zeros(n), PDMat(Matrix(trueC)))
     X = rand(tdist, t)
-#println(cov(td))
+    #println(cov(td))
     scm = cov(X')
     scm = scm / tr(scm)
     M = tme(X)
