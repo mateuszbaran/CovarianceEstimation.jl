@@ -23,8 +23,6 @@
 # IEEE Statistical Signal Processing Workshop (SSP), 1-5.
 # https://sciences.ucf.edu/math/tengz/wp-content/uploads/sites/45/2016/08/automatic-diagonal-loading-3.pdf
 
-using LinearAlgebra
-
 ## Tyler M-Estimator fixed point algorithm (Tyler, 1987)
 # `X` (the data) must be a wide matrix (for the sake of efficiency)
 # `tol` is the stopping criterion
@@ -127,57 +125,3 @@ function nrtme( X::AbstractMatrix{T};
     verbose && @info("Convergence has " * (😋 ? "" : "not ") * "been attained.\n\n")
     return Rnew
 end
-
-
-
-## EXAMPLE usage
-X = rand(10, 10) * randn(10, 100) # a wide matrix
-tyler = tme(X, verbose = true) # the shape matrix is 10x10
-nrtmeRMT = nrtme(X, verbose = true)
-nrtmeLW = nrtme(X, reg = :LW, verbose = true)
-
-
-## TEST the M-estimators
-using BenchmarkTools, Distributions, PDMats, PosDefManifold, Statistics
-
-# create data drawn randomly from a multivariate t-student
-# distribution with `df` degrees of freedom
-# and check how far the estimated shape is different from `trueC`
-n, t, df = 30, 512, 3.0
-trueC = randP(n)
-trueC = trueC / tr(trueC)
-tdist = MvTDist(3.0, zeros(n), PDMat(Matrix(trueC)))
-X = rand(tdist, t)
-
-# run 100 simulations
-# and check the Fisher distance between true and estimated shape
-t = 1_000
-ntrials = 100
-dscm = Vector{Float64}(undef, ntrials)
-dtme = similar(dscm)
-dnrtme = similar(dscm)
-
-for i = 1:ntrials
-    println("trial ", i, " of ", ntrials)
-    tdist = MvTDist(df, zeros(n), PDMat(Matrix(trueC)))
-    X = rand(tdist, t)
-    #println(cov(td))
-    scm = cov(X')
-    scm = scm / tr(scm)
-    M = tme(X)
-    nrM = nrtme(X)
-    dscm[i] = distance(Fisher, Hermitian(trueC), Hermitian(scm))
-    dtme[i] = distance(Fisher, Hermitian(trueC), Hermitian(M))
-    dnrtme[i] = distance(Fisher, Hermitian(trueC), Hermitian(nrM))
-end
-# results in dB
-10 * log10(mean(dscm))
-10 * log10(mean(dtme))
-10 * log10(mean(dnrtme))
-
-
-## BENCHMARK algorithms
-n, t = 20, 100
-X = rand(n, n) * randn(n, t)
-@benchmark tme($X)
-@benchmark nrtme($X)

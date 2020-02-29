@@ -53,3 +53,4 @@ end
 
 include("test_linearshrinkage.jl")
 include("test_nonlinearshrinkage.jl")
+include("test_m-estimators.jl")

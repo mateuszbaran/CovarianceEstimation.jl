@@ -18,5 +18,6 @@ export CovarianceEstimator, SimpleCovariance,
 include("utils.jl")
 include("linearshrinkage.jl")
 include("nonlinearshrinkage.jl")
+include("m-estimators.jl")
 
 end # module
