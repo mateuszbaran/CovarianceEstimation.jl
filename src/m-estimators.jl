@@ -23,15 +23,28 @@
 # IEEE Statistical Signal Processing Workshop (SSP), 1-5.
 # https://sciences.ucf.edu/math/tengz/wp-content/uploads/sites/45/2016/08/automatic-diagonal-loading-3.pdf
 
-## Tyler M-Estimator fixed point algorithm (Tyler, 1987)
-# `X` (the data) must be a wide matrix (for the sake of efficiency)
-# `tol` is the stopping criterion
-# `maxiter` is the maximum number of iterations allowed
-# if `verbose`, information on convergence will be printed in the REPL.
-function tme(X::AbstractMatrix{T};
-             tol::Real = real(T)(1e-6),
-             maxiter::Int = 200,
-             verbose::Bool = false) where {T<:Union{Real,Complex}}
+"""
+    TylerMEstimator(; tol::Real = 1e-6, maxiter::Int = 200, verbose::Bool = false)
+
+Tyler M-Estimator fixed point algorithm (Tyler, 1987)
+`tol` is the stopping criterion
+`maxiter` is the maximum number of iterations allowed
+if `verbose`, information on convergence will be printed in the REPL.
+"""
+struct TylerMEstimator{TTol<:Real} <: CovarianceEstimator
+    tol::TTol
+    maxiter::Int
+    verbose::Bool
+end
+
+function TylerMEstimator(; tol::Real = 1e-6, maxiter::Int = 200, verbose::Bool = false)
+    TylerMEstimator(tol, maxiter, verbose)
+end
+
+function cov(tme::TylerMEstimator, X::AbstractMatrix{T}) where {T<:Union{Real,Complex}}
+    tol = real(T)(tme.tol)
+    maxiter = tme.maxiter
+    verbose = tme.verbose
     n, t = size(X)
     R = Matrix{T}(I, n, n)
     Rnew = Matrix{T}(undef, n, n)

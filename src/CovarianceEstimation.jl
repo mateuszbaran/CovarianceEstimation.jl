@@ -12,7 +12,8 @@ export CovarianceEstimator, SimpleCovariance,
     DiagonalUnitVariance, DiagonalCommonVariance, DiagonalUnequalVariance,
     CommonCovariance, PerfectPositiveCorrelation, ConstantCorrelation,
     # Eigendecomposition-based methods
-    AnalyticalNonlinearShrinkage
+    AnalyticalNonlinearShrinkage,
+    TylerMEstimator
 
 
 include("utils.jl")
