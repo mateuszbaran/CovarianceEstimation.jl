@@ -179,5 +179,5 @@ end
 ## BENCHMARK algorithms
 n, t = 20, 100
 X = rand(n, n) * randn(n, t)
-@benchmark(tme(X))
-@benchmark(nrtme(X))
+@benchmark tme($X)
+@benchmark nrtme($X)
