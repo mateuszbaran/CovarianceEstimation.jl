@@ -48,7 +48,7 @@ function cov(tme::TylerMEstimator, X::AbstractMatrix{T}) where {T<:Union{Real,Co
     n, t = size(X)
     R = Matrix{T}(I, n, n)
     Rnew = Matrix{T}(undef, n, n)
-    iter, 😋 = 1, false
+    iter, converged = 1, false
 
     verbose && println("Iterating M-estimator fixed-point algorithm...")
     while true
@@ -65,32 +65,59 @@ function cov(tme::TylerMEstimator, X::AbstractMatrix{T}) where {T<:Union{Real,Co
             "M-estimator reached the max number of iterations before convergence:",
             iter,
         )
-        (😋 = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = Rnew)
+        (converged = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = Rnew)
     end # while
-    verbose && @info("Convergence has " * (😋 ? "" : "not ") * "been attained.\n\n")
+    verbose && @info("Convergence has " * (converged ? "" : "not ") * "been attained.\n\n")
     return Rnew
 end
 
+"""
+    NormalizedRegularizedTylerMEstimator(;
+        tol::Real = 1e-6,
+        maxiter::Int = 200,
+        verbose::Bool = false,
+        reg::Symbol = :RMT
+    )
 
-## normalized regularized Tyler's M-Estimator (Zhang and Wiesel, 2016)
-# `X` (the data) must be a wide matrix (for the sake of efficiency)
-# if `reg` is `:RMT` (default) the random matrix theory shrinkage is used.
-# 	Any other ymbol will use the Ledoit & Wolf shrinkage.
-# `tol` is the stopping criterion
-# `maxiter` is the maximum number of iterations allowed
-# if `verbose`, information on convergence will be printed in the REPL.
-function nrtme( X::AbstractMatrix{T};
-                reg::Symbol = :RMT,
-                tol::Real = real(T)(1e-6),
-                maxiter::Int = 200,
-                verbose::Bool = false) where {T<:Union{Real,Complex}}
+Compute the normalized regularized Tyler's M-Estimator (Zhang and Wiesel, 2016)
+`X` (the data) must be a wide matrix (for the sake of efficiency)
+if `reg` is `:RMT` (default) the random matrix theory shrinkage is used.
+Any other symbol will use the Ledoit & Wolf shrinkage.
+`tol` is the stopping criterion
+`maxiter` is the maximum number of iterations allowed
+if `verbose`, information on convergence will be printed in the REPL.
+"""
+struct NormalizedRegularizedTylerMEstimator{TTol<:Real} <: CovarianceEstimator
+    tol::TTol
+    maxiter::Int
+    verbose::Bool
+    reg::Symbol
+end
+
+function NormalizedRegularizedTylerMEstimator(;
+    tol::Real = 1e-6,
+    maxiter::Int = 200,
+    verbose::Bool = false,
+    reg = :RMT,
+)
+    NormalizedRegularizedTylerMEstimator(tol, maxiter, verbose, reg)
+end
+
+function cov(
+    nrtme::NormalizedRegularizedTylerMEstimator,
+    X::AbstractMatrix{T},
+) where {T<:Real}
+    tol = real(T)(nrtme.tol)
+    maxiter = nrtme.maxiter
+    verbose = nrtme.verbose
+    reg = nrtme.reg
     n, t = size(X)
     R = Matrix{T}(I, n, n)
     Rnew = zeros(T, n, n)
     x = Matrix{T}(undef, n, 1)
     v = Vector{T}(undef, n)
-    iter, 😋, α, β, nt⁻¹ = 1, false, 0.0, 0.0, n / t
-    x² = [x⋅x for x ∈ eachcol(X)]
+    iter, converged, α, β, nt⁻¹ = 1, false, 0.0, 0.0, n / t
+    x² = map(i -> dot(view(X, :, i), view(X, :, i)), axes(X, 2))
 
     if reg == :RMT
         @inbounds for i=1:t
@@ -133,8 +160,8 @@ function nrtme( X::AbstractMatrix{T};
             "nrM-estimator reached the max number of iterations before convergence:",
             iter,
         )
-        (😋 = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = Rnew)
+        (converged = conv <= tol) || overRun == true ? break : (iter += 1; R[:] = Rnew)
     end # while
-    verbose && @info("Convergence has " * (😋 ? "" : "not ") * "been attained.\n\n")
+    verbose && @info("Convergence has " * (converged ? "" : "not ") * "been attained.\n\n")
     return Rnew
 end

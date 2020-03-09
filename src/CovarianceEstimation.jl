@@ -13,7 +13,7 @@ export CovarianceEstimator, SimpleCovariance,
     CommonCovariance, PerfectPositiveCorrelation, ConstantCorrelation,
     # Eigendecomposition-based methods
     AnalyticalNonlinearShrinkage,
-    TylerMEstimator
+    TylerMEstimator, NormalizedRegularizedTylerMEstimator
 
 
 include("utils.jl")

@@ -23,6 +23,7 @@ Random.seed!(1234)
     dnrtme = similar(dscm)
 
     tme = TylerMEstimator()
+    nrtme = NormalizedRegularizedTylerMEstimator()
     for i = 1:ntrials
         # println("trial ", i, " of ", ntrials)
         tdist = MvTDist(df, zeros(n), PDMat(Matrix(trueC)))
@@ -31,13 +32,18 @@ Random.seed!(1234)
         scm = cov(X')
         scm = scm / tr(scm)
         M = cov(tme, X)
-        nrM = CovarianceEstimation.nrtme(X)
+        nrM = cov(nrtme, X)
+
+        @test isposdef(M)
+        @test isposdef(nrM)
+        @test issymmetric(M)
+        @test issymmetric(nrM)
         dscm[i] = distance(Fisher, Hermitian(trueC), Hermitian(scm))
         dtme[i] = distance(Fisher, Hermitian(trueC), Hermitian(M))
         dnrtme[i] = distance(Fisher, Hermitian(trueC), Hermitian(nrM))
     end
     # results in dB
-    println(10 * log10(mean(dscm)))
-    println(10 * log10(mean(dtme)))
-    println(10 * log10(mean(dnrtme)))
+    #println(10 * log10(mean(dscm)))
+    #println(10 * log10(mean(dtme)))
+    #println(10 * log10(mean(dnrtme)))
 end
