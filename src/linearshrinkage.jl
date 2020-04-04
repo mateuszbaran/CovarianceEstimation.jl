@@ -118,16 +118,7 @@ function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real};
     # sample covariance of size (p x p)
     S = cov(SimpleCovariance(corrected=lse.corrected), X; dims=dims, mean=mean)
 
-    # NOTE: don't need to check if mean is proper as this is already done above
-    if mean === nothing
-        Xc .-= Statistics.mean(Xc, dims=1)
-    elseif mean isa AbstractArray
-        if dims == 1
-            Xc .-= mean
-        else
-            Xc .-= mean'
-        end
-    end
+    subtract_mean!(Xc, mean; dims=dims)
 
     return linear_shrinkage(lse.target, Xc, S, lse.shrinkage, n, p, lse.corrected)
 end

@@ -1,6 +1,10 @@
+using CovarianceEstimation
 using Distributions
+using LinearAlgebra
 using PDMats
 using PosDefManifold
+using Random
+using Test
 
 Random.seed!(1234)
 
