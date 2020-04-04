@@ -1,4 +1,4 @@
-using Documenter, CovarianceEstimation
+using Documenter, CovarianceEstimation, StatsBase
 
 makedocs(
     modules = [CovarianceEstimation],
@@ -11,6 +11,7 @@ makedocs(
             "Methods" => "man/methods.md",
             "Linear shrinkage estimators" => "man/lshrink.md",
             "Nonlinear shrinkage estimators" => "man/nlshrink.md",
+            "M-estimators" => "man/mestim.md",
             "MSE comparisons" => "man/msecomp.md"
         ],
         "Library" => Any[

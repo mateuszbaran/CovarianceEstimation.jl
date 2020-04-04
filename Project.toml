@@ -1,7 +1,7 @@
 name = "CovarianceEstimation"
 uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
 authors = ["Mateusz Baran <mateuszbaran89@gmail.com>", "Thibaut Lienart"]
-version = "0.2.3"
+version = "0.3.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -14,8 +14,11 @@ julia = "1.0"
 
 [extras]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+PDMats = "90014a1f-27ba-587c-ab20-58faa44d9150"
+PosDefManifold = "f45a3650-5c51-11e9-1e9a-133aa5e309cf"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Random", "DelimitedFiles"]
+test = ["Test", "DelimitedFiles", "Distributions", "PDMats", "PosDefManifold", "Random"]

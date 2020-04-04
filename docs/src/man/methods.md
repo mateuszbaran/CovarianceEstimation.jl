@@ -95,6 +95,10 @@ cov(method2, X)
 
 [Read more on nonlinear shrinkage estimators...](@ref nlshrink)
 
+## M estimators
+
+[Read more on M-estimators estimators...](@ref mestim)
+
 ## Comparing estimators
 
 You may want to look at our simple [comparison of covariance estimators](@ref msecomp) which compares the MSE of the various estimators in a range of situations.

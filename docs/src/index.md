@@ -13,7 +13,7 @@ A package for robustly estimating covariance matrices of real-valued data.
 ## Manual outline
 
 ```@contents
-Pages = ["man/methods.md", "man/lshrink.md", "man/nlshrink.md", "man/msecomp.md"]
+Pages = ["man/methods.md", "man/lshrink.md", "man/nlshrink.md", "man/msecomp.md", "man/mestim.md"]
 ```
 
 ## Library Outline
