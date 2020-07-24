@@ -55,7 +55,7 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
 
     η = ifelse(p < n, n, n - Int(est_mean)) # effective sample size
     # sample eigenvalues sorted in ascending order and eigenvectors
-   F    = isa(decomp, Nothing) ? eigen(S) : decomp # O(p^3)
+    F    = isa(decomp, Nothing) ? eigen(S) : decomp # O(p^3)
     perm = sortperm(F.values)
     sample_perm = @view perm[max(1, (p - η) + 1):p]
     λ    = @view F.values[sample_perm]
