@@ -5,6 +5,6 @@ end
 
 
 function linshrink!(F::AbstractMatrix, S::AbstractMatrix, λ::Real)
-    F .= (1.0 .- λ).*S .+ λ.*F)
+    F .= (1.0 .- λ).*S .+ λ.*F
     return Symmetric(F)
 end
