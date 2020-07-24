@@ -265,7 +265,7 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
         λ  /= κ * (ΣS² - 2tr(S) + p)
     elseif λ == :ss
         # use the standardised data matrix
-        d   = 1.0 ./ sum(Xc², dims=1)[:]
+        d   = 1.0 ./ vec(sum(Xc², dims=1))
         S̄   = rescale(S, sqrt.(d)) # this has diagonal 1/κ
         ΣS̄² = sumij2(S̄, with_diag=true)
         λ   = sumij(rescale!(uccov(Xc²), d), with_diag=true) / γ^2 - ΣS̄²
@@ -309,7 +309,7 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
         λ  /= κ * (ΣS² - p*v^2)
     elseif λ == :ss
         # use the standardised data matrix
-        d   = 1.0 ./ sum(Xc², dims=1)[:]
+        d   = 1.0 ./ vec(sum(Xc², dims=1))
         S̄   = rescale(S, sqrt.(d)) # this has diagonal 1/κ
         v̄   = κ # tr(S̄)/p
         ΣS̄² = sumij2(S̄, with_diag=true)
@@ -365,7 +365,7 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
         λ  /= κ * ΣS²
     elseif λ == :ss
         # use the standardised data matrix
-        d   = 1.0 ./ sum(Xc², dims=1)[:]
+        d   = 1.0 ./ vec(sum(Xc², dims=1))
         ΣS̄² = sumij2(rescale(S, sqrt.(d)))
         λ   = sumij(rescale!(uccov(Xc²), d)) / γ^2 - ΣS̄²
         λ  /= κ * ΣS̄²
@@ -414,7 +414,7 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
         λ   = sumij(uccov(Xc²), with_diag=true) / γ^2 - ΣS²
         λ  /= κ * (ΣS² - p*(p-1)*c^2 - p*v^2)
     elseif λ == :ss
-        d   = 1.0 ./ sum(Xc², dims=1)[:]
+        d   = 1.0 ./ vec(sum(Xc², dims=1))
         S̄   = rescale(S, sqrt.(d))
         ΣS̄² = sumij2(S̄, with_diag=true)
         λ   = sumij(rescale!(uccov(Xc²), d), with_diag=true) / γ^2 - ΣS̄²
@@ -461,7 +461,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
         λ  -= sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
     elseif λ == :ss
-        d   = 1.0 ./ sum(Xc², dims=1)[:]
+        d   = 1.0 ./ vec(sum(Xc², dims=1))
         s   = sqrt.(d)
         S̄   = rescale(S, s)
         ΣS̄² = sumij2(S̄)
@@ -515,7 +515,7 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
         λ  -= r̄ * sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
     elseif λ == :ss
-        d    = 1.0 ./ sum(Xc², dims=1)[:]
+        d    = 1.0 ./ vec(sum(Xc², dims=1))
         s    = sqrt.(d)
         S̄    = rescale(S, s)
         F̄, r̄ = target_F(S̄, p)
