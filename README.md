@@ -1,6 +1,6 @@
 | Status | Coverage | Docs |
 | :----: | :----: | :----: |
-| [![Build Status](https://travis-ci.com/mateuszbaran/CovarianceEstimation.jl.svg?branch=master)](https://travis-ci.com/mateuszbaran/CovarianceEstimation.jl) [![Build status](https://ci.appveyor.com/api/projects/status/7riq3mtk8wy6k3yl?svg=true)](https://ci.appveyor.com/project/mateuszbaran/covarianceestimation-jl) | [ ![codecov.io](http://codecov.io/github/mateuszbaran/CovarianceEstimation.jl/coverage.svg?branch=master)](http://codecov.io/github/mateuszbaran/CovarianceEstimation.jl?branch=master) | [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://mateuszbaran.github.io/CovarianceEstimation.jl/stable) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev) |
+| [![CI](https://github.com/mateuszbaran/CovarianceEstimation.jl/workflows/CI/badge.svg)](https://github.com/mateuszbaran/CovarianceEstimation.jl/actions?query=workflow%3ACI+branch%3Amaster) | [ ![codecov.io](http://codecov.io/github/mateuszbaran/CovarianceEstimation.jl/coverage.svg?branch=master)](http://codecov.io/github/mateuszbaran/CovarianceEstimation.jl?branch=master) | [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://mateuszbaran.github.io/CovarianceEstimation.jl/stable) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev) |
 
 # CovarianceEstimation.jl
 
