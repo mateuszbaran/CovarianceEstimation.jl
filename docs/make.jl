@@ -1,4 +1,4 @@
-using Documenter, CovarianceEstimation
+using Documenter, CovarianceEstimation, StatsBase
 
 makedocs(
     modules = [CovarianceEstimation],
@@ -21,5 +21,5 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/mateuszbaran/CovarianceEstimation.jl.git"
+    repo = "github.com/mateuszbaran/CovarianceEstimation.jl.git", push_preview = true
 )
