@@ -221,7 +221,7 @@ http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p.11.
 function sum_fij(Xc, S, n, κ)
     sd  = sqrt.(diag(S))
     M   = ((Xc.^3)' * Xc) ./ sd
-    M .-= κ * S .* sd
+    M .-= κ .* S .* sd
     M .*= sd'
     return sumij(M) / (n * κ)
 end
@@ -381,7 +381,7 @@ end
 function target_C(S::AbstractMatrix, p::Int)
     v  = tr(S)/p
     c  = sumij(S; with_diag=false) / (p * (p - 1))
-    F  = c * ones(p, p)
+    F  = fill(c, (p, p))
     F -= Diagonal(F)
     F += v * I
     return F, v, c
