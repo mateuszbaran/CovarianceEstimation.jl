@@ -221,7 +221,7 @@ http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p.11.
 function sum_fij(Xc, S, n, κ)
     sd  = sqrt.(diag(S))
     M   = ((Xc.^3)' * Xc) ./ sd
-    M .-= κ * S .* sd
+    M .-= κ .* S .* sd
     M .*= sd'
     return sumij(M) / (n * κ)
 end
