@@ -381,7 +381,7 @@ end
 function target_C(S::AbstractMatrix, p::Int)
     v  = tr(S)/p
     c  = sumij(S; with_diag=false) / (p * (p - 1))
-    F  = c * ones(p, p)
+    F  = fill(c, (p, p))
     F -= Diagonal(F)
     F += v * I
     return F, v, c
