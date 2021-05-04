@@ -39,6 +39,12 @@ function epanechnikov_HT1(x::Real)
     -EPAN_3 * x + EPAN_2 * (1.0 - x^2/5.0) * log(abs((SQRT5 - x)/(SQRT5 + x)))
 end
 
+"""
+    epnanechnikov_HT2(x)
+Return the Hilbert Transform of the Epanechnikov kernel evaluated at `x`
+if `|x|=√5`.
+"""
+epanechnikov_HT2(x::Real) = -EPAN_3*x
 
 """
     analytical_nonlinear_shrinkage(S, n, p; decomp)
