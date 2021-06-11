@@ -4,7 +4,7 @@
 
 # CovarianceEstimation.jl
 
-Lightweight robust covariance estimation in Julia i.e. if you have a data matrix `X` of size `n×p` corresponding to `n` observations with `p` features, this package will help you to obtain an estimator of the covariance matrix associated with this data.
+Lightweight robust covariance estimation in Julia i.e. if you have a data matrix `X` of size `n×p` corresponding to `n` observations with `p` features, this package will help you to obtain an estimator of the covariance matrix of size `p×p` associated with this data.
 
 **Note**: if you are interested in covariance estimation in the context of a linear regression, consider for now the package [CovarianceMatrices.jl](https://github.com/gragusa/CovarianceMatrices.jl) which focuses around that case.
 
