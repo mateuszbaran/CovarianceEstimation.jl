@@ -39,7 +39,6 @@ function testUncorrelated(ce::CovarianceEstimator)
     for X2 ∈ X2s
         @test isdiag(cov(ce, X2))
     end
-
 end
 
 function testTranslation(ce::CovarianceEstimator, X)
@@ -51,5 +50,11 @@ function testTranslation(ce::CovarianceEstimator, X)
     @test C1t ≈ C2t atol = 1e-12 rtol = 1e-16
 end
 
-include("test_linearshrinkage.jl")
-include("test_nonlinearshrinkage.jl")
+function _get_ref(name::AbstractString)
+    path = endswith(pwd(), "CovarianceEstimation") ? "test" : ""
+    return readdlm(joinpath(path, "test_matrices", "$name.csv"))
+end
+
+include("test_biweight.jl")
+# include("test_linearshrinkage.jl")
+# include("test_nonlinearshrinkage.jl")
