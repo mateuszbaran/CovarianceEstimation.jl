@@ -15,21 +15,55 @@ function _test_cov_vecvec(ce::CovarianceEstimator, X::AbstractMatrix{<:Real})
     end
 end
 
-@testset "BiweightMidcovariance: c=9.0, modify_sample_size=false" begin
-    ce = BiweightMidcovariance()
+@testset "BiweightMidcovariance" begin
+    @testset "basic properties" begin
+        ce = BiweightMidcovariance()
+        for X in test_matrices
+            testTransposition(ce, X)
+            testDims(ce, X)
+            testUncorrelated(ce)
+            testTranslation(ce, X)
 
-    test_mat1 = _get_ref("20x100")
-    test_mat2 = _get_ref("100x20")
-    test_mat3 = _get_ref("50x50")
+            # Test that other dispatches are consistent with the main one we are testing.
+            _test_cov_vec(ce, X)
+            _test_cov_vecvec(ce, X)
+        end
+    end
 
-    testTransposition(ce, test_mat1)
-    testUncorrelated(ce)
-    testTranslation(ce, test_mat1)
+    @testset "Z should give zeros, not NaNs" begin
+        # This covers a difference discovered against astropy.
+        # It was due to not implementing the special case that covariance is defined to be 0
+        # when MAD = 0.
+        @test cov(BiweightMidcovariance(), Z) == zeros(Float64, 3, 3)
+    end
 
-    # Test that other dispatches are consistent with the main one we are testing.
-    _test_cov_vec(ce, test_mat1)
-    _test_cov_vecvec(ce, test_mat1)
+    @testset "astropy reference (c=9.0)" begin
+        # These tests are against references generated with astropy.
+        #
+        # References generated with:
+        #   * System: Linux 5.4.0-90-generic, x86_64, Intel 8700K
+        #   * Software: Python 3.7.6, astropy 4.3.1, numpy 1.21.2
+        #
+        # import os
+        # import numpy
+        # from astropy.stats import biweight_midcovariance
+        # prefix = os.path.join(
+        #     os.path.expanduser("~"), ".julia", "dev", "CovarianceEstimation", "test",
+        #     "test_matrices"
+        # )
+        # for sample in ["20x100", "50x50", "100x20"]:
+        #     for modify_sample_size in [False, True]:
+        #         path = os.path.join(prefix, f"{sample}.csv")
+        #         X = numpy.genfromtxt(path).T
+        #         c = biweight_midcovariance(X)
 
-    c1 = cov(ce, test_mat1)
-    # TODO compare against references
+        #         mss = "_mss" if modify_sample_size else ""
+        #         out_path = os.path.join(prefix, f"{sample}_bwcov{mss}.csv")
+        #         with open(out_path, "w") as file_:
+        #             for i in range(c.shape[0]):
+        #                 file_.write(" ".join(str(el) for el in c[i, :]))
+        #                 file_.write("\n")
+        _test_refs(BiweightMidcovariance(), "bwcov")
+        _test_refs(BiweightMidcovariance(; modify_sample_size=true), "bwcov_mss")
+    end
 end

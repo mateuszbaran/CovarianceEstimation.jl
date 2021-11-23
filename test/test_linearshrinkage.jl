@@ -25,15 +25,8 @@ end
 
     ss = LinearShrinkage(target=DiagonalUnequalVariance(),
                                   shrinkage=:ss; corrected=true)
-    test_mat1 = _get_ref("20x100")
-    ref_cov1  = _get_ref("20x100_corpcor")
-    test_mat2 = _get_ref("100x20")
-    ref_cov2  = _get_ref("100x20_corpcor")
-    test_mat3 = _get_ref("50x50")
-    ref_cov3  = _get_ref("50x50_corpcor")
-    c = cov(ss, test_mat1); @test c ≈ ref_cov1; @test issymmetric(c)
-    c = cov(ss, test_mat2); @test c ≈ ref_cov2; @test issymmetric(c)
-    c = cov(ss, test_mat3); @test c ≈ ref_cov3; @test issymmetric(c)
+
+    _test_refs(ss, "corpcor")
 end
 
 

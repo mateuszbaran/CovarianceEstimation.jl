@@ -55,6 +55,22 @@ function _get_ref(name::AbstractString)
     return readdlm(joinpath(path, "test_matrices", "$name.csv"))
 end
 
-include("test_biweight.jl")
-# include("test_linearshrinkage.jl")
-# include("test_nonlinearshrinkage.jl")
+function _test_ref(ce::CovarianceEstimator, name::AbstractString, ref::AbstractString)
+    X = _get_ref(name)
+    ref_cov = _get_ref("$(name)_$ref")
+    c = cov(ce, X)
+    @test c ≈ ref_cov
+    @test issymmetric(c)
+end
+
+function _test_refs(ce::CovarianceEstimator, ref::AbstractString)
+    for name in ("20x100", "100x20", "50x50")
+        _test_ref(ce, name, ref)
+    end
+end
+
+@testset "CovarianceEstimation" begin
+    include("test_biweight.jl")
+    include("test_linearshrinkage.jl")
+    include("test_nonlinearshrinkage.jl")
+end
