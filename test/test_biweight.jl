@@ -56,7 +56,6 @@ end
         #         path = os.path.join(prefix, f"{sample}.csv")
         #         X = numpy.genfromtxt(path).T
         #         c = biweight_midcovariance(X)
-
         #         mss = "_mss" if modify_sample_size else ""
         #         out_path = os.path.join(prefix, f"{sample}_bwcov{mss}.csv")
         #         with open(out_path, "w") as file_:
