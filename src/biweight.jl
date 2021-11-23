@@ -32,14 +32,17 @@ where ``\\mathrm{MAD}`` represents the median absolute deviation,
 \\end{aligned}
 ```
 
+If either ``\\mathrm{MAD}_x = 0`` or ``\\mathrm{MAD}_y = 0``, the pairwise covariance is
+defined to be zero.
+
 The parameter ``c`` is a tuning constant, for which the default is ``9.0``.
 Larger values will reduce the number of outliers that are removed — i.e. reducing
 robustness, but increasing sample efficiency.
 
 # Fields
 - `c::Float64`: The tuning constant corresponding to ``c`` above.
-- `modify_sample_size::Bool`: If `false`, then we use a sample size ``n_s`` equal to the total
-    number of observations ``n``. This is consistent with the standard definition of
+- `modify_sample_size::Bool`: If `false`, then we use a sample size ``n_s`` equal to the
+    total number of observations ``n``. This is consistent with the standard definition of
     biweight midcovariance in the literature. Otherwise, we count only those elements which
     are not rejected as outliers in the numerator, i.e. those for which ``|u_i|<1``
     and ``|v_i|<1``.
@@ -68,6 +71,10 @@ end
 function covzm(ce::BiweightMidcovariance, x::AbstractVector{<:Real})
     MADx = median(abs.(x))
     numerator = zero(eltype(x))
+
+    # If MADx is zero, return zero.
+    MADx == 0 && return zero(one(eltype(x)) / 1)
+
     denominator = zero(eltype(x))
     count = 0
     for xi in x
@@ -98,6 +105,11 @@ function covzm(
 
     # Promote types between x & y for numerator
     numerator = zero(promote_type(eltype(x), eltype(y)))
+
+    # If either of the MADs are zero, return zero.
+    MADx == 0 && return numerator
+    MADy == 0 && return numerator
+
     denominator_x = zero(eltype(x))
     denominator_y = zero(eltype(y))
     count = 0
