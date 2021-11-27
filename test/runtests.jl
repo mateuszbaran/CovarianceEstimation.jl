@@ -31,8 +31,8 @@ function testTransposition(ce::CovarianceEstimator, X)
 end
 
 function testDims(ce::CovarianceEstimator, X)
-    @test_throws ArgumentError cov(ce, X, dims=0)
-    @test_throws ArgumentError cov(ce, X, dims=3)
+    @test_throws ArgumentError cov(ce, X; dims=0)
+    @test_throws ArgumentError cov(ce, X; dims=3)
 end
 
 function testUncorrelated(ce::CovarianceEstimator)
