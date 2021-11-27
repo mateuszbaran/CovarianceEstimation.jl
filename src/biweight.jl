@@ -87,7 +87,7 @@ function covzm(ce::BiweightMidcovariance, x::AbstractVector{<:Real})
         numerator += xi^2 * (1 - ui²)^4
         denominator += (1 - ui²) * (1 - 5 * ui²)
     end
-    n = ce.modify_sample_size ? count : length(x)
+    n = ifelse(ce.modify_sample_size, count, length(x))
     return n * numerator / (denominator^2)
 end
 
@@ -138,7 +138,7 @@ function covzm(
         numerator += i_numerator
     end
 
-    n = ce.modify_sample_size ? count : length(x)
+    n = ifelse(ce.modify_sample_size, count, length(x))
     return n * numerator / (denominator_x * denominator_y)
 end
 
