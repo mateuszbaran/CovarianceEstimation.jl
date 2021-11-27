@@ -52,12 +52,14 @@ These methods build an estimator of the covariance derived from `S`. They are im
   - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised Ledoit-Wolf shrinkage (`:rblw`) and Oracle-Approximating shrinkage (`:oas`) are also supported (see [**3**]).
   - **Note**: `S` is symmetric semi-positive definite so that if the `F` is symmetric positive definite and provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite. For the diagonal targets `DiagonalUnitVariance`, `DiagonalCommonVariance` and `DiagonalUnequalVariance` the target is necessarily SPD.
 * `AnalyticalNonlinearShrinkage`: estimator of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.[**4**]
+* `BiweightMidcovariance`: robust estimator, described more in the [documentation](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev/).[**5**]
 
 **Time complexity**:
 - Linear shrinkage: `O(p²n)` with a low constant (main cost is forming `S`)
 - Nonlinear shrinkage:
   * if `p<n`: `O(p²n + n²)` with a moderate constant (main cost is forming `S` and manipulating a matrix of `n²` elements)
   * if `p>n`: `O(p³)` with a low constant (main cost is computing the eigen decomposition of `S`).
+- Biweight midcovariance: `O(p²n)`
 
 ### Other estimators (coming)
 
@@ -92,3 +94,4 @@ These benchmarks should (as usual) be taken with a pinch of salt but essentially
 * [**2**] O. Ledoit and M. Wolf, *[Honey, I Shrunk the Sample Covariance Matrix](http://www.ledoit.net/honey.pdf)*, The Journal of Portfolio Management, 2004.
 * [**3**] Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero, *[Shrinkage Algorithms for MMSE Covariance Estimation](https://arxiv.org/pdf/0907.4698.pdf)*, IEEE Transactions on Signal Processing, 2010.
 * [**4**] O. Ledoit and M. Wolf, *[Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices](http://www.econ.uzh.ch/static/wp/econwp264.pdf)*, Working Paper, 2018.
+* [**5**] Beers, Flynn, and Gebhardt (1990; AJ 100, 32) "Measures of Location and Scale for Velocities in Clusters of Galaxies – A Robust Approach"
