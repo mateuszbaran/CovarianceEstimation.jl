@@ -80,6 +80,8 @@ function covzm(ce::BiweightMidcovariance, x::AbstractVector{<:Real})
     count = 0
     for xi in x
         ui² = (xi / (ce.c * MADx))^2
+        # Benchmarking suggests that having this branch is similar or faster to a form
+        # using `ifelse`, where we always compute the updates but avoid the branch.
         ui² >= 1 && continue
         count += 1
         numerator += xi^2 * (1 - ui²)^4
@@ -118,18 +120,22 @@ function covzm(
         ui² = (xi / (ce.c * MADx))^2
         vi² = (yi / (ce.c * MADy))^2
 
-        if ui² < 1
-            denominator_x += (1 - ui²) * (1 - 5 * ui²)
-        end
+        # Compute the updates, and increment if desired.
+        # This way should avoid branches, and benchmarks suggest it's 1-2% faster than
+        # using conditionals.
+        ax = (1 - ui²) * (1 - 5 * ui²)
+        ay = (1 - vi²) * (1 - 5 * vi²)
+        anum = xi * (1 - ui²)^2 * yi * (1 - vi²)^2
 
-        if vi² < 1
-            denominator_y += (1 - vi²) * (1 - 5 * vi²)
-        end
-
-        if ui² < 1 && vi² < 1
-            numerator += xi * (1 - ui²)^2 * yi * (1 - vi²)^2
-            count += 1
-        end
+        denominator_x += ifelse(ui² < 1, ax, zero(denominator_x))
+        denominator_y += ifelse(vi² < 1, ay, zero(denominator_y))
+        i_count, i_numerator = ifelse(
+            ui² < 1 && vi² < 1,
+            (1, anum),
+            (0, zero(numerator)),
+        )
+        count += i_count
+        numerator += i_numerator
     end
 
     n = ce.modify_sample_size ? count : length(x)
