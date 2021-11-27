@@ -16,17 +16,21 @@ function _test_cov_vecvec(ce::CovarianceEstimator, X::AbstractMatrix{<:Real})
 end
 
 @testset "BiweightMidcovariance" begin
-    @testset "basic properties" begin
-        ce = BiweightMidcovariance()
-        for X in test_matrices
-            testTransposition(ce, X)
-            testDims(ce, X)
-            testUncorrelated(ce)
-            testTranslation(ce, X)
+    for c in (9, 5)
+        for modify_sample_size in (true, false)
+            @testset "basic properties $c=c, modify_sample_size=$modify_sample_size" begin
+                ce = BiweightMidcovariance(; c, modify_sample_size)
+                for X in test_matrices
+                    testTransposition(ce, X)
+                    testDims(ce, X)
+                    testUncorrelated(ce)
+                    testTranslation(ce, X)
 
-            # Test that other dispatches are consistent with the main one we are testing.
-            _test_cov_vec(ce, X)
-            _test_cov_vecvec(ce, X)
+                    # Test that other dispatches are consistent with the one tested above.
+                    _test_cov_vec(ce, X)
+                    _test_cov_vecvec(ce, X)
+                end
+            end
         end
     end
 
