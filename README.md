@@ -52,7 +52,7 @@ These methods build an estimator of the covariance derived from `S`. They are im
   - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised Ledoit-Wolf shrinkage (`:rblw`) and Oracle-Approximating shrinkage (`:oas`) are also supported (see [**3**]).
   - **Note**: `S` is symmetric semi-positive definite so that if the `F` is symmetric positive definite and provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite. For the diagonal targets `DiagonalUnitVariance`, `DiagonalCommonVariance` and `DiagonalUnequalVariance` the target is necessarily SPD.
 * `AnalyticalNonlinearShrinkage`: estimator of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.[**4**]
-* `BiweightMidcovariance`: robust estimator, described more in the [documentation](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev/).[**5**]
+* `BiweightMidcovariance`: robust estimator, described more in the [documentation](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev/man/methods/#Biweight-midcovariance).[**5**]
 
 **Time complexity**:
 - Linear shrinkage: `O(p²n)` with a low constant (main cost is forming `S`)

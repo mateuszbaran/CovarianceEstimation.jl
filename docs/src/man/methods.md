@@ -95,6 +95,23 @@ cov(method2, X)
 
 [Read more on nonlinear shrinkage estimators...](@ref nlshrink)
 
+## Biweight midcovariance
+
+The biweight midcovariance is a covariance estimator that is resilient to outliers.
+A full description of the technique is included on [`BiweightMidcovariance`](@ref).
+
+```@example
+using CovarianceEstimation # hide
+using Distributions # hide
+using Random # hide
+Random.seed!(1)
+n, p = 10, 3
+X = rand(TDist(3), (n, p))  # Moderately heavy-tailed data
+cov(BiweightMidcovariance(), X)
+```
+
+The two controllable parameters are the keyword arguments `c` and `modify_sample_size`, whose purpose is described in the docstring.
+
 ## Comparing estimators
 
 You may want to look at our simple [comparison of covariance estimators](@ref msecomp) which compares the MSE of the various estimators in a range of situations.
