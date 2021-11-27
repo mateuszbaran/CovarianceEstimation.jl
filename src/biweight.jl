@@ -129,11 +129,7 @@ function covzm(
 
         denominator_x += ifelse(ui² < 1, ax, zero(denominator_x))
         denominator_y += ifelse(vi² < 1, ay, zero(denominator_y))
-        i_count, i_numerator = ifelse(
-            ui² < 1 && vi² < 1,
-            (1, anum),
-            (0, zero(numerator)),
-        )
+        i_count, i_numerator = ifelse(ui² < 1 && vi² < 1, (1, anum), (0, zero(numerator)))
         count += i_count
         numerator += i_numerator
     end
@@ -145,6 +141,10 @@ end
 function cov(
     ce::BiweightMidcovariance, x::AbstractVector{<:Real}, y::AbstractVector{<:Real}
 )
+    if size(x) != size(y)
+        throw(ArgumentError("x & y have different sizes, $(size(x)) & $(size(y))"))
+    end
+
     return covzm(ce, x .- median(x), y .- median(y))
 end
 
@@ -156,31 +156,72 @@ function cov(
 )
     dims ∈ (1, 2) || throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
 
+    # This is the output type of median.
+    T = typeof(one(eltype(X)) / 1)
+
     # If the `mean` argument isn't provided, then we centralise with the median.
-    Xc = mean === nothing ? X .- median(X; dims=dims) : X .- mean
+    # Xc = mean === nothing ? X .- median(X; dims=dims) : X .- mean
+    Xc = if mean === nothing
+        # The following is equivalent to
+        #   X .- median(X; dims=dims)
+        # However, it significantly reduces the runtime of cov. This is primarily achieved
+        # by reducing the number of allocations -- we allocate a single temporary buffer
+        # which we allow `median!` to mutate, and then copy each section of data into it.
+        n = dims == 2 ? size(X, 2) : size(X, 1)
+        p = dims == 2 ? size(X, 1) : size(X, 2)
+        Xc = copy(X)
+        temp = Vector{T}(undef, n)
+        if dims == 1
+            @inbounds for i in 1:p
+                copyto!(temp, @view(X[:, i]))
+                Xc[:, i] .-= median!(temp)
+            end
+        else  # dims == 2
+            @inbounds for i in 1:p
+                copyto!(temp, @view(X[i, :]))
+                Xc[i, :] .-= median!(temp)
+            end
+        end
+        Xc
+    else
+        X .- mean
+    end
 
     # Standardise the orientation of Xc, and ascertain the number of variables.
     Xc = dims == 2 ? transpose(Xc) : Xc
-    p = size(Xc, 2)
+    n, p = size(Xc)
 
-    # Infer the output element type. This follows the approach used in the stdlib, in
-    # Statistics.covzm.
-    T = promote_type(typeof(one(eltype(Xc)) / 1), eltype(Xc))
-
-    # Allocate a concrete output buffer, and populate it by iterating over all pairs.
-    # Since different outliers may be removed
-    result = Matrix{T}(undef, p, p)
+    # Compute all the median absolute deviations.
+    # To avoid extra allocations, allocate a temporary buffer which will be populated with
+    # the absolute values of the observations of each variable, and which we then allow
+    # median! to mutate.
+    temp = Vector{T}(undef, n)
+    MAD = Matrix{T}(undef, 1, p)
     @inbounds for i in 1:p
-        for j in i:p
-            if i == j
-                result[i, j] = covzm(ce, @view(Xc[:, i]))
-            else
-                cov_ij = covzm(ce, @view(Xc[:, i]), @view(Xc[:, j]))
-                result[i, j] = cov_ij
-                result[j, i] = cov_ij
-            end
+        for j in 1:n
+            temp[j] = abs(Xc[j, i])
         end
+        MAD[1, i] = median!(temp)
     end
+
+    u² = @. (Xc / (ce.c * MAD)) ^ 2
+    mask = u² .< 1
+
+    onesubu² = (1 .- u²)
+    onesubu²[.!mask] .= 0
+    a = @. Xc * onesubu² ^ 2
+    b = sum(@. onesubu² * (1 - 5 * u²); dims=1)
+    numerator = a' * a
+    denominator = b' * b
+
+    n = ce.modify_sample_size ? mask' * mask : size(Xc, 1)
+
+    result = @. n * numerator / denominator
+
+    # Whereever the MAD is zero, we should set the result to zero.
+    mad_zero = dropdims(iszero.(MAD); dims=1)
+    result[mad_zero, :] .= zero(eltype(result))
+    result[:, mad_zero] .= zero(eltype(result))
 
     return result
 end
