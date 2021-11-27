@@ -156,67 +156,73 @@ function cov(
 )
     dims ∈ (1, 2) || throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
 
-    # This is the output type of median.
-    T = typeof(one(eltype(X)) / 1)
+    # Ascertain the number of observations `n` and number of variables `p`.
+    n, p = dims == 1 ? size(X) : (size(X, 2), size(X, 1))
+
+    # Temporary storage to use when computing medians.
+    temp = Vector{eltype(X)}(undef, n)
 
     # If the `mean` argument isn't provided, then we centralise with the median.
-    # Xc = mean === nothing ? X .- median(X; dims=dims) : X .- mean
+    # After this statement, Xc is standardised to be of shape (n, p)
     Xc = if mean === nothing
         # The following is equivalent to
         #   X .- median(X; dims=dims)
-        # However, it significantly reduces the runtime of cov. This is primarily achieved
-        # by reducing the number of allocations -- we allocate a single temporary buffer
-        # which we allow `median!` to mutate, and then copy each section of data into it.
-        n = dims == 2 ? size(X, 2) : size(X, 1)
-        p = dims == 2 ? size(X, 1) : size(X, 2)
+        # However, this implementation significantly reduces the runtime of this function.
+        # This is primarily achieved by reducing the number of allocations -- we allocate a
+        # single temporary buffer which we allow `median!` to mutate, and then copy the next
+        # section of data into it.
+        X = dims == 2 ? transpose(X) : X
         Xc = copy(X)
-        temp = Vector{T}(undef, n)
-        if dims == 1
-            @inbounds for i in 1:p
-                copyto!(temp, @view(X[:, i]))
-                Xc[:, i] .-= median!(temp)
+        @inbounds for i in 1:p
+            # Avoiding copyto!(, ... @view(X[:, i])), because this can allocate a view if
+            # the call to copyto! isn't inlined.
+            for j in 1:n
+                temp[j] = X[j, i]
             end
-        else  # dims == 2
-            @inbounds for i in 1:p
-                copyto!(temp, @view(X[i, :]))
-                Xc[i, :] .-= median!(temp)
-            end
+            Xc[:, i] .-= median!(temp)
         end
         Xc
     else
-        X .- mean
+        Xc = X .- mean
+        # Standardise the orientation of Xc.
+        dims == 2 ? transpose(Xc) : Xc
     end
 
-    # Standardise the orientation of Xc, and ascertain the number of variables.
-    Xc = dims == 2 ? transpose(Xc) : Xc
-    n, p = size(Xc)
-
     # Compute all the median absolute deviations.
-    # To avoid extra allocations, allocate a temporary buffer which will be populated with
+    # To avoid extra allocations, use a temporary buffer `temp` which will be populated with
     # the absolute values of the observations of each variable, and which we then allow
     # median! to mutate.
-    temp = Vector{T}(undef, n)
+    T = typeof(one(eltype(X)) / 1)  # This is the output type of median.
     MAD = Matrix{T}(undef, 1, p)
     @inbounds for i in 1:p
+        # Avoiding map!(abs, temp, @view(Xc[:, i])), because this can allocate a view if
+        # the call to copyto! isn't inlined.
         for j in 1:n
             temp[j] = abs(Xc[j, i])
         end
         MAD[1, i] = median!(temp)
     end
 
-    u² = @. (Xc / (ce.c * MAD)) ^ 2
-    mask = u² .< 1
+    u² = @. (Xc / (ce.c * MAD))^2
 
-    onesubu² = (1 .- u²)
-    onesubu²[.!mask] .= 0
-    a = @. Xc * onesubu² ^ 2
-    b = sum(@. onesubu² * (1 - 5 * u²); dims=1)
+    onesubu² = max.((1 .- u²), 0)
+    a = @. Xc * onesubu²^2
     numerator = a' * a
+
+    a[:, :] .= @. onesubu² * (1 - 5 * u²)  # Re-use `a` memory to avoid an allocation.
+    b = sum(a; dims=1)
     denominator = b' * b
 
-    n = ce.modify_sample_size ? mask' * mask : size(Xc, 1)
+    n = if ce.modify_sample_size
+        mask = onesubu² .> 0
+        mask' * mask
+    else
+        n
+    end
 
-    result = @. n * numerator / denominator
+    # Re-use the numerator memory for the result.
+    result = numerator
+    result .*= n ./ denominator
 
     # Whereever the MAD is zero, we should set the result to zero.
     mad_zero = dropdims(iszero.(MAD); dims=1)
