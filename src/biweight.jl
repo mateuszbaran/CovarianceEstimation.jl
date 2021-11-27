@@ -64,8 +64,9 @@ struct BiweightMidcovariance <: CovarianceEstimator
     c::Float64
     modify_sample_size::Bool
 end
-function BiweightMidcovariance(; c::Float64=9.0, modify_sample_size::Bool=false)
-    return BiweightMidcovariance(c, modify_sample_size)
+function BiweightMidcovariance(; c::Real=9.0, modify_sample_size::Bool=false)
+    c > 0 || throw(ArgumentError("c must be positive, got $c"))
+    return BiweightMidcovariance(Float64(c), modify_sample_size)
 end
 
 function covzm(ce::BiweightMidcovariance, x::AbstractVector{<:Real})
@@ -73,7 +74,7 @@ function covzm(ce::BiweightMidcovariance, x::AbstractVector{<:Real})
     numerator = zero(eltype(x))
 
     # If MADx is zero, return zero.
-    MADx == 0 && return zero(one(eltype(x)) / 1)
+    iszero(MADx) && return zero(one(eltype(x)) / 1)
 
     denominator = zero(eltype(x))
     count = 0
@@ -93,7 +94,7 @@ function cov(
     x::AbstractVector{<:Real};
     mean::Union{Nothing,<:Real}=nothing,
 )
-    Mx = isnothing(mean) ? median(x) : mean
+    Mx = mean === nothing ? median(x) : mean
     return covzm(ce, x .- Mx)
 end
 
@@ -107,8 +108,8 @@ function covzm(
     numerator = zero(promote_type(eltype(x), eltype(y)))
 
     # If either of the MADs are zero, return zero.
-    MADx == 0 && return numerator
-    MADy == 0 && return numerator
+    iszero(MADx) && return numerator
+    iszero(MADy) && return numerator
 
     denominator_x = zero(eltype(x))
     denominator_y = zero(eltype(y))
@@ -150,7 +151,7 @@ function cov(
     dims ∈ (1, 2) || throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
 
     # If the `mean` argument isn't provided, then we centralise with the median.
-    Xc = isnothing(mean) ? X .- median(X; dims=dims) : X .- mean
+    Xc = mean === nothing ? X .- median(X; dims=dims) : X .- mean
 
     # Standardise the orientation of Xc, and ascertain the number of variables.
     Xc = dims == 2 ? transpose(Xc) : Xc
