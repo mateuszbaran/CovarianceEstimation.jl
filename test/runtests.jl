@@ -45,7 +45,7 @@ function testTranslation(ce::CovarianceEstimator, X)
     C1 = cov(ce, X)
     C2 = cov(ce, X .+ randn(1, size(X, 2)))
     @test C1 ≈ C2 atol = 1e-12 rtol = 1e-16
-    C1t = cov(ce, X')
+    C1t = cov(ce, X')
     C2t = cov(ce, X' .+ randn(1, size(X, 1)))
     @test C1t ≈ C2t atol = 1e-12 rtol = 1e-16
 end
@@ -63,8 +63,10 @@ function _test_ref(ce::CovarianceEstimator, name::AbstractString, ref::AbstractS
     @test issymmetric(c)
 end
 
-function _test_refs(ce::CovarianceEstimator, ref::AbstractString)
-    for name in ("20x100", "100x20", "50x50")
+function _test_refs(
+    ce::CovarianceEstimator, names::AbstractVector{<:AbstractString}, ref::AbstractString,
+)
+    for name in names
         _test_ref(ce, name, ref)
     end
 end

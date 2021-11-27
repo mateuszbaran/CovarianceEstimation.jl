@@ -26,7 +26,7 @@ end
     ss = LinearShrinkage(target=DiagonalUnequalVariance(),
                                   shrinkage=:ss; corrected=true)
 
-    _test_refs(ss, "corpcor")
+    _test_refs(ss, ["20x100", "100x20", "50x50"], "corpcor")
 end
 
 

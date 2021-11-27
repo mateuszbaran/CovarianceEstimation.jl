@@ -51,18 +51,19 @@ end
         #     os.path.expanduser("~"), ".julia", "dev", "CovarianceEstimation", "test",
         #     "test_matrices"
         # )
-        # for sample in ["20x100", "50x50", "100x20"]:
+        # for sample in ["20x100", "50x50", "100x20", "50x50tdist3"]:
         #     for modify_sample_size in [False, True]:
         #         path = os.path.join(prefix, f"{sample}.csv")
         #         X = numpy.genfromtxt(path).T
-        #         c = biweight_midcovariance(X)
+        #         c = biweight_midcovariance(X, modify_sample_size=modify_sample_size)
         #         mss = "_mss" if modify_sample_size else ""
         #         out_path = os.path.join(prefix, f"{sample}_bwcov{mss}.csv")
         #         with open(out_path, "w") as file_:
         #             for i in range(c.shape[0]):
         #                 file_.write(" ".join(str(el) for el in c[i, :]))
         #                 file_.write("\n")
-        _test_refs(BiweightMidcovariance(), "bwcov")
-        _test_refs(BiweightMidcovariance(; modify_sample_size=true), "bwcov_mss")
+        names = ["20x100", "50x50", "100x20", "50x50tdist3"]
+        _test_refs(BiweightMidcovariance(), names, "bwcov")
+        _test_refs(BiweightMidcovariance(; modify_sample_size=true), names, "bwcov_mss")
     end
 end
