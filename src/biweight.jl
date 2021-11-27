@@ -70,7 +70,7 @@ function BiweightMidcovariance(; c::Real=9.0, modify_sample_size::Bool=false)
 end
 
 function covzm(ce::BiweightMidcovariance, x::AbstractVector{<:Real})
-    MADx = median(abs.(x))
+    MADx = median!(abs.(x))
     numerator = zero(eltype(x))
 
     # If MADx is zero, return zero.
@@ -103,8 +103,8 @@ end
 function covzm(
     ce::BiweightMidcovariance, x::AbstractVector{<:Real}, y::AbstractVector{<:Real}
 )
-    MADx = median(abs.(x))
-    MADy = median(abs.(y))
+    MADx = median!(abs.(x))
+    MADy = median!(abs.(y))
 
     # Promote types between x & y for numerator
     numerator = zero(promote_type(eltype(x), eltype(y)))
