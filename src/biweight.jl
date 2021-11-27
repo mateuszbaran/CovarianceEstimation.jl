@@ -196,7 +196,7 @@ function cov(
     MAD = Matrix{T}(undef, 1, p)
     @inbounds for i in 1:p
         # Avoiding map!(abs, temp, @view(Xc[:, i])), because this can allocate a view if
-        # the call to copyto! isn't inlined.
+        # the call to map! isn't inlined.
         for j in 1:n
             temp[j] = abs(Xc[j, i])
         end
