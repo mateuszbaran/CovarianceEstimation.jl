@@ -86,6 +86,8 @@ These benchmarks should (as usual) be taken with a pinch of salt but essentially
   - average speedup: `12x`
 * **Ledoit-Wolf 2** (implements `AnalyticalNonlinearShrinkage`)
   - average speedup: `25x`
+* **Astropy** (implements `BiweightMidcovariance`)
+  - average speedup: `3x`
 
 
 ## References
