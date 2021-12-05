@@ -19,7 +19,7 @@ end
     for c in (9, 5)
         for modify_sample_size in (true, false)
             @testset "basic properties c=$c, modify_sample_size=$modify_sample_size" begin
-                ce = BiweightMidcovariance(; c, modify_sample_size)
+                ce = BiweightMidcovariance(; c=c, modify_sample_size=modify_sample_size)
                 for X in test_matrices
                     testTransposition(ce, X)
                     testDims(ce, X)
