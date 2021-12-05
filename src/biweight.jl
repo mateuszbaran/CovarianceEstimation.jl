@@ -110,6 +110,7 @@ function covzm(
     numerator = zero(promote_type(eltype(x), eltype(y)))
 
     # If either of the MADs are zero, return zero.
+    #   `numerator` is always zero here, and of the correct type.
     iszero(MADx) && return numerator
     iszero(MADy) && return numerator
 
