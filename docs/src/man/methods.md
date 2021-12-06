@@ -19,16 +19,16 @@ In order to avoid having to specify this everywhere in the document, it is usefu
 With these notations we can write:
 
 ```math
-\begin{eqnarray}
-    S &=& \kappa^{-1}X_c^T X_c \label{simple-covariance}\\
-    D_{ij} &=& S_{ij}\mathbf 1_{[i=j]}\\
-    X_s &=& X_c D^{-1/2}
-\end{eqnarray}
+\begin{aligned}
+    S &= \kappa^{-1}X_c^T X_c\\
+    D_{ij} &= S_{ij}\mathbf 1_{[i=j]}\\
+    X_s &= X_c D^{-1/2}
+\end{aligned}
 ```
 
 ## Simple estimator
 
-The standard covariance estimator is easily obtained via \eqref{simple-covariance}.
+The standard covariance estimator is easily obtained via the equation above.
 It can be specified with the constructor `SimpleCovariance` which can take a named argument `corrected` (either `false` (default) or `true`).
 
 ```@example
@@ -94,6 +94,23 @@ cov(method2, X)
 ## Nonlinear shrinkage estimators
 
 [Read more on nonlinear shrinkage estimators...](@ref nlshrink)
+
+## Biweight midcovariance
+
+The biweight midcovariance is a covariance estimator that is resilient to outliers.
+A full description of the technique is included on [`BiweightMidcovariance`](@ref).
+
+```@example
+using CovarianceEstimation # hide
+using Distributions # hide
+using Random # hide
+Random.seed!(1)
+n, p = 10, 3
+X = rand(TDist(3), (n, p))  # Moderately heavy-tailed data
+cov(BiweightMidcovariance(), X)
+```
+
+The two controllable parameters are the keyword arguments `c` and `modify_sample_size`, whose purpose is described in the docstring.
 
 ## Comparing estimators
 

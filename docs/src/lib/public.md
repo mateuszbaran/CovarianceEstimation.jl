@@ -30,4 +30,5 @@ CommonCovariance
 PerfectPositiveCorrelation
 ConstantCorrelation
 AnalyticalNonlinearShrinkage
+BiweightMidcovariance
 ```

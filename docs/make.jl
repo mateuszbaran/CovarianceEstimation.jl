@@ -2,7 +2,7 @@ using Documenter, CovarianceEstimation, StatsBase
 
 makedocs(
     modules = [CovarianceEstimation],
-    format = Documenter.HTML(),
+    format = Documenter.HTML(; prettyurls=get(ENV, "CI", "false") == "true"),
     sitename = "CovarianceEstimation.jl",
     authors = "Mateusz Baran, Thibaut Lienart, and contributors.",
     pages = [

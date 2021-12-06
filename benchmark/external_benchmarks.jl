@@ -12,7 +12,7 @@
 # ==========================================================================
 
 using CovarianceEstimation
-using Random:seed!
+using Random: seed!
 using DelimitedFiles
 using Statistics
 using LinearAlgebra
@@ -162,3 +162,30 @@ times_lw2 = [0.015798, 0.007848]
 
 # roughly 25x speedup
 speedup = mean(times_lw2 ./ times_ours[[1, 3]])
+
+
+# =========
+# ASTROPY
+# =========
+bw = BiweightMidcovariance()
+times = zeros(length(p))
+res = zeros(length(p))
+for i ∈ eachindex(p)
+    Xᵢ = X[i]
+    Cᵢ = C[i]
+    start = time()
+    C_bw = cov(bw, Xᵢ)
+    times[i] = time() - start
+    res[i] = norm(C_bw - Cᵢ)
+end
+res_ours = res
+times_ours = times
+res_astropy = [   70.41980995   331.84897257  1975.77842564 11556.0246496][:]
+times_astropy = [0.00025606 0.00023079 0.00453758 0.00508738][:]
+
+δ = mean(res_ours .- res_astropy)
+
+# speedup varies from x5 for small matrices to ~similar speed for large matrices.
+# The average speedup is ~x3 by this definition.
+speedups = times_astropy ./ times_ours
+speedup = mean(speedups)

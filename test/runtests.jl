@@ -31,25 +31,48 @@ function testTransposition(ce::CovarianceEstimator, X)
 end
 
 function testDims(ce::CovarianceEstimator, X)
-    @test_throws ArgumentError cov(ce, X, dims=0)
-    @test_throws ArgumentError cov(ce, X, dims=3)
+    @test_throws ArgumentError cov(ce, X; dims=0)
+    @test_throws ArgumentError cov(ce, X; dims=3)
 end
 
 function testUncorrelated(ce::CovarianceEstimator)
     for X2 ∈ X2s
         @test isdiag(cov(ce, X2))
     end
-
 end
 
 function testTranslation(ce::CovarianceEstimator, X)
     C1 = cov(ce, X)
     C2 = cov(ce, X .+ randn(1, size(X, 2)))
     @test C1 ≈ C2 atol = 1e-12 rtol = 1e-16
-    C1t = cov(ce, X')
+    C1t = cov(ce, X')
     C2t = cov(ce, X' .+ randn(1, size(X, 1)))
     @test C1t ≈ C2t atol = 1e-12 rtol = 1e-16
 end
 
-include("test_linearshrinkage.jl")
-include("test_nonlinearshrinkage.jl")
+function _get_ref(name::AbstractString)
+    path = endswith(pwd(), "CovarianceEstimation") ? "test" : ""
+    return readdlm(joinpath(path, "test_matrices", "$name.csv"))
+end
+
+function _test_ref(ce::CovarianceEstimator, name::AbstractString, ref::AbstractString)
+    X = _get_ref(name)
+    ref_cov = _get_ref("$(name)_$ref")
+    c = cov(ce, X)
+    @test c ≈ ref_cov
+    @test issymmetric(c)
+end
+
+function _test_refs(
+    ce::CovarianceEstimator, names::AbstractVector{<:AbstractString}, ref::AbstractString,
+)
+    for name in names
+        _test_ref(ce, name, ref)
+    end
+end
+
+@testset "CovarianceEstimation" begin
+    include("test_biweight.jl")
+    include("test_linearshrinkage.jl")
+    include("test_nonlinearshrinkage.jl")
+end

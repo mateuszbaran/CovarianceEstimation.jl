@@ -1,7 +1,9 @@
 [deps]
 CovarianceEstimation = "587fd27a-f159-11e8-2dae-1979310e6154"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+Distributions = "0.25"
 Documenter = "0.25"

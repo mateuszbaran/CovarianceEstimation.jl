@@ -14,7 +14,6 @@ end
 
 
 @testset "LinShrink: target D with SS (ref⭒) " begin
-    p = ifelse(endswith(pwd(), "CovarianceEstimation"), "test", "")
     ## R Script used to compare:
     # require(corpcor)
     # tm1 = read.table("20x100.csv")
@@ -26,15 +25,8 @@ end
 
     ss = LinearShrinkage(target=DiagonalUnequalVariance(),
                                   shrinkage=:ss; corrected=true)
-    test_mat1 = readdlm(joinpath(p, "test_matrices/20x100.csv"))
-    ref_cov1  = readdlm(joinpath(p, "test_matrices/20x100_corpcor.csv"))
-    test_mat2 = readdlm(joinpath(p, "test_matrices/100x20.csv"))
-    ref_cov2  = readdlm(joinpath(p, "test_matrices/100x20_corpcor.csv"))
-    test_mat3 = readdlm(joinpath(p, "test_matrices/50x50.csv"))
-    ref_cov3  = readdlm(joinpath(p, "test_matrices/50x50_corpcor.csv"))
-    c = cov(ss, test_mat1); @test c ≈ ref_cov1; @test issymmetric(c)
-    c = cov(ss, test_mat2); @test c ≈ ref_cov2; @test issymmetric(c)
-    c = cov(ss, test_mat3); @test c ≈ ref_cov3; @test issymmetric(c)
+
+    _test_refs(ss, ["20x100", "100x20", "50x50"], "corpcor")
 end
 
 
