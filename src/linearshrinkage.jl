@@ -274,6 +274,7 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
     else
         throw(ArgumentError("Unsupported shrinkage method for target DiagonalUnitVariance: $λ."))
     end
+    λ = clamp(λ, zero(T), one(T))
     return linshrink(F, S, λ)
 end
 
