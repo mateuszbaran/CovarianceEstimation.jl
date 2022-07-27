@@ -27,7 +27,7 @@ const EPAN_3 = 0.3 * INVPI
 
 Return the Epanechnikov kernel evaluated at `x`.
 """
-epanechnikov(x::Real) = EPAN_1 * max(0.0, 1.0 - x^2/5.0)
+epanechnikov(x::T) where T<:Real = T(EPAN_1 * max(0.0, 1.0 - x^2/5.0))
 
 """
     epnanechnikov_HT(x)
@@ -35,8 +35,8 @@ epanechnikov(x::Real) = EPAN_1 * max(0.0, 1.0 - x^2/5.0)
 Return the Hilbert Transform of the Epanechnikov kernel evaluated at `x`
 if `|x|≂̸√5`.
 """
-function epanechnikov_HT1(x::Real)
-    -EPAN_3 * x + EPAN_2 * (1.0 - x^2/5.0) * log(abs((SQRT5 - x)/(SQRT5 + x)))
+function epanechnikov_HT1(x::T) where T <: Real
+    T(-EPAN_3 * x + EPAN_2 * (1.0 - x^2/5.0) * log(abs((SQRT5 - x)/(SQRT5 + x))))
 end
 
 """
@@ -44,7 +44,7 @@ end
 Return the Hilbert Transform of the Epanechnikov kernel evaluated at `x`
 if `|x|=√5`.
 """
-epanechnikov_HT2(x::Real) = -EPAN_3*x
+epanechnikov_HT2(x::T) where T <: Real = T(-EPAN_3*x)
 
 """
     analytical_nonlinear_shrinkage(S, n, p; decomp)
@@ -66,6 +66,7 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
     sample_perm = @view perm[max(1, (p - η) + 1):p]
     λ    = @view F.values[sample_perm]
     U    = F.vectors[:, perm]
+    T    = eltype(F)
 
     # dominant cost forming of S or eigen(S) --> O(max{np^2, p^3})
 
@@ -73,12 +74,12 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
     L = repeat(λ, outer=(1, min(p, η)))
 
     # Equation (4.9)
-    h = η^(-1//3)
+    h = T(η^(-1//3))
     H = h * L'
     x = (L .- L') ./ H
 
     # additional useful definitions
-    γ  = p/η
+    γ  = T(p/η)
     πλ = π * λ
 
     # Equation (4.7) in http://www.econ.uzh.ch/static/wp/econwp264.pdf
@@ -96,17 +97,17 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
     if p <= η
         # Equation (4.3)
         πγλ = γ * πλ
-        denom = @. (πγλ * f̃)^2 + (1.0 - γ - πγλ * Hf̃)^2
+        denom = @. (πγλ * f̃)^2 + (one(T) - γ - πγλ * Hf̃)^2
         d̃ = λ ./ denom
     else
         # Equation (C.8)
-        hs5  = h * SQRT5
-        Hf̃0  = (0.3/h^2 + 0.75/hs5 * (1.0 - 0.2/h^2) * log((1+hs5)/(1-hs5)))
-        Hf̃0 *= mean(1.0 ./ πλ)
+        hs5  = T(h * SQRT5)
+        Hf̃0  = T((0.3/h^2 + 0.75/hs5 * (1.0 - 0.2/h^2) * log((1+hs5)/(1-hs5))))
+        Hf̃0 *= mean(one(T) ./ πλ)
         # Equation (C.5)
-        d̃0 = INVPI / ((γ - 1.0) * Hf̃0)
+        d̃0 = T(INVPI / ((γ - one(T)) * Hf̃0))
         # Eq. (C.4)
-        d̃1 = @. 1.0 / (π * πλ * (f̃^2 + Hf̃^2))
+        d̃1 = @. one(T) / (π * πλ * (f̃^2 + Hf̃^2))
         d̃  = [fill(d̃0, (p - η, 1)); d̃1]
     end
 
