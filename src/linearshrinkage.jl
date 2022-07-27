@@ -355,8 +355,9 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_D(S)
+    T   = eltype(F)
     κ   = n - Int(corrected)
-    γ   = κ/n
+    γ   = T(κ / n)
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
@@ -372,7 +373,7 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
     else
         throw(ArgumentError("Unsupported shrinkage method for target DiagonalUnequalVariance: $λ."))
     end
-    λ = clamp(λ, 0.0, 1.0)
+    λ = clamp(λ, zero(T), one(T))
     return linshrink(F, S, λ)
 end
 
