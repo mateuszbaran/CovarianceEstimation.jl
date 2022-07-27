@@ -75,4 +75,5 @@ end
     include("test_biweight.jl")
     include("test_linearshrinkage.jl")
     include("test_nonlinearshrinkage.jl")
+    include("test_float32.jl")
 end
