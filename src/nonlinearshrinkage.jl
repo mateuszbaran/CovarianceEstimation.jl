@@ -27,7 +27,7 @@ const EPAN_3 = 0.3 * INVPI
 
 Return the Epanechnikov kernel evaluated at `x`.
 """
-epanechnikov(x::T) where T<:Real = T(EPAN_1 * max(0.0, 1.0 - x^2/5.0))
+epanechnikov(x::T) where T<:Real = float(T)(EPAN_1 * max(0.0, 1.0 - x^2/5.0))
 
 """
     epnanechnikov_HT(x)
@@ -36,7 +36,7 @@ Return the Hilbert Transform of the Epanechnikov kernel evaluated at `x`
 if `|x|≂̸√5`.
 """
 function epanechnikov_HT1(x::T) where T <: Real
-    T(-EPAN_3 * x + EPAN_2 * (1.0 - x^2/5.0) * log(abs((SQRT5 - x)/(SQRT5 + x))))
+    float(T)(-EPAN_3 * x + EPAN_2 * (1.0 - x^2/5.0) * log(abs((SQRT5 - x)/(SQRT5 + x))))
 end
 
 """
@@ -44,7 +44,7 @@ end
 Return the Hilbert Transform of the Epanechnikov kernel evaluated at `x`
 if `|x|=√5`.
 """
-epanechnikov_HT2(x::T) where T <: Real = T(-EPAN_3*x)
+epanechnikov_HT2(x::T) where T <: Real = float(T)(-EPAN_3*x)
 
 """
     analytical_nonlinear_shrinkage(S, n, p; decomp)
@@ -66,7 +66,7 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
     sample_perm = @view perm[max(1, (p - η) + 1):p]
     λ    = @view F.values[sample_perm]
     U    = F.vectors[:, perm]
-    T    = eltype(F)
+    T    = float(eltype(F))
 
     # dominant cost forming of S or eigen(S) --> O(max{np^2, p^3})
 

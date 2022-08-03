@@ -255,7 +255,7 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = I
-    T   = eltype(S)
+    T   = float(eltype(S))
     κ   = n - Int(corrected)
     γ   = T(κ/n)
     Xc² = Xc.^2
@@ -299,7 +299,7 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_B(S, p)
-    T   = eltype(F)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
     γ   = T(κ/n)
     Xc² = Xc.^2
@@ -357,7 +357,7 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_D(S)
-    T   = eltype(F)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
     γ   = T(κ / n)
     Xc² = Xc.^2
@@ -408,7 +408,7 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F, v, c = target_C(S, p)
-    T   = eltype(F)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
     γ   = T(κ/n)
     Xc² = Xc.^2
@@ -455,7 +455,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_E(S)
-    T   = eltype(F)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
     γ   = T(κ/n)
     Xc² = Xc.^2
@@ -510,7 +510,7 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F, r̄ = target_F(S, p)
-    T    = eltype(F)
+    T    = float(eltype(F))
     κ    = n - Int(corrected)
     γ    = T(κ/n)
     Xc²  = Xc.^2
