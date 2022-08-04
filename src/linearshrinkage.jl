@@ -255,8 +255,9 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = I
+    T   = float(eltype(S))
     κ   = n - Int(corrected)
-    γ   = κ/n
+    γ   = T(κ/n)
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
@@ -265,15 +266,15 @@ function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
         λ  /= κ * (ΣS² - 2tr(S) + p)
     elseif λ == :ss
         # use the standardised data matrix
-        d   = 1.0 ./ vec(sum(Xc², dims=1))
+        d   = one(T) ./ vec(sum(Xc², dims=1))
         S̄   = rescale(S, sqrt.(d)) # this has diagonal 1/κ
         ΣS̄² = sumij2(S̄, with_diag=true)
         λ   = sumij(rescale!(uccov(Xc²), d), with_diag=true) / γ^2 - ΣS̄²
-        λ  /= κ * ΣS̄² - p / κ
+        λ  /= T(κ * ΣS̄² - p / κ)
     else
         throw(ArgumentError("Unsupported shrinkage method for target DiagonalUnitVariance: $λ."))
     end
-    λ = clamp(λ, 0.0, 1.0)
+    λ = clamp(λ, zero(T), one(T))
     return linshrink(F, S, λ)
 end
 
@@ -298,8 +299,9 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_B(S, p)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
-    γ   = κ/n
+    γ   = T(κ/n)
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
@@ -309,28 +311,28 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
         λ  /= κ * (ΣS² - p*v^2)
     elseif λ == :ss
         # use the standardised data matrix
-        d   = 1.0 ./ vec(sum(Xc², dims=1))
+        d   = one(T) ./ vec(sum(Xc², dims=1))
         S̄   = rescale(S, sqrt.(d)) # this has diagonal 1/κ
         v̄   = κ # tr(S̄)/p
         ΣS̄² = sumij2(S̄, with_diag=true)
         λ   = sumij(rescale!(uccov(Xc²), d), with_diag=true) / γ^2 - ΣS̄²
-        λ  /= κ * ΣS̄² - p/κ
+        λ  /= T(κ * ΣS̄² - p/κ)
     elseif λ == :rblw
         # https://arxiv.org/pdf/0907.4698.pdf equations 17, 19
         trS² = sum(abs2, S)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
-        λ = ((n-2)/n * trS² + tr²S) / ((n+2) * (trS² - tr²S/p))
+        λ = T(((n-2)/n * trS² + tr²S) / ((n+2) * (trS² - tr²S/p)))
     elseif λ == :oas
         # https://arxiv.org/pdf/0907.4698.pdf equation 23
         trS² = sum(abs2, S)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
-        λ = ((1.0-2.0/p) * trS² + tr²S) / ((n+1.0-2.0/p) * (trS² - tr²S/p))
+        λ = ((one(T)-T(2.0)/p) * trS² + tr²S) / ((n+one(T)-T(2.0)/p) * (trS² - tr²S/p))
     else
         throw(ArgumentError("Unsupported shrinkage method for target DiagonalCommonVariance: $λ."))
     end
-    λ = clamp(λ, 0.0, 1.0)
+    λ = clamp(λ, zero(T), one(T))
     return linshrink(F, S, λ)
 end
 
@@ -355,8 +357,9 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_D(S)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
-    γ   = κ/n
+    γ   = T(κ / n)
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
@@ -365,14 +368,14 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
         λ  /= κ * ΣS²
     elseif λ == :ss
         # use the standardised data matrix
-        d   = 1.0 ./ vec(sum(Xc², dims=1))
+        d   = one(T) ./ vec(sum(Xc², dims=1))
         ΣS̄² = sumij2(rescale(S, sqrt.(d)))
         λ   = sumij(rescale!(uccov(Xc²), d)) / γ^2 - ΣS̄²
         λ  /= κ * ΣS̄²
     else
         throw(ArgumentError("Unsupported shrinkage method for target DiagonalUnequalVariance: $λ."))
     end
-    λ = clamp(λ, 0.0, 1.0)
+    λ = clamp(λ, zero(T), one(T))
     return linshrink(F, S, λ)
 end
 
@@ -405,8 +408,9 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F, v, c = target_C(S, p)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
-    γ   = κ/n
+    γ   = T(κ/n)
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
@@ -414,7 +418,7 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
         λ   = sumij(uccov(Xc²), with_diag=true) / γ^2 - ΣS²
         λ  /= κ * (ΣS² - p*(p-1)*c^2 - p*v^2)
     elseif λ == :ss
-        d   = 1.0 ./ vec(sum(Xc², dims=1))
+        d   = one(T) ./ vec(sum(Xc², dims=1))
         S̄   = rescale(S, sqrt.(d))
         ΣS̄² = sumij2(S̄, with_diag=true)
         λ   = sumij(rescale!(uccov(Xc²), d), with_diag=true) / γ^2 - ΣS̄²
@@ -422,7 +426,7 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
     else
         throw(ArgumentError("Unsupported shrinkage method for target CommonCovariance: $λ."))
     end
-    λ = clamp(λ, 0.0, 1.0)
+    λ = clamp(λ, zero(T), one(T))
     return linshrink!(F, S, λ)
 end
 
@@ -451,8 +455,9 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F   = target_E(S)
+    T   = float(eltype(F))
     κ   = n - Int(corrected)
-    γ   = κ/n
+    γ   = T(κ/n)
     Xc² = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
@@ -461,7 +466,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
         λ  -= sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
     elseif λ == :ss
-        d   = 1.0 ./ vec(sum(Xc², dims=1))
+        d   = one(T) ./ vec(sum(Xc², dims=1))
         s   = sqrt.(d)
         S̄   = rescale(S, s)
         ΣS̄² = sumij2(S̄)
@@ -472,7 +477,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
     else
         throw(ArgumentError("Unsupported shrinkage method for target PerfectPositiveCorrelation: $λ."))
     end
-    λ = clamp(λ, 0.0, 1.0)
+    λ = clamp(λ, zero(T), one(T))
     return linshrink!(F, S, λ)
 end
 
@@ -505,8 +510,9 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
                           corrected::Bool)
 
     F, r̄ = target_F(S, p)
+    T    = float(eltype(F))
     κ    = n - Int(corrected)
-    γ    = κ/n
+    γ    = T(κ/n)
     Xc²  = Xc.^2
     # computing the shrinkage
     if λ ∈ [:auto, :lw]
@@ -515,7 +521,7 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
         λ  -= r̄ * sum_fij(Xc, S, n, κ)
         λ  /= sumij2(S - F)
     elseif λ == :ss
-        d    = 1.0 ./ vec(sum(Xc², dims=1))
+        d    = one(T) ./ vec(sum(Xc², dims=1))
         s    = sqrt.(d)
         S̄    = rescale(S, s)
         F̄, r̄ = target_F(S̄, p)
@@ -526,6 +532,6 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
     else
         throw(ArgumentError("Unsupported shrinkage method for target ConstantCorrelation: $λ."))
     end
-    λ = clamp(λ, 0.0, 1.0)
+    λ = clamp(λ, zero(T), one(T))
     return linshrink!(F, S, λ)
 end
