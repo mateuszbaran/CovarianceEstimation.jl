@@ -134,7 +134,7 @@ vector (possibly a zero vector) and avoid the use of `mean=0`.
     - (p<n): O(np^2 + n^2) with moderate constant
     - (p>n): O(p^3) with low constant (dominated by eigendecomposition of S)
 """
-function cov(ans::AnalyticalNonlinearShrinkage, X::AbstractMatrix{<:Real}, weights::AbstractWeights...;
+function cov(ans::AnalyticalNonlinearShrinkage, X::AbstractMatrix{<:Real}, weights::FrequencyWeights...;
              dims::Int=1, mean=nothing)
 
     @assert dims ∈ [1, 2] "Argument dims can only be 1 or 2 (given: $dims)"

@@ -103,12 +103,18 @@ LinearShrinkage(;
     corrected::Bool=false) = LinearShrinkage(target, shrinkage, corrected=corrected)
 
 """
-    cov(lse::LinearShrinkage, X, [weights]; dims=1)
+    cov(lse::LinearShrinkage, X, [weights::FrequencyWeights]; dims=1)
 
 Linear shrinkage covariance estimator for matrix `X` along dimension `dims`.
 Computed using the method described by `lse`.
+
+Optionally provide `weights` associated with each observation in `X` (see `StatsBase.FrequencyWeights`).
+
+!!! note
+    Theoretical guidance for the use of weights in shrinkage estimation seems to be lacking, but
+    there are natural generalizations for `FrequencyWeights`.
 """
-function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real}, weights::AbstractWeights...;
+function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real}, weights::FrequencyWeights...;
              dims::Int=1, mean=nothing)
 
     dims ∈ (1, 2) || throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
@@ -171,7 +177,7 @@ This operation appears often in the computations of optimal shrinkage λ.
 * Time complexity: ``O(2np^2)``
 """
 uccov(X::AbstractMatrix) = (X' * X) / size(X, 1)
-uccov(X::AbstractMatrix, weights::AbstractWeights) = (X' * (weights .* X)) / sum(weights)
+uccov(X::AbstractMatrix, weights::FrequencyWeights) = (X' * (weights .* X)) / sum(weights)
 
 
 """
@@ -248,7 +254,7 @@ linear_shrinkage
 
 function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     return linshrink(I, S, λ)
 end
@@ -260,7 +266,7 @@ Compute the shrinkage estimator where the target is a `DiagonalUnitVariance`.
 """
 function linear_shrinkage(::DiagonalUnitVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F   = I
     T   = float(eltype(S))
@@ -293,7 +299,7 @@ target_B(S::AbstractMatrix, p::Int) = tr(S)/p * I
 
 function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     return linshrink(target_B(S, p), S, λ)
 end
@@ -305,7 +311,7 @@ Compute the shrinkage estimator where the target is a `DiagonalCommonVariance`.
 """
 function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F   = target_B(S, p)
     T   = float(eltype(F))
@@ -352,7 +358,7 @@ target_D(S::AbstractMatrix) = Diagonal(S)
 
 function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     return linshrink(target_D(S), S, λ)
 end
@@ -364,7 +370,7 @@ Compute the shrinkage estimator where the target is a `DiagonalUnequalVariance`.
 """
 function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F   = target_D(S)
     T   = float(eltype(F))
@@ -378,9 +384,11 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
         λ   = sumij(uccov(Xc², weights...)) / γ^2 - ΣS²
         λ  /= κ * ΣS²
     elseif λ == :ss
+        keep = diag(S) .> zero(T)
+        Xc² = Xc²[:, keep]
         # use the standardised data matrix
         d   = one(T) ./ vec(sum(Xc², weights...; dims=1))
-        ΣS̄² = sumij2(rescale(S, sqrt.(d)))
+        ΣS̄² = sumij2(rescale(S[keep, keep], sqrt.(d)))
         λ   = sumij(rescale!(uccov(Xc², weights...), d)) / γ^2 - ΣS̄²
         λ  /= κ * ΣS̄²
     else
@@ -403,7 +411,7 @@ end
 
 function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F, _, _ = target_C(S, p)
     return linshrink!(F, S, λ)
@@ -416,7 +424,7 @@ Compute the shrinkage estimator where the target is a `CommonCovariance`.
 """
 function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F, v, c = target_C(S, p)
     T   = float(eltype(F))
@@ -451,7 +459,7 @@ end
 
 function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     return linshrink!(target_E(S), S, λ)
 end
@@ -464,7 +472,7 @@ Compute the shrinkage estimator where the target is a
 """
 function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F   = target_E(S)
     T   = float(eltype(F))
@@ -507,7 +515,7 @@ end
 
 function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Real, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F, _ = target_F(S, p)
     return linshrink!(F, S, λ)
@@ -520,7 +528,7 @@ Compute the shrinkage estimator where the target is a `ConstantCorrelation`.
 """
 function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
                           S::AbstractMatrix, λ::Symbol, n::Int, p::Int,
-                          corrected::Bool, weights::AbstractWeights...)
+                          corrected::Bool, weights::FrequencyWeights...)
 
     F, r̄ = target_F(S, p)
     T    = float(eltype(F))
