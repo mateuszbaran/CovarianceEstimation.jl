@@ -10,3 +10,6 @@ function linshrink!(F::AbstractMatrix, S::AbstractMatrix, λ::Real)
     F .= (one(λ) .- λ).*S .+ λ.*F
     return Symmetric(F)
 end
+
+totalweight(n) = n
+totalweight(_, weights) = sum(weights)

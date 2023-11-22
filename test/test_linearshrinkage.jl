@@ -174,12 +174,6 @@ end
             LSEss = LinearShrinkage(target, :ss, corrected=c)
             LSElw = LinearShrinkage(target, :lw, corrected=c)
             c = cov(LSEss, Xcs); @test c ≈ cov(LSElw, Xcs); @test issymmetric(c)
-            # weights are not currently exported but it seems to be a good
-            # idea to ensure proper errors
-            fw1 = FrequencyWeights(rand(1:10, size(Xcs, 1)))
-            @test_throws ErrorException cov(LSEss, Xcs, fw1)
-            @test_throws ErrorException cov(LSEss, Xcs, fw1; dims=2)
-            @test_throws ErrorException cov(LSEss, Xcs, fw1; mean=nothing)
         end
     end
 end
@@ -208,6 +202,19 @@ end
                 meanvec = vec(mean(Xcs, dims=dim))
                 @test cov(LSEss, Xcs, dims=dim, mean=meanvec) ≈ cov(LSEss, Xcs, dims=dim, mean=nothing)
                 @test cov(LSElw, Xcs, dims=dim, mean=meanvec) ≈ cov(LSElw, Xcs, dims=dim, mean=nothing)
+            end
+            # weights
+            w = FrequencyWeights(ones(n))
+            c = cov(LSEss, Xcs, w; dims=dim, mean=mean(Xcs, w; dims=dim));
+            @test c ≈ cov(LSEss, Xcs; dims=dim, mean=nothing)
+            n2 = n ÷ 2
+            if n2 > 1
+                w = FrequencyWeights([ones(n2); zeros(n-n2)])
+                meanvec = mean(Xcs, w; dims=dim)
+                for mn in (meanvec, nothing), ce in (LSEss, LSElw)
+                    c = cov(ce, Xcs, w; dims=dim, mean=mn);
+                    @test c ≈ cov(ce, dim == 1 ? Xcs[1:n2, :] : Xcs[:, 1:n2]; dims=dim, mean=nothing)
+                end
             end
         end
     end

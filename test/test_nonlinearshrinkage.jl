@@ -5,12 +5,10 @@
         ref_result = matlab_ledoitwolf_analytical_shrinkage(X̂)
         c = cov(ANS, X̂); @test c ≈ ref_result
         @test issymmetric(c)
+        size(X̂, 1) < 24 && continue
+        n2 = size(X̂, 1) ÷ 2
+        w = FrequencyWeights(vcat(ones(n2), zeros(size(X̂, 1) - n2)))
+        ref_result = matlab_ledoitwolf_analytical_shrinkage(X̂[1:n2, :])
+        c = cov(ANS, X̂, w); @test c ≈ ref_result
     end
-
-    # weights are not currently exported but it seems to be a good
-    # idea to ensure proper errors
-    fw1 = FrequencyWeights(rand(1:10, size(test_matrices[1], 1)))
-    @test_throws ErrorException cov(ANS, test_matrices[1], fw1)
-    @test_throws ErrorException cov(ANS, test_matrices[1], fw1; dims=2)
-    @test_throws ErrorException cov(ANS, test_matrices[1], fw1; mean=nothing)
 end
