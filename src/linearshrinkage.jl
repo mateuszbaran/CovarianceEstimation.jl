@@ -1,7 +1,7 @@
 const Shrinkage = Union{Symbol, Real}
 abstract type LinearShrinkageTarget end
 
-# Taxonomy from http://strimmerlab.org/publications/journals/shrinkcov2005.pdf
+# Taxonomy from https://strimmerlab.github.io/publications/journals/shrinkcov2005.pdf
 # page 13
 
 """
@@ -213,7 +213,7 @@ end
     sum_fij(Xc, S, n, κ)
 
 Internal function corresponding to ``∑_{i≂̸j}f_{ij}`` that appears in
-http://strimmerlab.org/publications/journals/shrinkcov2005.pdf p.11.
+https://strimmerlab.github.io/publications/journals/shrinkcov2005.pdf p.11.
 
 * Space complexity: ``O(np + 2p^2)``
 * Time complexity: ``O(2np^2)``
