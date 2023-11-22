@@ -92,7 +92,7 @@ These benchmarks should (as usual) be taken with a pinch of salt but essentially
 
 ## References
 
-* [**1**] J. Schäfer and K. Strimmer, *[A Shrinkage Approach to Large-Scale Covariance Matrix Estimation and Implications for Functional Genomics](http://strimmerlab.org/publications/journals/shrinkcov2005.pdf)*, Statistical Applications in Genetics and Molecular Biology, 2005.
+* [**1**] J. Schäfer and K. Strimmer, *[A Shrinkage Approach to Large-Scale Covariance Matrix Estimation and Implications for Functional Genomics](https://strimmerlab.github.io/publications/journals/shrinkcov2005.pdf)*, Statistical Applications in Genetics and Molecular Biology, 2005.
 * [**2**] O. Ledoit and M. Wolf, *[Honey, I Shrunk the Sample Covariance Matrix](http://www.ledoit.net/honey.pdf)*, The Journal of Portfolio Management, 2004.
 * [**3**] Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero, *[Shrinkage Algorithms for MMSE Covariance Estimation](https://arxiv.org/pdf/0907.4698.pdf)*, IEEE Transactions on Signal Processing, 2010.
 * [**4**] O. Ledoit and M. Wolf, *[Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices](http://www.econ.uzh.ch/static/wp/econwp264.pdf)*, Working Paper, 2018.
