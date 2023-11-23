@@ -111,8 +111,9 @@ Computed using the method described by `lse`.
 Optionally provide `weights` associated with each observation in `X` (see `StatsBase.FrequencyWeights`).
 
 !!! note
-    Theoretical guidance for the use of weights in shrinkage estimation seems to be lacking, but
-    there are natural generalizations for `FrequencyWeights`.
+    Theoretical guidance for the use of weights in shrinkage estimation seems sparse.
+    `FrequencyWeights` have a straightforward implementation, but support for other `AbstractWeight` subtypes
+    awaits analytical justification.
 """
 function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real}, weights::FrequencyWeights...;
              dims::Int=1, mean=nothing)
