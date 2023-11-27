@@ -174,6 +174,11 @@ end
             LSEss = LinearShrinkage(target, :ss, corrected=c)
             LSElw = LinearShrinkage(target, :lw, corrected=c)
             c = cov(LSEss, Xcs); @test c ≈ cov(LSElw, Xcs); @test issymmetric(c)
+            # Weight types besides FrequencyWeights are not supported
+            aw1 = AnalyticWeights(rand(size(Xcs, 1)))
+            @test_throws ErrorException cov(LSEss, Xcs, aw1)
+            @test_throws ErrorException cov(LSEss, Xcs, aw1; dims=2)
+            @test_throws ErrorException cov(LSEss, Xcs, aw1; mean=nothing)
         end
     end
 end

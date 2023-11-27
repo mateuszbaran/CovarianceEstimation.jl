@@ -10,5 +10,10 @@
         w = FrequencyWeights(vcat(ones(n2), zeros(size(X̂, 1) - n2)))
         ref_result = matlab_ledoitwolf_analytical_shrinkage(X̂[1:n2, :])
         c = cov(ANS, X̂, w); @test c ≈ ref_result
+        # Weight types besides FrequencyWeights are not supported
+        aw1 = AnalyticWeights(rand(size(test_matrices[1], 1)))
+        @test_throws ErrorException cov(ANS, test_matrices[1], aw1)
+        @test_throws ErrorException cov(ANS, test_matrices[1], aw1; dims=2)
+        @test_throws ErrorException cov(ANS, test_matrices[1], aw1; mean=nothing)
     end
 end

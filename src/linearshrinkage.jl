@@ -339,7 +339,7 @@ function linear_shrinkage(::DiagonalCommonVariance, Xc::AbstractMatrix,
         trS² = sum(abs2, S)
         tr²S = tr(S)^2
         # note: using corrected or uncorrected S does not change λ
-        λ = T(((n-2)/n * trS² + tr²S) / ((n+2) * (trS² - tr²S/p)))
+        λ = T(((wn-2)/wn * trS² + tr²S) / ((wn+2) * (trS² - tr²S/p)))
     elseif λ == :oas
         # https://arxiv.org/pdf/0907.4698.pdf equation 23
         trS² = sum(abs2, S)
