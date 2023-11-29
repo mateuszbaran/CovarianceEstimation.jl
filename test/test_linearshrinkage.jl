@@ -164,20 +164,22 @@ end
         :ss assumes that the shrinkage should be the same if the data
         matrix is standardised. This is what is tested.
         =#
-        for c ∈ [false, true], X̂ ∈ test_matrices
+        for corrected ∈ [false, true], X̂ ∈ test_matrices
             Xcs = X̂
             Xcs = centercols(Xcs)
             n = size(Xcs, 1)
             for i ∈ 1:size(Xcs, 2)
-                Xcs[:, i] ./= sqrt(var(Xcs[:, i], corrected=c))
+                Xcs[:, i] ./= sqrt(var(Xcs[:, i], corrected=corrected))
             end
-            LSEss = LinearShrinkage(target, :ss, corrected=c)
-            LSElw = LinearShrinkage(target, :lw, corrected=c)
+            LSEss = LinearShrinkage(target, :ss, corrected=corrected)
+            LSElw = LinearShrinkage(target, :lw, corrected=corrected)
             c = cov(LSEss, Xcs); @test c ≈ cov(LSElw, Xcs); @test issymmetric(c)
             # Adding a coordinate with no variance should not result in NaN entries
             Xcs = [Xcs zeros(n, 1)]
-            c = cov(LSEss, Xcs; drop_var0=true);
-            @test all(isfinite, c); @test c ≈ cov(LSElw, Xcs; drop_var0=true); @test issymmetric(c)
+            LSEssdv0 = LinearShrinkage(target, :ss, corrected=corrected, drop_var0=true)
+            LSElwdv0 = LinearShrinkage(target, :lw, corrected=corrected, drop_var0=true)
+            c = cov(LSEssdv0, Xcs)
+            @test all(isfinite, c); @test c ≈ cov(LSElwdv0, Xcs); @test issymmetric(c)
             # Weight types besides FrequencyWeights are not supported
             aw1 = AnalyticWeights(rand(size(Xcs, 1)))
             @test_throws ErrorException cov(LSEss, Xcs, aw1)

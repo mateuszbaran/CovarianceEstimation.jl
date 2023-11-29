@@ -73,7 +73,7 @@ A subtype of `LinearShrinkageTarget` where
 struct ConstantCorrelation <: LinearShrinkageTarget end
 
 """
-    LinearShrinkage(target, shrinkage; corrected=false)
+    LinearShrinkage(target, shrinkage; corrected=false, drop_var0=false)
 
 Linear shrinkage estimator described by equation
 ``(1 - \\lambda) S + \\lambda F`` where ``S`` is standard covariance matrix,
@@ -82,28 +82,32 @@ shrinkage parameter, either given explicitly in `shrinkage` or automatically
 determined according to one of the supported methods.
 
 The corrected estimator is used if `corrected` is true.
+`drop_var0=true` drops the zero-variance variables from the computation of `\\lambda`.
 """
 struct LinearShrinkage{T<:LinearShrinkageTarget, S<:Shrinkage} <: CovarianceEstimator
     target::T
     shrinkage::S
     corrected::Bool
-    function LinearShrinkage(t::TT, s::SS; corrected=false) where {TT<:LinearShrinkageTarget, SS<:Real}
+    drop_var0::Bool
+
+    function LinearShrinkage(t::TT, s::SS; corrected=false, drop_var0=false) where {TT<:LinearShrinkageTarget, SS<:Real}
         0 ≤ s ≤ 1 || throw(ArgumentError("Shrinkage value should be between 0 and 1. Got $s."))
-        new{TT, SS}(t, s, corrected)
+        new{TT, SS}(t, s, corrected, drop_var0)
     end
-    function LinearShrinkage(t::TT, s::Symbol=:auto; corrected=false) where TT <: LinearShrinkageTarget
+    function LinearShrinkage(t::TT, s::Symbol=:auto; corrected=false, drop_var0=false) where TT <: LinearShrinkageTarget
         s ∈ (:auto, :lw, :ss, :rblw, :oas) || throw(ArgumentError("Shrinkage method $s not supported."))
-        new{TT, Symbol}(t, s, corrected)
+        new{TT, Symbol}(t, s, corrected, drop_var0)
     end
 end
 
 LinearShrinkage(;
     target::LinearShrinkageTarget=DiagonalUnitVariance(),
     shrinkage::Shrinkage,
-    corrected::Bool=false) = LinearShrinkage(target, shrinkage, corrected=corrected)
+    corrected::Bool=false,
+    drop_var0::Bool=false) = LinearShrinkage(target, shrinkage, corrected=corrected, drop_var0=drop_var0)
 
 """
-    cov(lse::LinearShrinkage, X, [weights::FrequencyWeights]; dims=1, mean=nothing, drop_var0=false)
+    cov(lse::LinearShrinkage, X, [weights::FrequencyWeights]; dims=1, mean=nothing)
 
 Linear shrinkage covariance estimator for matrix `X` along dimension `dims`.
 Computed using the method described by `lse`.
@@ -114,11 +118,9 @@ Optionally provide `weights` associated with each observation in `X` (see `Stats
     Theoretical guidance for the use of weights in shrinkage estimation seems sparse.
     `FrequencyWeights` have a straightforward implementation, but support for other `AbstractWeight` subtypes
     awaits analytical justification.
-
-`drop_var0=true` drops the zero-variance variables from the covariance matrix.
 """
 function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real}, weights::FrequencyWeights...;
-             dims::Int=1, mean=nothing, drop_var0::Bool=false)
+             dims::Int=1, mean=nothing)
 
     dims ∈ (1, 2) || throw(ArgumentError("Argument dims can only be 1 or 2 (given: $dims)"))
 
@@ -126,7 +128,7 @@ function cov(lse::LinearShrinkage, X::AbstractMatrix{<:Real}, weights::Frequency
     n, p = size(Xc)
     # sample covariance of size (p x p)
     S = cov(SimpleCovariance(corrected=lse.corrected), X, weights...; dims=dims, mean=mean)
-    pvar = p - (drop_var0 ? sum(iszero, diag(S)) : 0)
+    pvar = p - (lse.drop_var0 ? sum(iszero, diag(S)) : 0)
 
     # NOTE: don't need to check if mean is proper as this is already done above
     if mean === nothing
@@ -255,7 +257,7 @@ of size `n` by `p` with covariance matrix `S` and shrinkage parameter `λ`.
 Calculates corrected covariance if `corrected` is true.
 
 `pvar == p` or `pvar = p - sum(iszero, diag(S))`, the number of non-zero
-diagonal variances in `S`. The choice is controlled by `drop_var0` in `cov(::LinearShrinkage, ...)`.
+diagonal variances in `S`. The choice is controlled by `LinearShrinkage(...; drop_var0=true/false)`.
 """
 linear_shrinkage
 
@@ -396,7 +398,7 @@ function linear_shrinkage(::DiagonalUnequalVariance, Xc::AbstractMatrix,
         keep = diag(S) .> zero(T)
         Xc² = Xc²[:, keep]
         # use the standardised data matrix
-        d   = map(z -> guardeddiv(oneunit(T), z), vec(sum(Xc², weights...; dims=1)))
+        d   = diaginv(pvar < p, oneunit(T), vec(sum(Xc², weights...; dims=1)))
         ΣS̄² = sumij2(rescale(S[keep, keep], sqrt.(d)))
         λ   = sumij(rescale!(uccov(Xc², weights...), d)) / γ^2 - ΣS̄²
         λ  /= κ * ΣS̄²
@@ -447,7 +449,7 @@ function linear_shrinkage(::CommonCovariance, Xc::AbstractMatrix,
         λ   = sumij(uccov(Xc², weights...), with_diag=true) / γ^2 - ΣS²
         λ  /= κ * (ΣS² - pvar*(pvar-1)*c^2 - pvar*v^2)
     elseif λ == :ss
-        d   = map(z -> guardeddiv(oneunit(T), z), vec(sum(Xc², weights...; dims=1)))
+        d   = diaginv(pvar < p, oneunit(T), vec(sum(Xc², weights...; dims=1)))
         S̄   = rescale(S, sqrt.(d))
         ΣS̄² = sumij2(S̄, with_diag=true)
         λ   = sumij(rescale!(uccov(Xc², weights...), d), with_diag=true) / γ^2 - ΣS̄²
@@ -496,7 +498,7 @@ function linear_shrinkage(::PerfectPositiveCorrelation, Xc::AbstractMatrix,
         λ  -= sum_fij(Xc, S, n, κ, weights...)
         λ  /= sumij2(S - F)
     elseif λ == :ss
-        d   = map(z -> guardeddiv(oneunit(T), z), vec(sum(Xc², weights...; dims=1)))
+        d   = diaginv(pvar < p, oneunit(T), vec(sum(Xc², weights...; dims=1)))
         s   = sqrt.(d)
         S̄   = rescale(S, s)
         ΣS̄² = sumij2(S̄)
@@ -553,7 +555,7 @@ function linear_shrinkage(::ConstantCorrelation, Xc::AbstractMatrix,
         λ  -= r̄ * sum_fij(Xc, S, n, κ, weights...)
         λ  /= sumij2(S - F)
     elseif λ == :ss
-        d   = map(z -> guardeddiv(oneunit(T), z), vec(sum(Xc², weights...; dims=1)))
+        d   = diaginv(pvar < p, oneunit(T), vec(sum(Xc², weights...; dims=1)))
         s    = sqrt.(d)
         S̄    = rescale(S, s)
         F̄, r̄ = target_F(S̄, p, pvar)
