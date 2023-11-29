@@ -174,6 +174,10 @@ end
             LSEss = LinearShrinkage(target, :ss, corrected=c)
             LSElw = LinearShrinkage(target, :lw, corrected=c)
             c = cov(LSEss, Xcs); @test c ≈ cov(LSElw, Xcs); @test issymmetric(c)
+            # Adding a coordinate with no variance should not result in NaN entries
+            Xcs = [Xcs zeros(n, 1)]
+            c = cov(LSEss, Xcs; drop_var0=true);
+            @test all(isfinite, c); @test c ≈ cov(LSElw, Xcs; drop_var0=true); @test issymmetric(c)
             # Weight types besides FrequencyWeights are not supported
             aw1 = AnalyticWeights(rand(size(Xcs, 1)))
             @test_throws ErrorException cov(LSEss, Xcs, aw1)
