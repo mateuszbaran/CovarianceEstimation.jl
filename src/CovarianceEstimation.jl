@@ -4,6 +4,8 @@ using Statistics
 using StatsBase
 using LinearAlgebra
 import StatsBase: cov
+using WoodburyMatrices
+using TSVD
 
 export cov
 export CovarianceEstimator, SimpleCovariance,
@@ -14,12 +16,18 @@ export CovarianceEstimator, SimpleCovariance,
     # Eigendecomposition-based methods
     AnalyticalNonlinearShrinkage,
     # Biweight midcovariance
-    BiweightMidcovariance
+    BiweightMidcovariance,
+    # Woodbury-based methods
+    WoodburyEstimator,
+    # Loss functions
+    NormLoss, StatLoss
 
 
 include("utils.jl")
+include("loss.jl")
 include("biweight.jl")
 include("linearshrinkage.jl")
 include("nonlinearshrinkage.jl")
+include("woodbury.jl")
 
 end # module
