@@ -20,7 +20,7 @@ export CovarianceEstimator, SimpleCovariance,
     # Woodbury-based methods
     WoodburyEstimator,
     # Loss functions
-    NormLoss, StatLoss
+    NormLossCov, StatLossCov
 
 
 include("utils.jl")

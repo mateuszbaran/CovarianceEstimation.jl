@@ -14,7 +14,7 @@ Specify that covariance matrices should be estimated using a "spiked" covariance
 
     Σ = σ²I + U * Λ * U'
 
-`loss` is either a [`NormLoss`](@ref) or [`StatLoss`](@ref) object, which specifies the
+`loss` is either a [`NormLossCov`](@ref) or [`StatLossCov`](@ref) object, which specifies the
 loss function for which the estimated covariance will be optimal. `rank` is the maximum
 number of eigenvalues `Λ` to retain in the model. Optionally, one may specify `σ²` directly,
 or it can be estimated from the data matrix (`σ²=nothing`). Set `corrected=true` to use

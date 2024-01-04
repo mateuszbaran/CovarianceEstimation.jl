@@ -29,25 +29,25 @@ function woodbury_test(ce::WoodburyEstimator, X̂)
 end
 
 @testset "Woodbury shrinkage" begin
-    @test_throws ArgumentError NormLoss(:not_a_norm, 1)
-    @test_throws ArgumentError NormLoss(:L2, 0)
+    @test_throws ArgumentError NormLossCov(:not_a_norm, 1)
+    @test_throws ArgumentError NormLossCov(:L2, 0)
     for norm in (:L1, :L2, :Linf)
         for pivotidx in 1:7
-            if pivotidx ∈ (5, 7) || (norm == :L1 && pivotidx ∈ (3, 4))
+            if pivotidx ∈ (5, 7) || (norm == :Linf && pivotidx ∈ (3, 4))
                 X̂ = test_matrices[argmax([size(X̂, 1) for X̂ ∈ test_matrices])]
-                @test_throws ArgumentError cov(WoodburyEstimator(NormLoss(norm, pivotidx), 2), X̂)
+                @test_throws ArgumentError cov(WoodburyEstimator(NormLossCov(norm, pivotidx), 2), X̂)
                 continue
             end
-            loss = NormLoss(norm, pivotidx)
+            loss = NormLossCov(norm, pivotidx)
             for X̂ ∈ test_matrices
                 size(X̂, 1) < 6 && continue
                 woodbury_test(WoodburyEstimator(loss, 2), X̂)
             end
         end
     end
-    @test_throws ArgumentError StatLoss(:oops)
+    @test_throws ArgumentError StatLossCov(:oops)
     for mode in (:st, :ent, :div, :aff, :fre)
-        loss = StatLoss(mode)
+        loss = StatLossCov(mode)
         for X̂ ∈ test_matrices
             size(X̂, 1) < 6 && continue
             woodbury_test(WoodburyEstimator(loss, 2), X̂)
@@ -58,7 +58,7 @@ end
     v = zeros(size(Y, 2))
     v[1] = 100
     Y = [Y; v'; -v']    # avoid perturbing the mean
-    ce = WoodburyEstimator(StatLoss(:ent), 2; σ²=1)
+    ce = WoodburyEstimator(StatLossCov(:ent), 2; σ²=1)
     C = cov(ce, Y)
     @test Matrix(C) ≈ cov(Y) rtol=0.1
     @test C.D[1,1] ≈ 400 rtol=0.1

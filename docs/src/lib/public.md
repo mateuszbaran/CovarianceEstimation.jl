@@ -29,4 +29,7 @@ PerfectPositiveCorrelation
 ConstantCorrelation
 AnalyticalNonlinearShrinkage
 BiweightMidcovariance
+NormLossCov
+StatLossCov
+WoodburyEstimator
 ```
