@@ -82,19 +82,19 @@ function shrinker(loss::NormLossCov, ℓ::Real, c::Real, s::Real)
     # See top of file for why these are branches rather than dispatch
     norm, pivotidx = loss.norm, loss.pivotidx
     pivotidx ∈ (5, 7) && throw(ArgumentError("Pivot index $(pivotidx) is not supported, see Table 2 in Donoho et al. 2018"))
-    if norm == :L2
+    if norm == :L2         # Frobenius
         return  pivotidx == 1 ? ℓ * c^2 + s^2 :
                 pivotidx == 2 ? ℓ / (c^2 + ℓ * s^2) :
                 pivotidx == 3 ? (ℓ * c^2 + ℓ^2 * s^2) / (c^2 + ℓ^2 * s^2) :
                 pivotidx == 4 ? (ℓ^2 * c^2 + s^2) / (ℓ * c^2 + s^2) :
                 #= pivotidx == 6 =# 1 + (ℓ - 1) * c^2 / (c^2 + ℓ * s^2)^2
-    elseif norm == :L1
-        pivotidx ∈ (3, 4) && throw(ArgumentError("Pivot index $(pivotidx) is not supported for L1 norm, see Table 2 in Donoho et al. 2018"))
+    elseif norm == :Linf   # Operator
+        pivotidx ∈ (3, 4) && throw(ArgumentError("Pivot index $(pivotidx) is not supported for Linf norm, see Table 2 in Donoho et al. 2018"))
         return  pivotidx ∈ (1, 2) ? ℓ :
                 #= pivotidx == 6 =# 1 + (ℓ - 1) / (c^2 + ℓ * s^2)
-    elseif norm == :Linf
+    elseif norm == :L1     # Nuclear
         val = pivotidx == 1 ? 1 + (ℓ - 1) * (1 - 2s^2) :
-              pivotidx == 2 ? ℓ / (c^2 + 2(ℓ-1)*s^2) :
+              pivotidx == 2 ? ℓ / (c^2 + (2ℓ-1)*s^2) :
               pivotidx == 3 ? ℓ / (c^2 + ℓ^2*s^2) :
               pivotidx == 4 ? (ℓ^2*c^2 + s^2) / ℓ :
               #= pivotidx == 6 =# (ℓ - (ℓ - 1)^2*c^2*s^2) / (c^2 + ℓ*s^2)^2
