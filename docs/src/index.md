@@ -7,7 +7,7 @@ A package for robustly estimating covariance matrices of real-valued data.
 ## Package Features
 
 - Standard corrected and uncorrected covariance estimators,
-- Linear and Nonlinear shrinkage estimators
+- Linear and Nonlinear shrinkage estimators, including estimators for covariance matrices too large to store in dense form
 - Focus on speed and lightweight dependencies
 
 ## Manual outline
