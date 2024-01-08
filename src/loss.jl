@@ -58,7 +58,7 @@ In the table below, `A` and `B` are the target and sample covariances, respectiv
 
 | `mode` | loss |  Interpretation  |
 |--------|---------|-----|
-| `:st`  | `st(A, B) = tr(A⁻¹ B - I) - log(det(B)/det(A))` | Minimize `2 Dₖₗ(N(0, B)||N(0, A))` where `N` is normal distribution |
+| `:st`  | `st(A, B) = tr(A⁻¹ B - I) - log(det(B)/det(A))` | Minimize KL-divergence between `N(0, A)` and `N(0, B)` where `N` is normal distribution |
 | `:ent` | `st(B, A)` | Minimize errors in Mahalanobis distances |
 | `:div` | `st(A, B) + st(B, A)` | |
 | `:aff` | `0.5 * log(det(A + B) / (2 * sqrt(det(A*B))))` | Minimize Hellinger distance between `N(0, A)` and `N(0, B)` |
