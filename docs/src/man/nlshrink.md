@@ -23,7 +23,7 @@ performed and the corresponding eigenvalues are shrunk by optimal methods for a 
 - [`NormLossCov`](@ref) allows you to specify that you want to minimize some notion of loss against the "true" covariance matrix
 - [`StatLossCov`](@ref) allows you to optimize for certain specific statistical outcomes, e.g., optimizing the accuracy of Mahalanobis distances.
 
-The eigenvalue shrinkage function is plotted for all choices below:
+The eigenvalue shrinkage function is plotted for all choices below (`γ = p/n`, the ratio of the dimensionality to the number of observations):
 
 ![Donoho et al Fig 3](../assets/donoho_fig3.png)
 
