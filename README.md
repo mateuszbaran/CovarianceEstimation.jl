@@ -52,6 +52,7 @@ These methods build an estimator of the covariance derived from `S`. They are im
   - in the case of the `DiagonalCommonVariance` target, a Rao-Blackwellised Ledoit-Wolf shrinkage (`:rblw`) and Oracle-Approximating shrinkage (`:oas`) are also supported (see [**3**]).
   - **Note**: `S` is symmetric semi-positive definite so that if the `F` is symmetric positive definite and provided `λ` is non-zero, the estimator obtained after shrinkage is also symmetric positive definite. For the diagonal targets `DiagonalUnitVariance`, `DiagonalCommonVariance` and `DiagonalUnequalVariance` the target is necessarily SPD.
 * `AnalyticalNonlinearShrinkage`: estimator of the form `MΛM'` where `M` and `Λ` are matrices derived from the eigen decomposition of `S`.[**4**]
+* `WoodburyEstimator`: estimator of the form `σ²I + U * Λ * U'`, where `I` is the identity matrix, `U` is low rank semi-orthogonal, and `Λ` is diagonal. This form is well-suited to very high-dimensional problems.[**6**]
 * `BiweightMidcovariance`: robust estimator, described more in the [documentation](https://mateuszbaran.github.io/CovarianceEstimation.jl/dev/man/methods/#Biweight-midcovariance).[**5**]
 
 **Time complexity**:
@@ -97,3 +98,4 @@ These benchmarks should (as usual) be taken with a pinch of salt but essentially
 * [**3**] Y. Chen, A. Wiesel, Y. C. Eldar, and A. O. Hero, *[Shrinkage Algorithms for MMSE Covariance Estimation](https://arxiv.org/pdf/0907.4698.pdf)*, IEEE Transactions on Signal Processing, 2010.
 * [**4**] O. Ledoit and M. Wolf, *[Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices](http://www.econ.uzh.ch/static/wp/econwp264.pdf)*, Working Paper, 2018.
 * [**5**] Beers, Flynn, and Gebhardt (1990; AJ 100, 32) "Measures of Location and Scale for Velocities in Clusters of Galaxies – A Robust Approach"
+* [**6**] Donoho, D.L., Gavish, M. and Johnstone, I.M., 2018. *Optimal shrinkage of eigenvalues in the spiked covariance model.* Annals of Statistics, 46(4), p.1742.
