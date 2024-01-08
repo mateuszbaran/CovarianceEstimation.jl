@@ -101,7 +101,7 @@ function shrink(loss::LossFunction, λ::Real, σ²::Real, γ::Real)
     λ′ = λu + 1 - γ
     ℓ = (λ′ + sqrt(λ′^2 - 4λu)) / 2
     # Calculate the cosine (Eq. 1.6)
-    c = sqrt((1 - γ / (ℓ - 1)^2) / (1 + γ / (ℓ - 1)^2))
+    c = sqrt((1 - γ / (ℓ - 1)^2) / (1 + γ / (ℓ - 1)))
     # Calculate the sine
     s = sqrt(1 - c^2)
     # Apply the shrinker
