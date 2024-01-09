@@ -76,4 +76,5 @@ end
     include("test_linearshrinkage.jl")
     include("test_nonlinearshrinkage.jl")
     include("test_float32.jl")
+    include("test_woodbury.jl")
 end
