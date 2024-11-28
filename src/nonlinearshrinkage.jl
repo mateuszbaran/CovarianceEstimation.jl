@@ -4,14 +4,24 @@
 Analytical nonlinear shrinkage estimator. See docs for
 `analytical_nonlinear_shrinkage` for details.
 """
-struct AnalyticalNonlinearShrinkage{TEigen<:Union{Eigen,Nothing}} <: CovarianceEstimator
+struct AnalyticalNonlinearShrinkage{TEigen<:Union{Eigen,Nothing},Talpha<:Real} <: CovarianceEstimator
     decomp::TEigen
     corrected::Bool
-    function AnalyticalNonlinearShrinkage(;corrected=false)
-        new{Nothing}(nothing, corrected)
+    alpha::Talpha
+    warn_if_small_eigenvalue::Bool
+    function AnalyticalNonlinearShrinkage(;
+        corrected=false,
+        alpha::Real=0.0,
+        warn_if_small_eigenvalue::Bool=false,
+    )
+        new{Nothing,typeof(alpha)}(nothing, corrected, alpha, warn_if_small_eigenvalue)
     end
-    function AnalyticalNonlinearShrinkage(decomp::Eigen; corrected=false)
-        new{Eigen}(decomp, corrected)
+    function AnalyticalNonlinearShrinkage(decomp::Eigen;
+        corrected=false,
+        alpha::Real=0.0,
+        warn_if_small_eigenvalue::Bool=false,
+    )
+        new{Eigen,typeof(alpha)}(decomp, corrected, alpha, warn_if_small_eigenvalue)
     end
 end
 
@@ -47,17 +57,26 @@ if `|x|=√5`.
 epanechnikov_HT2(x::T) where T <: Real = float(T)(-EPAN_3*x)
 
 """
-    analytical_nonlinear_shrinkage(S, n, p; decomp)
+    analytical_nonlinear_shrinkage(S, n, p; decomp;
+        alpha::Real=0.0,
+        warn_if_small_eigenvalue::Bool=false,
+    )
 
 Internal implementation of the analytical nonlinear shrinkage. The
 implementation is inspired from the Matlab code given in section C of
 Olivier Ledoit and Michael Wolf's paper "Analytical Nonlinear
 Shrinkage of Large-Dimensional Covariance Matrices". (Nov 2018)
 http://www.econ.uzh.ch/static/wp/econwp264.pdf
+
+Shrinked eigenvalues smaller than `alpha` are replaced with `alpha`.
+If `warn_if_small_eigenvalue` is `true`, additionally a warning is emitted
+if any eigenvalue is replaced with `alpha`.
 """
 function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
                                         n::Int, p::Int, est_mean::Bool;
-                                        decomp::Union{Nothing,Eigen}=nothing)
+                                        decomp::Union{Nothing,Eigen}=nothing,
+                                        alpha::Real=0.0,
+                                        warn_if_small_eigenvalue::Bool=false)
 
     η = ifelse(p < n, n, n - Int(est_mean)) # effective sample size
     # sample eigenvalues sorted in ascending order and eigenvectors
@@ -72,7 +91,6 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
 
     # compute analytical nonlinear shrinkage kernel formula
     L = repeat(λ, outer=(1, min(p, η)))
-
     # Equation (4.9)
     h = T(η^(-1//3))
     H = h * L'
@@ -109,6 +127,16 @@ function analytical_nonlinear_shrinkage(S::AbstractMatrix{<:Real},
         # Eq. (C.4)
         d̃1 = @. one(T) / (π * πλ * (f̃^2 + Hf̃^2))
         d̃  = [fill(d̃0, (p - η, 1)); d̃1]
+    end
+    if alpha > 0
+        for i = eachindex(d̃)
+            if d̃[i] < alpha
+                if warn_if_small_eigenvalue
+                    @warn "analytical_nonlinear_shrinkage: Eingenvalue at position smaller than " i alpha
+                end
+                d̃[i] = alpha
+            end
+        end
     end
 
     # Equation (4.4)
@@ -149,5 +177,7 @@ function cov(ans::AnalyticalNonlinearShrinkage, X::AbstractMatrix{<:Real}, weigh
 
     S  = cov(SimpleCovariance(corrected=ans.corrected), X, weights...; dims=dims, mean=mean)
     return analytical_nonlinear_shrinkage(S, wn, p, mean === nothing;
-                decomp=ans.decomp)
+                decomp=ans.decomp,
+                alpha=ans.alpha,
+                warn_if_small_eigenvalue=ans.warn_if_small_eigenvalue)
 end

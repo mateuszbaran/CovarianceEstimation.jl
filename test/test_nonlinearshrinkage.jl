@@ -1,5 +1,7 @@
 @testset "Analytical Nonlin shrinkage (ref⭒) " begin
     ANS = AnalyticalNonlinearShrinkage()
+    ANS_alpha = AnalyticalNonlinearShrinkage(; alpha=1.0)
+
     for X̂ ∈ test_matrices
         size(X̂, 1) < 12 && continue
         ref_result = matlab_ledoitwolf_analytical_shrinkage(X̂)
@@ -15,5 +17,9 @@
         @test_throws ErrorException cov(ANS, test_matrices[1], aw1)
         @test_throws ErrorException cov(ANS, test_matrices[1], aw1; dims=2)
         @test_throws ErrorException cov(ANS, test_matrices[1], aw1; mean=nothing)
+
+        # test alpha
+        c = cov(ANS_alpha, X̂)
+        @test minimum(eigvals(c)) ≈ ANS_alpha.alpha
     end
 end
