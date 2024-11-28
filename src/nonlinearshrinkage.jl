@@ -66,7 +66,11 @@ Internal implementation of the analytical nonlinear shrinkage. The
 implementation is inspired from the Matlab code given in section C of
 Olivier Ledoit and Michael Wolf's paper "Analytical Nonlinear
 Shrinkage of Large-Dimensional Covariance Matrices". (Nov 2018)
-http://www.econ.uzh.ch/static/wp/econwp264.pdf
+http://www.econ.uzh.ch/static/wp/econwp264.pdf , later published as
+
+    O. Ledoit and M. Wolf, “Analytical nonlinear shrinkage of large-dimensional covariance
+    matrices,” The Annals of Statistics, vol. 48, no. 5, pp. 3043–3065, Oct. 2020,
+    doi: 10.1214/19-AOS1921.
 
 Shrinked eigenvalues smaller than `alpha` are replaced with `alpha`.
 If `warn_if_small_eigenvalue` is `true`, additionally a warning is emitted
