@@ -11,8 +11,8 @@ TSVD = "9449cd9e-2762-5aa3-a617-5413e99d722e"
 WoodburyMatrices = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 
 [compat]
-LinearAlgebra = "1"
-Statistics = "1"
+LinearAlgebra = "<0.0.1, 1"
+Statistics = "<0.0.1, 1"
 StatsBase = "0.33, 0.34"
 WoodburyMatrices = "1"
 TSVD = "0.4"
